@@ -5,6 +5,8 @@
 - Deno (https://docs.deno.com/runtime/) for bundling, packaging, running
 - Deno Desktop (https://docs.deno.com/runtime/desktop/)
 - Zod (https://zod.dev) for schema validation
+- Alpine.js (https://alpinejs.dev) for client-side interactivity
+- Mustache (https://mustache.github.io) for templating
 
 ## Website — `website/`
 
