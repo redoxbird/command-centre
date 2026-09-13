@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Core meta -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Primary SEO meta -->
+    <title>Enhanced Inputs – Modern Form Components</title>
+    <meta name="description" content="A lightweight, zero-dependency library for beautiful, accessible form inputs." />
+
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="Enhanced Inputs – Modern Form Components" />
+    <meta property="og:description" content="A lightweight, zero-dependency library for beautiful, accessible form inputs." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yourdomain.com/" />
+    <meta property="og:image" content="https://yourdomain.com/og-image.jpg" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Enhanced Inputs – Modern Form Components" />
+    <meta name="twitter:description" content="A lightweight, zero-dependency library for beautiful, accessible form inputs." />
+    <meta name="twitter:image" content="https://yourdomain.com/og-image.jpg" />
+
+    <!-- Favicon & App icons -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Manifest (PWA ready) -->
+
+    <!-- DNS prefetch & preconnect (speed up external resources) -->
+    <link rel="preconnect" href="https://cdn.twind.style" crossorigin />
+
+    <!-- Coloris CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mdbassit/Coloris@latest/dist/coloris.min.css"/>
+    <script src="https://cdn.jsdelivr.net/gh/mdbassit/Coloris@latest/dist/coloris.min.js"></script>
+
+    <!-- WC DatePicker -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/wc-datepicker/dist/esm/wc-datepicker.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/wc-datepicker/dist/themes/light.css" />
+
+    <!-- Your demo styles (assuming they're optimized & fingerprinted in prod) -->
+    <link rel="stylesheet" href="./demo.css" />
+    <link rel="stylesheet" href="./dist/themes/default.css" />
+
+    <!-- Optional: Preload critical resources -->
+    <!-- <link rel="preload" href="/fonts/yourfont.woff2" as="font" type="font/woff2" crossorigin /> -->
+
+    <!-- Security headers (you'll set these server-side, but CSP example) -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.twind.style; style-src 'self' 'unsafe-inline'"> -->
+
+    <!-- Theme color (for mobile browsers) -->
+    <meta name="theme-color" content="#ffffff" />
+
+</head>
+
+
+<body class="e-demo__body">
+    <h1 class="e-demo__heading">Enhanced Inputs</h1>
+
+    <div class="e-demo__container">
+        <form method="get" action="/" id="demoForm" class="e-demo__form">
+            <e-input
+                name="email"
+                label="Email"
+                description="Enter your email address"
+                placeholder="user@example.com"
+                validate-on="blur"
+                required
+                min="5"
+                min-message="Minimum length is 5 characters"
+                max="100"
+                regex="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                ends-with="gmail.com"
+                lowercase="true"
+            >
+            </e-input>
+
+            <e-input
+              name="username"
+              label="Username"
+              description="3–20 characters, letters and numbers only."
+              placeholder="johndoe"
+              validate-on="blur"
+              min="3"
+              max="20"
+              regex="^[a-zA-Z0-9]+$"
+              regex-message="Only letters and numbers are allowed."
+              required
+            ></e-input>
+
+            <e-input
+              name="website"
+              label="Website"
+              placeholder="example.com"
+              validate-on="blur"
+              prefix="https://"
+              prefix-value="https://"
+              format="url"
+              format-message="Invalid URL format."
+              ends-with=".gov"
+              required
+            >
+            </e-input>
+
+            <e-input
+              name="search"
+              label="Search"
+              placeholder="Search..."
+              validate-on="blur"
+              action-button="clear"
+              required
+            >
+            </e-input>
+
+            <e-input
+                name="phone"
+                label="Phone"
+                placeholder="(555) 555-5555"
+                validate-on="blur"
+                required
+            >
+            </e-input>
+
+            <e-input
+                name="password"
+                label="Password"
+                placeholder="Password"
+                action-button="show"
+                validate-on="blur"
+                required
+            >
+            </e-input>
+
+            <e-input
+                name="amount"
+                label="Amount"
+                placeholder="100"
+                validate-on="blur"
+                format="number"
+                gte="10"
+                positive
+                required
+            >
+            </e-input>
+
+            <e-input
+              name="color"
+              label="Color"
+              placeholder="#ff0000"
+              validate-on="blur"
+              required
+            >
+            </e-input>
+
+            <e-input
+              name="date"
+              label="Date"
+              placeholder="2023-01-01"
+              validate-on="blur"
+              range
+              required
+            >
+            </e-input>
+
+            <e-input
+              name="emoji"
+              label="Emoji"
+              placeholder="😊"
+              validate-on="blur"
+              format="emoji"
+              required
+            >
+            </e-input>
+
+            <e-input
+              name="apiKey"
+              label="API Key"
+              placeholder="e1a6a0d3-3024-4158-a42b-8e2bb041f7f6"
+              validate-on="blur"
+              format="uuid"
+              format-message="Invalid API Key"
+              action-button="copy"
+              required
+            >
+            </e-input>
+
+            <e-input
+              name="ip4"
+              label="IPv4"
+              placeholder="192.168.0.1"
+              validate-on="blur"
+              format="ipv4"
+              starts-with="192"
+              mask="ip"
+              required
+            >
+            </e-input>
+
+            <e-input
+              name="date"
+              label="Date"
+              placeholder="2022-01-01"
+              validate-on="blur"
+              format="iso-date"
+              required
+            >
+            </e-input>
+
+            <e-input
+              name="date-time"
+              label="Date Time"
+              placeholder="2022-01-01T12:00:00"
+              validate-on="blur"
+              format="iso-datetime"
+              required
+            >
+            </e-input>
+
+            <e-input
+                name="base64"
+                label="Base64"
+                placeholder="SGVsbG8gd29ybGQ="
+                validate-on="blur"
+                format="base64"
+                required
+            >
+            </e-input>
+
+            <e-input
+                name="base64url"
+                label="Base64URL"
+                placeholder="SGVsbG8gd29ybGQ="
+                validate-on="blur"
+                format="base64url"
+                required
+            >
+            </e-input>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script src="./dist/index.js"></script>
+
+    <script>
+        // ---------------------------------------------------------------
+        // 15. Demo Form Submission
+        // ---------------------------------------------------------------
+
+        // document.querySelector("e-input").addEventListener("input:error", (e) => {
+        //     console.log("Current value:", e.target.value);
+        // });
+
+        document.getElementById("demoForm").addEventListener("submit", async (e) => {
+          const form = e.target;
+            e.preventDefault();
+            const fields = form.querySelectorAll("e-input");
+
+              let allValid = true;
+              for (const field of fields) {
+                const { valid } = await field.validate();
+                if (!valid) {
+                  allValid = false
+                  field.focus();
+                  break;
+                };
+              }
+
+              if (!allValid) return;
+
+              const data = new FormData(form);
+              console.log(Object.fromEntries(data.entries()));
+        });
+    </script>
+
+</body>
+
+</html>

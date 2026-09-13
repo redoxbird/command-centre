@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Inputs Directory – Searchable Input Components</title>
+    <meta name="description" content="A searchable directory of input components with fuzzy search powered by uFuzzy." />
+
+    <!-- uFuzzy Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@leeoniya/ufuzzy@1.0.19/dist/uFuzzy.iife.min.js"></script>
+
+    <!-- Enhanced Inputs -->
+    <script src="./dist/index.js"></script>
+
+    <!-- Highlight.js for code -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Theme Styles -->
+    <link id="theme-stylesheet" rel="stylesheet" href="./dist/themes/default.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+
+        .search-container {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #6366f1;
+        }
+
+        .inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .input-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .input-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-card.hidden {
+            display: none;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: #6366f1;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .card-description {
+            color: #64748b;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .card-input {
+            margin-bottom: 20px;
+        }
+
+        .card-code {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+            font-size: 1.2rem;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .inputs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Enhanced Inputs Directory</h1>
+            <p>Search through our collection of enhanced input components using fuzzy search</p>
+        </div>
+
+        <div class="search-container">
+            <e-input
+                class="search-input"
+                name="search"
+                placeholder="Search inputs (e.g., 'email', 'password', 'date')..."
+                action-button="clear">
+            </e-input>
+        </div>
+
+        <div class="inputs-grid" id="inputs-grid">
+            <!-- Input cards will be populated by JavaScript -->
+        </div>
+
+        <div class="no-results" id="no-results" style="display: none;">
+            <i class="fas fa-search"></i>
+            <p>No inputs found matching your search.</p>
+        </div>
+    </div>
+
+    <script>
+        // Input data
+        const inputsData = [
+            {
+                title: 'Text Input',
+                description: 'Basic text input for general use',
+                icon: 'fas fa-font',
+                code: `<e-input
+    name="text"
+    label="Text Input"
+    placeholder="Enter text"
+    validate-on="blur">
+</e-input>`
+            },
+            {
+                title: 'Email Input',
+                description: 'Input specifically for email addresses with validation',
+                icon: 'fas fa-envelope',
+                code: `<e-input
+    name="email"
+    label="Email Address"
+    placeholder="user@example.com"
+    validate-on="blur"
+    required>
+</e-input>`
+            },
+            {
+                title: 'Password Input',
+                description: 'Secure password input with show/hide functionality',
+                icon: 'fas fa-lock',
+                code: `<e-input
+    name="password"
+    label="Password"
+    placeholder="Enter password"
+    action-button="show"
+    min="8"
+    validate-on="input"
+    required>
+</e-input>`
+            },
+            {
+                title: 'Number Input',
+                description: 'Numeric input with min/max validation',
+                icon: 'fas fa-hashtag',
+                code: `<e-input
+    name="number"
+    label="Number"
+    placeholder="123"
+    min="0"
+    max="100"
+    validate-on="change">
+</e-input>`
+            },
+            {
+                title: 'Phone Input',
+                description: 'Phone number input with formatting',
+                icon: 'fas fa-phone',
+                code: `<e-input
+    name="phone"
+    label="Phone Number"
+    placeholder="(555) 123-4567"
+    validate-on="blur">
+</e-input>`
+            },
+            {
+                title: 'URL Input',
+                description: 'Input for web URLs with validation',
+                icon: 'fas fa-link',
+                code: `<e-input
+    name="url"
+    label="Website URL"
+    placeholder="https://example.com"
+    validate-on="blur">
+</e-input>`
+            },
+            {
+                title: 'Search Input',
+                description: 'Search input with clear button',
+                icon: 'fas fa-search',
+                code: `<e-input
+    name="search"
+    label="Search"
+    placeholder="Search..."
+    action-button="clear"
+    min="2">
+</e-input>`
+            },
+            {
+                title: 'Select Input',
+                description: 'Dropdown select with options',
+                icon: 'fas fa-chevron-down',
+                code: `<e-input
+    name="select"
+    label="Select Option"
+    placeholder="Choose..."
+    validate-on="change">
+    <e-select-option value="option1">Option 1</e-select-option>
+    <e-select-option value="option2">Option 2</e-select-option>
+</e-input>`
+            },
+            {
+                title: 'Radio Input',
+                description: 'Radio button group for single selection',
+                icon: 'fas fa-circle',
+                code: `<e-input
+    name="radio"
+    label="Choose Option"
+    value="option1"
+    validate-on="change">
+    <e-radio-option value="option1">Option 1</e-radio-option>
+    <e-radio-option value="option2">Option 2</e-radio-option>
+</e-input>`
+            },
+            {
+                title: 'Date Input',
+                description: 'Date picker input',
+                icon: 'fas fa-calendar',
+                code: `<e-input
+    name="date"
+    label="Select Date"
+    validate-on="change">
+</e-input>`
+            },
+            {
+                title: 'Date Range Input',
+                description: 'Date range picker',
+                icon: 'fas fa-calendar-week',
+                code: `<e-input
+    name="daterange"
+    label="Date Range"
+    range
+    validate-on="change">
+</e-input>`
+            },
+            {
+                title: 'Range Input',
+                description: 'Slider input for numeric ranges',
+                icon: 'fas fa-sliders-h',
+                code: `<e-input
+    name="range"
+    label="Range"
+    min="0"
+    max="100"
+    step="1"
+    validate-on="change">
+</e-input>`
+            },
+            {
+                title: 'Color Input',
+                description: 'Color picker input',
+                icon: 'fas fa-palette',
+                code: `<e-input
+    name="color"
+    label="Choose Color"
+    value="#6366f1"
+    validate-on="change">
+</e-input>`
+            }
+        ];
+
+        // Initialize uFuzzy
+        const uf = new uFuzzy();
+
+        // DOM elements
+        const searchInput = document.querySelector('.search-input');
+        const inputsGrid = document.getElementById('inputs-grid');
+        const noResults = document.getElementById('no-results');
+
+        // Create input cards
+        function createInputCards() {
+            inputsGrid.innerHTML = '';
+            inputsData.forEach((input, index) => {
+                const card = document.createElement('div');
+                card.className = 'input-card';
+                card.dataset.index = index;
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="${input.icon}"></i>
+                        </div>
+                        <h3 class="card-title">${input.title}</h3>
+                    </div>
+                    <p class="card-description">${input.description}</p>
+                    <div class="card-input">
+                        ${input.code.replace(/</g, '<').replace(/>/g, '>')}
+                    </div>
+                    <div class="card-code">
+                        <pre><code class="language-html">${input.code}</code></pre>
+                    </div>
+                `;
+                inputsGrid.appendChild(card);
+            });
+
+            // Highlight code blocks
+            hljs.highlightAll();
+        }
+
+        // Fuzzy search function
+        function performSearch(query) {
+            if (!query.trim()) {
+                // Show all cards
+                document.querySelectorAll('.input-card').forEach(card => {
+                    card.classList.remove('hidden');
+                });
+                noResults.style.display = 'none';
+                return;
+            }
+
+            // Prepare haystack (searchable text for each input)
+            const haystack = inputsData.map(input =>
+                `${input.title} ${input.description}`.toLowerCase()
+            );
+
+            // Perform fuzzy search
+            const [idxs, info, order] = uf.search(haystack, query.toLowerCase());
+
+            // Hide all cards first
+            document.querySelectorAll('.input-card').forEach(card => {
+                card.classList.add('hidden');
+            });
+
+            // Show matching cards
+            if (idxs && idxs.length > 0) {
+                order.forEach(orderIdx => {
+                    const cardIndex = info.idx[orderIdx];
+                    const card = document.querySelector(`.input-card[data-index="${cardIndex}"]`);
+                    if (card) {
+                        card.classList.remove('hidden');
+                    }
+                });
+                noResults.style.display = 'none';
+            } else {
+                noResults.style.display = 'block';
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            createInputCards();
+
+            // Search input event
+            searchInput.addEventListener('input', (e) => {
+                performSearch(e.target.value);
+            });
+
+            // Clear search on clear button
+            searchInput.addEventListener('e:clear', () => {
+                performSearch('');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Inputs – Modern Form Components</title>
+    <meta name="description" content="A lightweight, zero-dependency library for beautiful, accessible form inputs." />
+
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="Enhanced Inputs – Modern Form Components" />
+    <meta property="og:description" content="A lightweight, zero-dependency library for beautiful, accessible form inputs." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yourdomain.com/" />
+    <meta property="og:image" content="https://yourdomain.com/og-image.jpg" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Enhanced Inputs – Modern Form Components" />
+    <meta name="twitter:description" content="A lightweight, zero-dependency library for beautiful, accessible form inputs." />
+    <meta name="twitter:image" content="https://yourdomain.com/og-image.jpg" />
+
+    <!-- Favicon & App icons -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- WC DatePicker -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/wc-datepicker/dist/esm/wc-datepicker.js"></script>
+
+    <!-- Range-slider  -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/range-slider-element@2/+esm"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
+
+    <!-- Your demo styles (assuming they're optimized & fingerprinted in prod) -->
+    <link id="theme-stylesheet" rel="stylesheet" href="./dist/themes/default.css" />
+
+    <!-- Theme color (for mobile browsers) -->
+    <meta name="theme-color" content="#ffffff" />
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./demo.css">
+</head>
+<body class="e-demo__body">
+    <!-- Hero Section -->
+    <section class="e-demo__hero">
+        <div class="e-demo__hero__content">
+            <h1 class="e-demo__hero__title">Enhanced Inputs</h1>
+            <p class="e-demo__hero__subtitle">
+                Modern, accessible, and form-native input components built with Lit.
+                Zero dependencies, maximum flexibility.
+            </p>
+            <div class="e-demo__hero__buttons">
+                <button class="e-demo__btn e-demo__btn--primary" onclick="scrollToSection('installation')">
+                    <i class="fas fa-download"></i> Get Started
+                </button>
+                <a href="https://github.com/redoxbird/enhanced-inputs" target="_blank" class="e-demo__btn e-demo__btn--secondary">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+            <div class="e-demo__features">
+                <div class="e-demo__feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Zero Dependencies</span>
+                </div>
+                <div class="e-demo__feature">
+                    <i class="fas fa-universal-access"></i>
+                    <span>WCAG AA Compliant</span>
+                </div>
+                <div class="e-demo__feature">
+                    <i class="fas fa-code"></i>
+                    <span>Form Native</span>
+                </div>
+                <div class="e-demo__feature">
+                    <i class="fas fa-palette"></i>
+                    <span>Fully Customizable</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section class="e-demo__installation" id="installation">
+        <div class="e-demo__installation__content">
+            <h2 class="e-demo__section-title">Quick Installation</h2>
+            <p class="e-demo__section-subtitle">
+                Get started with Enhanced Inputs in seconds. Choose your preferred installation method.
+            </p>
+
+            <div class="e-demo__install-methods">
+                <!-- NPM Installation -->
+                <div class="e-demo__install-card">
+                    <h3>
+                        <i class="fab fa-npm" style="color: #cb3837;"></i>
+                        Install via NPM
+                    </h3>
+                    <p>Perfect for projects using build tools like Vite, Webpack, or Rollup.</p>
+                    <div class="e-demo__code-snippet">
+                        <e-highlight-code lang="bash">npm install enhanced-inputs</e-highlight-code>
+                    </div>
+                    <div class="e-demo__code-snippet">
+                        <e-highlight-code lang="js">import 'enhanced-inputs';
+import 'enhanced-inputs';
+// Import other components as needed</e-highlight-code>
+                    </div>
+                </div>
+
+                <!-- CDN Installation -->
+                <div class="e-demo__install-card">
+                    <h3>
+                        <i class="fas fa-globe" style="color: var(--primary);"></i>
+                        Use via CDN
+                    </h3>
+                    <p>Quick and easy - just add a script tag to your HTML.</p>
+                    <h4>JavaScript</h4>
+                    <div class="e-demo__code-snippet">
+                        <e-highlight-code lang="html">&lt;script src="https://cdn.jsdelivr.net/gh/redoxbird/enhanced-inputs@main/dist/index.js"&gt;
+&lt;/script&gt;</e-highlight-code>
+                    </div>
+
+                    <h4>CSS</h4>
+                    <div class="e-demo__code-snippet">
+                        <e-highlight-code lang="html">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/redoxbird/enhanced-inputs@main/dist/themes/default.css"&gt;</e-highlight-code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="e-demo__next-steps">
+                <h3>Ready to build amazing forms?</h3>
+                <p>Once installed, you can use any input component immediately. No configuration required!</p>
+                <button class="e-demo__btn e-demo__btn--primary" style="background: white; color: var(--primary);" onclick="scrollToSection('examples')">
+                    <i class="fas fa-arrow-down"></i> View Examples
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Examples Section -->
+    <section class="e-demo__examples" id="examples">
+        <div class="e-demo__examples__content">
+            <div class="e-demo__section-header">
+                <h2 class="e-demo__section-title">Input Examples</h2>
+                <p class="e-demo__section-subtitle">Interactive examples showcasing the power and flexibility of Enhanced Inputs</p>
+            </div>
+
+            <!-- Theme Toggle -->
+            <div class="e-demo__theme-toggle-container">
+                <div class="e-demo__theme-toggle-header">
+                    <h3>
+                        <i class="fas fa-palette"></i>
+                        Theme Selector
+                    </h3>
+                    <p>Choose your preferred design theme for the input components</p>
+                </div>
+                <div class="e-demo__theme-toggle-group">
+                    <button class="e-demo__theme-btn e-demo__theme-btn--active" data-theme="default" onclick="switchTheme('default')">
+                        <div class="e-demo__theme-preview e-demo__theme-preview--default"></div>
+                        <span>Default</span>
+                    </button>
+                    <button class="e-demo__theme-btn" data-theme="carbon" onclick="switchTheme('carbon')">
+                        <div class="e-demo__theme-preview e-demo__theme-preview--carbon"></div>
+                        <span>Carbon</span>
+                    </button>
+                    <button class="e-demo__theme-btn" data-theme="fluent" onclick="switchTheme('fluent')">
+                        <div class="e-demo__theme-preview e-demo__theme-preview--fluent"></div>
+                        <span>Fluent</span>
+                    </button>
+                    <button class="e-demo__theme-btn" data-theme="material" onclick="switchTheme('material')">
+                        <div class="e-demo__theme-preview e-demo__theme-preview--material"></div>
+                        <span>Material</span>
+                    </button>
+                    <button class="e-demo__theme-btn" data-theme="newspaper" onclick="switchTheme('newspaper')">
+                        <div class="e-demo__theme-preview e-demo__theme-preview--newspaper"></div>
+                        <span>Newspaper</span>
+                    </button>
+                    <button class="e-demo__theme-btn" data-theme="classic" onclick="switchTheme('classic')">
+                        <div class="e-demo__theme-preview e-demo__theme-preview--classic"></div>
+                        <span>Classic</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="e-demo__cards-grid">
+
+                <!-- Text Input Card -->
+                  <e-demo-card
+                     title="Text Input"
+                     description="Standard single file input"
+                     style="--primary: #3b82f6; --primary-100: #eff6ff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-letter-case"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17.5 15.5m-3.5 0a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0" /><path d="M3 19v-10.5a3.5 3.5 0 0 1 7 0v10.5" /><path d="M3 13h7" /><path d="M21 12v7" /></svg>
+                    <e-input type="text"
+                        slot="input"
+                        name="username"
+                        label="Username"
+                        placeholder="johndoe"
+                        description="Choose a unique username"
+                        min="3"
+                        max="20"
+                        required
+                        validate-on="input|blur">
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+    name=&quot;username&quot;
+    label=&quot;Username&quot;
+    placeholder=&quot;johndoe&quot;
+    description=&quot;Choose a unique username&quot;
+    min=&quot;3&quot;
+    max=&quot;20&quot;
+    validate-on=&quot;input|blur&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+
+                <!--Email Input Card-->
+                <e-demo-card
+                    title="Email Input"
+                    description="Collect and validate email addresses"
+                    style="--primary: #10b981; --primary-100: #ecfdf5">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-mail"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M22 7.535v9.465a3 3 0 0 1 -2.824 2.995l-.176 .005h-14a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-9.465l9.445 6.297l.116 .066a1 1 0 0 0 .878 0l.116 -.066l9.445 -6.297z" /><path d="M19 4c1.08 0 2.027 .57 2.555 1.427l-9.555 6.37l-9.555 -6.37a2.999 2.999 0 0 1 2.354 -1.42l.201 -.007h14z" /></svg>
+
+                    <e-input type="email"
+                        slot="input"
+                        name="email"
+                        label="Email Address"
+                        placeholder="you@example.com"
+                        validate-on="blur"
+                        description="We'll never share your email"
+                        required>
+                    </e-input>
+
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;email&quot;
+    name=&quot;email&quot;
+    label=&quot;Email Address&quot;
+    placeholder=&quot;you@example.com&quot;
+    validate-on=&quot;blur&quot;
+    description=&quot;We&#39;ll never share your email&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+
+                <e-demo-card
+                    title="Password Input"
+                    description="Secure entry with toggle"
+                    style="--primary: #f59e0b; --primary-100: #fffbeb">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-lock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" /><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /><path d="M8 11v-4a4 4 0 1 1 8 0v4" /></svg>
+                    <e-input type="password"
+                        slot="input"
+                        name="password"
+                        label="Password"
+                        action-button="show"
+                        placeholder="Enter secure password"
+                        min="8"
+                        validate-on="input"
+                        description="Use a strong password"
+                        strength-meter="false"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;password&quot;
+    name=&quot;password&quot;
+    label=&quot;Password&quot;
+    action-button=&quot;show&quot;
+    placeholder=&quot;Enter secure password&quot;
+    min=&quot;8&quot;
+    validate-on=&quot;input&quot;
+    description=&quot;Use a strong password&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="Number Input"
+                    description="Enter numeric values with validation"
+                    style="--primary: #8b5cf6; --primary-100: #faf5ff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-hash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 9l14 0" /><path d="M5 15l14 0" /><path d="M11 4l-4 16" /><path d="M17 4l-4 16" /></svg>
+                    <e-input type="number"
+                        slot="input"
+                        name="age"
+                        label="Age"
+                        placeholder="25"
+                        min="18"
+                        max="100"
+                        validate-on="change"
+                        description="Enter your age"
+                        required>
+                    </e-input>
+
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;number&quot;
+    name=&quot;age&quot;
+    label=&quot;Age&quot;
+    placeholder=&quot;25&quot;
+    min=&quot;18&quot;
+    max=&quot;100&quot;
+    validate-on=&quot;change&quot;
+    description=&quot;Enter your age&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="Phone Input"
+                    description="Format and validate phone numbers"
+                    style="--primary: #06b6d4; --primary-100: #ecfeff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-phone"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2" /></svg>
+                    <e-input type="phone"
+                        slot="input"
+                        name="phone"
+                        label="Phone Number"
+                        placeholder="(555) 123-4567"
+                        validate-on="blur"
+                        description="Include country code">
+                    </e-input>
+
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;phone&quot;
+    name=&quot;phone&quot;
+    label=&quot;Phone Number&quot;
+    placeholder=&quot;(555) 123-4567&quot;
+    validate-on=&quot;blur&quot;
+    description=&quot;Include country code&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="URL Input"
+                    description="Validate web addresses"
+                    style="--primary: #6366f1; --primary-100: #eef2ff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-link"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 15l6 -6" /><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464" /><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463" /></svg>
+                    <e-input type="url"
+                        slot="input"
+                        name="website"
+                        label="Website URL"
+                        placeholder="example.com"
+                        prefix="https://"
+                        prefix-value="https://"
+                        validate-on="blur"
+                        description="Enter your website URL">
+                    </e-input>
+
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;url&quot;
+    name=&quot;website&quot;
+    label=&quot;Website URL&quot;
+    placeholder=&quot;https://example.com&quot;
+    validate-on=&quot;blur&quot;
+    description=&quot;Enter your website URL&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Search Input Card -->
+                <e-demo-card
+                    title="Search Input"
+                    description="Search with clear functionality"
+                    style="--primary: #64748b; --primary-100: #f8fafc">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-search"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>
+                    <e-input type="search"
+                        slot="input"
+                        name="query"
+                        label="Search"
+                        placeholder="Search products..."
+                        action-button="clear"
+                        validate-on="input"
+                        min="2"
+                        description="Type at least 2 characters">
+                    </e-input>
+
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;search&quot;
+    name=&quot;query&quot;
+    label=&quot;Search&quot;
+    placeholder=&quot;Search products...&quot;
+    action-button=&quot;clear&quot;
+    validate-on=&quot;input&quot;
+    min=&quot;2&quot;
+    description=&quot;Type at least 2 characters&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Select Input Card -->
+                <e-demo-card
+                    title="Select Input"
+                    description="Choose from predefined options"
+                    style="--primary: #059669; --primary-100: #ecfdf5">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                    <e-input type="select"
+                        slot="input"
+                        name="country"
+                        label="Country"
+                        placeholder="Select a country"
+                        validate-on="change"
+                        description="Choose your country from the list">
+                        <e-select-option value="us">United States</e-select-option>
+                        <e-select-option value="ca">Canada</e-select-option>
+                        <e-select-option value="uk">United Kingdom</e-select-option>
+                        <e-select-option value="de">Germany</e-select-option>
+                        <e-select-option value="fr">France</e-select-option>
+                        <e-select-option value="jp">Japan</e-select-option>
+                        <e-select-option value="au">Australia</e-select-option>
+                        <e-select-option value="br">Brazil</e-select-option>
+                        <e-select-option value="in">India</e-select-option>
+                        <e-select-option value="cn">China</e-select-option>
+                        <e-select-option value="ru">Russia</e-select-option>
+                        <e-select-option value="za">South Africa</e-select-option>
+                        <e-select-option value="mx">Mexico</e-select-option>
+                        <e-select-option value="kr">South Korea</e-select-option>
+                        <e-select-option value="it">Italy</e-select-option>
+                        <e-select-option value="es">Spain</e-select-option>
+                        <e-select-option value="nl">Netherlands</e-select-option>
+                        <e-select-option value="se">Sweden</e-select-option>
+                        <e-select-option value="no">Norway</e-select-option>
+                        <e-select-option value="dk">Denmark</e-select-option>
+                        <e-select-option value="fi">Finland</e-select-option>
+                        <e-select-option value="pl">Poland</e-select-option>
+                        <e-select-option value="tr">Turkey</e-select-option>
+                        <e-select-option value="ar">Argentina</e-select-option>
+                        <e-select-option value="co">Colombia</e-select-option>
+                        <e-select-option value="pe">Peru</e-select-option>
+                        <e-select-option value="cl">Chile</e-select-option>
+                        <e-select-option value="ve">Venezuela</e-select-option>
+                        <e-select-option value="ec">Ecuador</e-select-option>
+                        <e-select-option value="uy">Uruguay</e-select-option>
+                        <e-select-option value="py">Paraguay</e-select-option>
+                        <e-select-option value="bo">Bolivia</e-select-option>
+                        <e-select-option value="gy">Guyana</e-select-option>
+                        <e-select-option value="sr">Suriname</e-select-option>
+                        <e-select-option value="gf">French Guiana</e-select-option>
+                        <e-select-option value="fk">Falkland Islands</e-select-option>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;select&quot;
+    name=&quot;country&quot;
+    label=&quot;Country&quot;
+    placeholder=&quot;Select a country&quot;
+    searchable
+    validate-on=&quot;change&quot;
+    description=&quot;Choose your country from the list&quot;&gt;
+    &lt;e-select-option value=&quot;us&quot;&gt;United States&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;ca&quot;&gt;Canada&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;uk&quot;&gt;United Kingdom&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;de&quot;&gt;Germany&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;fr&quot;&gt;France&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;jp&quot;&gt;Japan&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;au&quot;&gt;Australia&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;br&quot;&gt;Brazil&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;in&quot;&gt;India&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;cn&quot;&gt;China&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;ru&quot;&gt;Russia&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;za&quot;&gt;South Africa&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;mx&quot;&gt;Mexico&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;kr&quot;&gt;South Korea&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;it&quot;&gt;Italy&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;es&quot;&gt;Spain&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;nl&quot;&gt;Netherlands&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;se&quot;&gt;Sweden&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;no&quot;&gt;Norway&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;dk&quot;&gt;Denmark&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;fi&quot;&gt;Finland&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;pl&quot;&gt;Poland&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;tr&quot;&gt;Turkey&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;ar&quot;&gt;Argentina&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;co&quot;&gt;Colombia&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;pe&quot;&gt;Peru&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;cl&quot;&gt;Chile&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;ve&quot;&gt;Venezuela&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;ec&quot;&gt;Ecuador&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;uy&quot;&gt;Uruguay&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;py&quot;&gt;Paraguay&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;bo&quot;&gt;Bolivia&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;gy&quot;&gt;Guyana&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;sr&quot;&gt;Suriname&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;gf&quot;&gt;French Guiana&lt;/e-select-option&gt;
+    &lt;e-select-option value=&quot;fk&quot;&gt;Falkland Islands&lt;/e-select-option&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Combobox Input Card -->
+                <e-demo-card
+                    title="Combobox Input"
+                    description="Searchable dropdown with filtering"
+                    style="--primary: #10b981; --primary-100: #ecfdf5">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-search"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>
+                    <e-input type="combobox"
+                        slot="input"
+                        name="programming_language"
+                        label="Programming Language"
+                        placeholder="Search languages..."
+                        validate-on="change"
+                        description="Search and select your favorite programming language">
+                        <e-combobox-option value="javascript" label="JavaScript" description="Popular scripting language"></e-combobox-option>
+                        <e-combobox-option value="typescript" label="TypeScript" description="Typed JavaScript superset"></e-combobox-option>
+                        <e-combobox-option value="python" label="Python" description="Versatile general-purpose language"></e-combobox-option>
+                        <e-combobox-option value="java" label="Java" description="Enterprise-grade object-oriented language"></e-combobox-option>
+                        <e-combobox-option value="csharp" label="C#" description="Microsoft's modern .NET language"></e-combobox-option>
+                        <e-combobox-option value="php" label="PHP" description="Server-side web development language"></e-combobox-option>
+                        <e-combobox-option value="ruby" label="Ruby" description="Elegant scripting language"></e-combobox-option>
+                        <e-combobox-option value="go" label="Go" description="Google's concurrent programming language"></e-combobox-option>
+                        <e-combobox-option value="rust" label="Rust" description="Systems programming with memory safety"></e-combobox-option>
+                        <e-combobox-option value="swift" label="Swift" description="Apple's modern programming language"></e-combobox-option>
+                        <e-combobox-option value="kotlin" label="Kotlin" description="Modern JVM language"></e-combobox-option>
+                        <e-combobox-option value="dart" label="Dart" description="Google's UI-focused language"></e-combobox-option>
+                        <e-combobox-option value="scala" label="Scala" description="Scalable JVM language"></e-combobox-option>
+                        <e-combobox-option value="r" label="R" description="Statistical computing language"></e-combobox-option>
+                        <e-combobox-option value="perl" label="Perl" description="Powerful text processing language"></e-combobox-option>
+                        <e-combobox-option value="lua" label="Lua" description="Lightweight scripting language"></e-combobox-option>
+                        <e-combobox-option value="elixir" label="Elixir" description="Functional language on Erlang VM"></e-combobox-option>
+                        <e-combobox-option value="clojure" label="Clojure" description="Lisp dialect on JVM"></e-combobox-option>
+                        <e-combobox-option value="haskell" label="Haskell" description="Purely functional programming language"></e-combobox-option>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;combobox&quot;
+    name=&quot;programming_language&quot;
+    label=&quot;Programming Language&quot;
+    placeholder=&quot;Search languages...&quot;
+    validate-on=&quot;change&quot;
+    description=&quot;Search and select your favorite programming language&quot;&gt;
+    &lt;e-combobox-option value=&quot;javascript&quot; label=&quot;JavaScript&quot; description=&quot;Popular scripting language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;typescript&quot; label=&quot;TypeScript&quot; description=&quot;Typed JavaScript superset&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;python&quot; label=&quot;Python&quot; description=&quot;Versatile general-purpose language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;java&quot; label=&quot;Java&quot; description=&quot;Enterprise-grade object-oriented language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;csharp&quot; label=&quot;C#&quot; description=&quot;Microsoft&#39;s modern .NET language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;php&quot; label=&quot;PHP&quot; description=&quot;Server-side web development language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;ruby&quot; label=&quot;Ruby&quot; description=&quot;Elegant scripting language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;go&quot; label=&quot;Go&quot; description=&quot;Google&#39;s concurrent programming language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;rust&quot; label=&quot;Rust&quot; description=&quot;Systems programming with memory safety&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;swift&quot; label=&quot;Swift&quot; description=&quot;Apple&#39;s modern programming language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;kotlin&quot; label=&quot;Kotlin&quot; description=&quot;Modern JVM language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;dart&quot; label=&quot;Dart&quot; description=&quot;Google&#39;s UI-focused language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;scala&quot; label=&quot;Scala&quot; description=&quot;Scalable JVM language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;r&quot; label=&quot;R&quot; description=&quot;Statistical computing language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;perl&quot; label=&quot;Perl&quot; description=&quot;Powerful text processing language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;lua&quot; label=&quot;Lua&quot; description=&quot;Lightweight scripting language&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;elixir&quot; label=&quot;Elixir&quot; description=&quot;Functional language on Erlang VM&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;clojure&quot; label=&quot;Clojure&quot; description=&quot;Lisp dialect on JVM&quot;&gt;&lt;/e-combobox-option&gt;
+    &lt;e-combobox-option value=&quot;haskell&quot; label=&quot;Haskell&quot; description=&quot;Purely functional programming language&quot;&gt;&lt;/e-combobox-option&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Radio Input Card -->
+                <e-demo-card
+                    title="Radio Input"
+                    description="Select one option from a group"
+                    style="--primary: #f43f5e; --primary-100: #fdf2f8">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /></svg>
+                    <e-input type="radio"
+                        slot="input"
+                        name="contact_method"
+                        label="Preferred Contact Method"
+                        validate-on="change"
+                        description="How would you like us to contact you?"
+                        required>
+                        <e-radio-option value="email" label="Email" description="Receive notifications via email"></e-radio-option>
+                        <e-radio-option selected value="phone" label="Phone" description="Receive notifications via phone call" badge="Recommended"></e-radio-option>
+                        <e-radio-option value="sms" label="SMS" description="Receive notifications via text message"></e-radio-option>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;radio&quot;
+    name=&quot;contact_method&quot;
+    label=&quot;Preferred Contact Method&quot;
+    value=&quot;email&quot;
+    validate-on=&quot;change&quot;
+    description=&quot;How would you like us to contact you?&quot;
+    required&gt;
+    &lt;e-radio-option value=&quot;email&quot;&gt;Email&lt;/e-radio-option&gt;
+    &lt;e-radio-option value=&quot;phone&quot;&gt;Phone&lt;/e-radio-option&gt;
+    &lt;e-radio-option value=&quot;sms&quot;&gt;SMS&lt;/e-radio-option&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+
+                <!-- Checkbox Input Card -->
+                <e-demo-card
+                    title="Checkbox Input"
+                    description="Select multiple options"
+                    style="--primary: #10b981; --primary-100: #f0fdfa">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 11l3 3l8 -8" /><path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" /></svg>
+                    <e-input type="checkbox-group"
+                        slot="input"
+                        name="interests"
+                        label="Interests"
+                        description="Select your interests"
+                        validate-on="change"
+                        required>
+                        <e-checkbox-option value="sports" label="Sports" description="Stay updated on sports news"></e-checkbox-option>
+                        <e-checkbox-option value="music" label="Music" description="Get the latest music updates"></e-checkbox-option>
+                        <e-checkbox-option value="technology" label="Technology" description="Explore new tech trends"></e-checkbox-option>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;checkbox-group&quot;
+    name=&quot;interests&quot;
+    label=&quot;Interests&quot;
+    description=&quot;Select your interests&quot;
+    validate-on=&quot;change&quot;
+    required&gt;
+    &lt;e-checkbox-option value=&quot;sports&quot;&gt;Sports&lt;/e-checkbox-option&gt;
+    &lt;e-checkbox-option value=&quot;music&quot;&gt;Music&lt;/e-checkbox-option&gt;
+    &lt;e-checkbox-option value=&quot;technology&quot;&gt;Technology&lt;/e-checkbox-option&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+
+                <!-- Toggle Input Card -->
+                <e-demo-card
+                    title="Toggle Input"
+                    description="On/Off switch with labels"
+                    style="--primary: #8b5cf6; --primary-100: #faf5ff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-toggle-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 12a8 8 0 0 1 16 0a8 8 0 0 1 -16 0" /><path d="M8 12a4 4 0 0 0 8 0a4 4 0 0 0 -8 0" /></svg>
+                    <e-input type="toggle"
+                        slot="input"
+                        name="notifications"
+                        label="Enable Notifications"
+                        description="Receive push notifications"
+                        on-label="On"
+                        off-label="Off"
+                        validate-on="change"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;toggle&quot;
+    name=&quot;notifications&quot;
+    label=&quot;Enable Notifications&quot;
+    description=&quot;Receive push notifications&quot;
+    on-label=&quot;On&quot;
+    off-label=&quot;Off&quot;
+    validate-on=&quot;change&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Textarea Input Card -->
+                <e-demo-card
+                    title="Textarea Input"
+                    description="Multi-line text input with character count"
+                    style="--primary: #10b981; --primary-100: #ecfdf5">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-align-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6l16 0" /><path d="M4 12l10 0" /><path d="M4 18l14 0" /></svg>
+                    <e-input type="textarea"
+                        slot="input"
+                        name="message"
+                        label="Message"
+                        placeholder="Enter your message here..."
+                        description="Share your thoughts"
+                        max="500"
+                        rows="4"
+                        required
+                        validate-on="input|blur">
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;textarea&quot;
+    name=&quot;message&quot;
+    label=&quot;Message&quot;
+    placeholder=&quot;Enter your message here...&quot;
+    description=&quot;Share your thoughts&quot;
+    max=&quot;500&quot;
+    rows=&quot;4&quot;
+    validate-on=&quot;input|blur&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Date Input Card -->
+                 <e-demo-card
+                     title="Date Input"
+                     description="Pick a date from calendar"
+                     style="--primary: #ea580c; --primary-100: #fff7ed">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-calendar"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M11 15h1" /><path d="M12 15v3" /></svg>
+                    <e-input type="date"
+                        slot="input"
+                        name="birthday"
+                        label="Birth Date"
+                        validate-on="change"
+                        description="Select your birth date">
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;date&quot;
+    name=&quot;birthday&quot;
+    label=&quot;Birth Date&quot;
+    validate-on=&quot;change&quot;
+    description=&quot;Select your birth date&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="Date Range Input"
+                    description="Select start and end dates"
+                    style="--primary: #65a30d; --primary-100: #f7fee7">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-calendar-week"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" /><path d="M16 3v4" /><path d="M8 3v4" /><path d="M4 11h16" /><path d="M7 14h.013" /><path d="M10.01 14h.005" /><path d="M13.01 14h.005" /><path d="M16.015 14h.005" /><path d="M13.015 17h.005" /><path d="M7.01 17h.005" /><path d="M10.01 17h.005" /></svg>
+                    <e-input type="date"
+                        slot="input"
+                        name="check"
+                        label="Date"
+                        validate-on="change"
+                        range
+                        description="Select checkin and checkout date">
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;date&quot;
+    name=&quot;check&quot;
+    label=&quot;Date&quot;
+    validate-on=&quot;change&quot;
+    range
+    description=&quot;Select checkin and checkout date&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="Range Input"
+                    description="Adjust values with slider"
+                    style="--primary: #0ea5e9; --primary-100: #f0f9ff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-adjustments"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M6 4v4" /><path d="M6 12v8" /><path d="M10 16a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M12 4v10" /><path d="M12 18v2" /><path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M18 4v1" /><path d="M18 9v11" /></svg>
+                    <e-input type="range"
+                        slot="input"
+                        name="range"
+                        label="Range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value-type="currency"
+                        validate-on="change"
+                        description="Select a value range">
+                    </e-input>
+
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;range&quot;
+   name=&quot;range&quot;
+   label=&quot;Range&quot;
+   min=&quot;0&quot;
+   max=&quot;100&quot;
+   step=&quot;5&quot;
+   validate-on=&quot;change&quot;
+   range
+   description=&quot;Select a value range&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+
+                <e-demo-card
+                    title="Color Input"
+                    description="Choose colors with picker"
+                    style="--primary: #7c3aed; --primary-100: #f3e8ff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-palette"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25" /><path d="M8.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M16.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>
+                    <e-input type="color"
+                        slot="input"
+                        name="theme"
+                        label="Theme Color"
+                        value="#6366f1"
+                        validate-on="change"
+                        description="Choose your theme color"
+                        >
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;color&quot;
+    name=&quot;theme&quot;
+    label=&quot;Theme Color&quot;
+    value=&quot;#6366f1&quot;
+    validate-on=&quot;change&quot;
+    description=&quot;Choose your theme color&quot;
+    &gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Email with Advanced Validation Card -->
+                <e-demo-card
+                    title="Advanced Email"
+                    description="Enhanced email validation"
+                    style="--primary: #14b8a6; --primary-100: #f0fdfa">
+                    <i slot="icon" class="fas fa-envelope"></i>
+                    <e-input type="email"
+                        slot="input"
+                        name="advanced_email"
+                        label="Email Address"
+                        description="Enter your email address"
+                        placeholder="user@example.com"
+                        validate-on="blur"
+                        required
+                        min="5"
+                        min-message="Minimum length is 5 characters"
+                        max="100"
+                        regex="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                        ends-with="gmail.com"
+                        lowercase="true">
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;email&quot;
+    name=&quot;advanced_email&quot;
+    label=&quot;Email Address&quot;
+    description=&quot;Enter your email address&quot;
+    placeholder=&quot;user@example.com&quot;
+    validate-on=&quot;blur&quot;
+    required
+    min=&quot;5&quot;
+    min-message=&quot;Minimum length is 5 characters&quot;
+    max=&quot;100&quot;
+    regex=&quot;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$&quot;
+    ends-with=&quot;gmail.com&quot;
+    lowercase=&quot;true&quot;&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Website URL Card -->
+                <e-demo-card
+                    title="Website URL"
+                    description="Validate website URLs"
+                    style="--primary: #2563eb; --primary-100: #eff6ff">
+                    <i slot="icon" class="fas fa-globe"></i>
+                    <e-input type="url"
+                        slot="input"
+                        name="website"
+                        label="Website"
+                        placeholder="example.com"
+                        validate-on="blur"
+                        prefix="https://"
+                        prefix-value="https://"
+                        format="url"
+                        format-message="Invalid URL format."
+                        ends-with=".gov"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;url&quot;
+  name=&quot;website&quot;
+  label=&quot;Website&quot;
+  placeholder=&quot;example.com&quot;
+  validate-on=&quot;blur&quot;
+  prefix=&quot;https://&quot;
+  prefix-value=&quot;https://&quot;
+  format=&quot;url&quot;
+  format-message=&quot;Invalid URL format.&quot;
+  ends-with=&quot;.gov&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+
+                <!-- Emoji Input Card -->
+                <e-demo-card
+                    title="Emoji Input"
+                    description="Input emoji characters"
+                    style="--primary: #ec4899; --primary-100: #fdf2f8">
+                    <i slot="icon" class="fas fa-smile"></i>
+                    <e-input type="text"
+                        slot="input"
+                        name="emoji"
+                        label="Emoji"
+                        placeholder="😊"
+                        validate-on="blur"
+                        format="emoji"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+  name=&quot;emoji&quot;
+  label=&quot;Emoji&quot;
+  placeholder=&quot;😊&quot;
+  validate-on=&quot;blur&quot;
+  format=&quot;emoji&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- API Key Input Card -->
+                <e-demo-card
+                    title="API Key"
+                    description="Secure API key entry"
+                    style="--primary: #6b7280; --primary-100: #f9fafb">
+                    <i slot="icon" class="fas fa-key"></i>
+                    <e-input type="text"
+                        slot="input"
+                        name="apiKey"
+                        label="API Key"
+                        placeholder="e1a6a0d3-3024-4158-a42b-8e2bb041f7f6"
+                        validate-on="blur"
+                        format="uuid"
+                        format-message="Invalid API Key"
+                        action-button="copy"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+  name=&quot;apiKey&quot;
+  label=&quot;API Key&quot;
+  placeholder=&quot;e1a6a0d3-3024-4158-a42b-8e2bb041f7f6&quot;
+  validate-on=&quot;blur&quot;
+  format=&quot;uuid&quot;
+  format-message=&quot;Invalid API Key&quot;
+  action-button=&quot;copy&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- IPv4 Input Card -->
+                <e-demo-card
+                    title="IPv4 Address"
+                    description="Validate IPv4 addresses"
+                    style="--primary: #78716c; --primary-100: #fafaf9">
+                    <i slot="icon" class="fas fa-network-wired"></i>
+                    <e-input type="text"
+                        slot="input"
+                        name="ip4"
+                        label="IPv4"
+                        placeholder="192.168.0.1"
+                        validate-on="blur"
+                        format="ipv4"
+                        starts-with="192"
+                        mask="ip"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+  name=&quot;ip4&quot;
+  label=&quot;IPv4&quot;
+  placeholder=&quot;192.168.0.1&quot;
+  validate-on=&quot;blur&quot;
+  format=&quot;ipv4&quot;
+  starts-with=&quot;192&quot;
+  mask=&quot;ip&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- ISO Date Input Card -->
+                <e-demo-card
+                    title="ISO Date"
+                    description="ISO formatted date input"
+                    style="--primary: #eab308; --primary-100: #fefce8">
+                    <i slot="icon" class="fas fa-calendar-alt"></i>
+                    <e-input type="text"
+                        slot="input"
+                        name="iso_date"
+                        label="Date"
+                        placeholder="2022-01-01"
+                        validate-on="blur"
+                        format="iso-date"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+  name=&quot;iso_date&quot;
+  label=&quot;Date&quot;
+  placeholder=&quot;2022-01-01&quot;
+  validate-on=&quot;blur&quot;
+  format=&quot;iso-date&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- ISO DateTime Input Card -->
+                <e-demo-card
+                    title="ISO DateTime"
+                    description="ISO formatted date and time"
+                    style="--primary: #ef4444; --primary-100: #fef2f2">
+                    <i slot="icon" class="fas fa-clock"></i>
+                    <e-input type="text"
+                        slot="input"
+                        name="date_time"
+                        label="Date Time"
+                        placeholder="2022-01-01T12:00:00"
+                        validate-on="blur"
+                        format="iso-datetime"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+  name=&quot;date_time&quot;
+  label=&quot;Date Time&quot;
+  placeholder=&quot;2022-01-01T12:00:00&quot;
+  validate-on=&quot;blur&quot;
+  format=&quot;iso-datetime&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Base64 Input Card -->
+                <e-demo-card
+                    title="Base64"
+                    description="Base64 encoded input"
+                    style="--primary: #737373; --primary-100: #fafafa">
+                    <i slot="icon" class="fas fa-code"></i>
+                    <e-input type="text"
+                        slot="input"
+                        name="base64"
+                        label="Base64"
+                        placeholder="SGVsbG8gd29ybGQ="
+                        validate-on="blur"
+                        format="base64"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+  name=&quot;base64&quot;
+  label=&quot;Base64&quot;
+  placeholder=&quot;SGVsbG8gd29ybGQ=&quot;
+  validate-on=&quot;blur&quot;
+  format=&quot;base64&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Base64URL Input Card -->
+                <e-demo-card
+                    title="Base64URL"
+                    description="Base64URL encoded input"
+                    style="--primary: #71717a; --primary-100: #fafafa">
+                    <i slot="icon" class="fas fa-link"></i>
+                    <e-input type="text"
+                        slot="input"
+                        name="base64url"
+                        label="Base64URL"
+                        placeholder="SGVsbG8gd29ybGQ="
+                        validate-on="blur"
+                        format="base64url"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+  name=&quot;base64url&quot;
+  label=&quot;Base64URL&quot;
+  placeholder=&quot;SGVsbG8gd29ybGQ=&quot;
+  validate-on=&quot;blur&quot;
+  format=&quot;base64url&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Password with Show Button Card -->
+                <e-demo-card
+                    title="Password (Show)"
+                    description="Password with visibility toggle"
+                    style="--primary: #f59e0b; --primary-100: #fffbeb">
+                    <i slot="icon" class="fas fa-eye"></i>
+                    <e-input type="password"
+                        slot="input"
+                        name="show_password"
+                        label="Password"
+                        placeholder="Password"
+                        action-button="show"
+                        validate-on="blur"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;password&quot;
+  name=&quot;show_password&quot;
+  label=&quot;Password&quot;
+  placeholder=&quot;Password&quot;
+  action-button=&quot;show&quot;
+  validate-on=&quot;blur&quot;
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <!-- Number with Validation Card -->
+                <e-demo-card
+                    title="Amount"
+                    description="Currency amount input"
+                    style="--primary: #22c55e; --primary-100: #f0fdf4">
+                    <i slot="icon" class="fas fa-dollar-sign"></i>
+                    <e-input type="number"
+                        slot="input"
+                        name="amount"
+                        label="Amount"
+                        placeholder="100"
+                        validate-on="blur"
+                        format="number"
+                        gte="10"
+                        positive
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;number&quot;
+  name=&quot;amount&quot;
+  label=&quot;Amount&quot;
+  placeholder=&quot;100&quot;
+  validate-on=&quot;blur&quot;
+  format=&quot;number&quot;
+  gte=&quot;10&quot;
+  positive
+  required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+            </div>
+        </div>
+    </section>
+
+        <!-- Advanced Usage Section -->
+        <section class="e-demo__advanced-usage" id="advanced">
+            <div class="e-demo__section-header">
+                <h2 class="e-demo__section-title">Advanced Usage Examples</h2>
+                <p class="e-demo__section-subtitle">Explore powerful validation patterns, custom actions, and complex form scenarios</p>
+            </div>
+
+            <div class="e-demo__cards-grid">
+
+                <e-demo-card
+                    title="Secure Password"
+                    description="Multi-rule password with strength meter"
+                    style="--primary: #f59e0b; --primary-100: #fffbeb">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-shield"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg>
+                    <e-input type="password"
+                        slot="input"
+                        name="secure_password"
+                        label="Create Strong Password"
+                        placeholder="Enter secure password"
+                        validate-on="input|blur"
+                        min="12"
+                        min-message="Password must be at least 12 characters"
+                        regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]"
+                        regex-message="Must include: uppercase, lowercase, number, and special character"
+                        description="Password strength indicator will appear as you type"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;password&quot;
+    name=&quot;secure_password&quot;
+    label=&quot;Create Strong Password&quot;
+    validate-on=&quot;input|blur&quot;
+    min=&quot;12&quot;
+    regex=&quot;^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&amp;])&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="URL with Domain Rules"
+                    description="Conditional validation with domain restrictions"
+                    style="--primary: #6366f1; --primary-100: #eef2ff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-globe"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/></svg>
+                    <e-input type="url"
+                        slot="input"
+                        name="company_url"
+                        label="Company Website"
+                        placeholder="https://yourcompany.com"
+                        validate-on="blur"
+                        url
+                        url-message="Please enter a valid URL"
+                        starts-with="https://"
+                        starts-with-message="Must use HTTPS for security"
+                        regex="^https:\/\/(www\.)?[a-zA-Z0-9-]+\.(com|org|io|dev)\/?$"
+                        regex-message="Only .com, .org, .io, or .dev domains allowed"
+                        description="Enter your company's official website"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;url&quot;
+    name=&quot;company_url&quot;
+    label=&quot;Company Website&quot;
+    validate-on=&quot;blur&quot;
+    url
+    starts-with=&quot;https://&quot;
+    regex=&quot;^https:\/\/(www\.)?[a-zA-Z0-9-]+\.(com|org|io|dev)\/?$&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="Investment Amount"
+                    description="Business logic with number constraints"
+                    style="--primary: #22c55e; --primary-100: #f0fdf4">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-currency-dollar"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 8.5c0 -.83 .67 -1.5 1.5 -1.5h3c.83 0 1.5 .67 1.5 1.5v0c0 .83 -.67 1.5 -1.5 1.5h-3c-.83 0 -1.5 .67 -1.5 1.5v0c0 .83 .67 1.5 1.5 1.5h3c.83 0 1.5 -.67 1.5 -1.5"/><path d="M12 7v10"/></svg>
+                    <e-input type="number"
+                        slot="input"
+                        name="investment"
+                        label="Investment Amount"
+                        prefix="$"
+                        placeholder="1,000"
+                        validate-on="input|change"
+                        gte="1000"
+                        gte-message="Minimum investment is $1,000"
+                        lte="100000"
+                        lte-message="Maximum investment is $100,000"
+                        positive
+                        positive-message="Amount must be positive"
+                        int
+                        int-message="Whole dollar amounts only"
+                        description="Investment range: $1,000 - $100,000"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;number&quot;
+    name=&quot;investment&quot;
+    label=&quot;Investment Amount&quot;
+    prefix=&quot;$&quot;
+    validate-on=&quot;input|change&quot;
+    gte=&quot;1000&quot;
+    lte=&quot;100000&quot;
+    positive
+    int
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="US Business Phone"
+                    description="Country-specific formatting and validation"
+                    style="--primary: #06b6d4; --primary-100: #ecfeff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-phone"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"/></svg>
+                    <e-input type="phone"
+                        slot="input"
+                        name="business_phone"
+                        label="Business Phone Number"
+                        validate-on="blur"
+                        description="Enter your US business phone number with country code"
+                        action-button="copy"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;phone&quot;
+    name=&quot;business_phone&quot;
+    label=&quot;Business Phone Number&quot;
+    validate-on=&quot;blur&quot;
+    action-button=&quot;copy&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="Employee ID"
+                    description="Pattern matching with visual prefix and mask"
+                    style="--primary: #8b5cf6; --primary-100: #faf5ff">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-id"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 5m0 3a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/><path d="M9 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M15 9l2 0"/><path d="M15 13l2 0"/><path d="M9 16a4 4 0 0 1 4 0"/></svg>
+                    <e-input type="text"
+                        slot="input"
+                        name="employee_id"
+                        label="Employee ID"
+                        prefix="EMP-"
+                        placeholder="2024-001"
+                        validate-on="blur"
+                        regex="^\d{4}-\d{3}$"
+                        regex-message="Format: YYYY-NNN (e.g., 2024-001)"
+                        min="8"
+                        max="12"
+                        description="Format: Year followed by 3-digit number"
+                        action-button="copy"
+                        mask="####-###"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+    name=&quot;employee_id&quot;
+    label=&quot;Employee ID&quot;
+    prefix=&quot;EMP-&quot;
+    regex=&quot;^\d{4}-\d{3}$&quot;
+    mask=&quot;####-###&quot;
+    action-button=&quot;copy&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+                <e-demo-card
+                    title="Username Availability"
+                    description="Async validation with simulated API check"
+                    style="--primary: #64748b; --primary-100: #f8fafc">
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-user-search"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h1.5"/><path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M20.2 20.2l1.8 1.8"/></svg>
+                    <e-input type="text"
+                        slot="input"
+                        name="username_check"
+                        label="Choose Username"
+                        placeholder="Enter desired username"
+                        validate-on="blur"
+                        min="3"
+                        min-message="Username must be at least 3 characters"
+                        max="20"
+                        max-message="Username cannot exceed 20 characters"
+                        regex="^[a-zA-Z0-9_]+$"
+                        regex-message="Only letters, numbers, and underscores allowed"
+                        description="We'll check availability when you finish typing"
+                        action-button="clear"
+                        required>
+                    </e-input>
+                    <e-highlight-code slot="code" lang="html">&lt;e-input type=&quot;text&quot;
+    name=&quot;username_check&quot;
+    label=&quot;Choose Username&quot;
+    validate-on=&quot;blur&quot;
+    min=&quot;3&quot;
+    max=&quot;20&quot;
+    regex=&quot;^[a-zA-Z0-9_]+$&quot;
+    action-button=&quot;clear&quot;
+    required&gt;
+&lt;/e-input&gt;</e-highlight-code>
+                </e-demo-card>
+
+            </div>
+
+            <!-- Interactive Demo Section -->
+            <div class="e-demo__interactive-demo">
+                <h3 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; color: var(--dark); text-align: center;">
+                    🚀 Try It Yourself — Complete Registration Form
+                </h3>
+                <p style="color: var(--gray); text-align: center; margin-bottom: 30px;">
+                    Fill out this real-world registration form to see every input type in action
+                </p>
+
+                <form id="advanced-demo-form" class="e-demo__form" style="display: grid; gap: 20px;">
+
+                    <e-input type="text"
+                        name="full_name"
+                        label="Full Name"
+                        placeholder="John Doe"
+                        validate-on="blur"
+                        min="2"
+                        max="100"
+                        required>
+                    </e-input>
+
+                    <e-input type="email"
+                        name="email"
+                        label="Email Address"
+                        placeholder="john@company.com"
+                        validate-on="blur"
+                        email
+                        required>
+                    </e-input>
+
+                    <e-input type="password"
+                        name="password"
+                        label="Password"
+                        placeholder="Create a strong password"
+                        action-button="show"
+                        validate-on="input"
+                        min="8"
+                        description="Use a mix of letters, numbers, and symbols"
+                        required>
+                    </e-input>
+
+                    <e-input type="number"
+                        name="age"
+                        label="Age"
+                        placeholder="25"
+                        validate-on="change"
+                        min="18"
+                        max="120"
+                        required>
+                    </e-input>
+
+                    <e-input type="phone"
+                        name="phone"
+                        label="Phone Number"
+                        placeholder="(555) 123-4567"
+                        validate-on="blur"
+                        description="Include your country code"
+                        required>
+                    </e-input>
+
+                    <e-input type="url"
+                        name="website"
+                        label="Personal Website"
+                        placeholder="https://johndoe.com"
+                        validate-on="blur"
+                        url
+                        description="Optional — your portfolio or blog URL">
+                    </e-input>
+
+                    <e-input type="date"
+                        name="birthdate"
+                        label="Date of Birth"
+                        validate-on="change"
+                        required>
+                    </e-input>
+
+                    <e-input type="select"
+                        name="country"
+                        label="Country of Residence"
+                        placeholder="Select your country"
+                        validate-on="change"
+                        description="Choose your country from the list"
+                        required>
+                        <e-select-option value="us">United States</e-select-option>
+                        <e-select-option value="ca">Canada</e-select-option>
+                        <e-select-option value="uk">United Kingdom</e-select-option>
+                        <e-select-option value="de">Germany</e-select-option>
+                        <e-select-option value="fr">France</e-select-option>
+                        <e-select-option value="jp">Japan</e-select-option>
+                        <e-select-option value="au">Australia</e-select-option>
+                        <e-select-option value="br">Brazil</e-select-option>
+                        <e-select-option value="in">India</e-select-option>
+                    </e-input>
+
+                    <e-input type="combobox"
+                        name="programming_lang"
+                        label="Favorite Programming Language"
+                        placeholder="Search languages..."
+                        validate-on="change"
+                        description="Search and select your favorite language">
+                        <e-combobox-option value="javascript" label="JavaScript" description="Popular scripting language"></e-combobox-option>
+                        <e-combobox-option value="typescript" label="TypeScript" description="Typed JavaScript superset"></e-combobox-option>
+                        <e-combobox-option value="python" label="Python" description="Versatile general-purpose language"></e-combobox-option>
+                        <e-combobox-option value="java" label="Java" description="Enterprise-grade language"></e-combobox-option>
+                        <e-combobox-option value="rust" label="Rust" description="Systems programming with memory safety"></e-combobox-option>
+                        <e-combobox-option value="go" label="Go" description="Google's concurrent language"></e-combobox-option>
+                    </e-input>
+
+                    <e-input type="radio"
+                        name="experience_level"
+                        label="Experience Level"
+                        validate-on="change"
+                        required>
+                        <e-radio-option value="beginner" label="Beginner" description="Less than 1 year"></e-radio-option>
+                        <e-radio-option value="intermediate" label="Intermediate" description="1-5 years"></e-radio-option>
+                        <e-radio-option value="senior" label="Senior" description="5+ years"></e-radio-option>
+                    </e-input>
+
+                    <e-input type="checkbox-group"
+                        name="skills"
+                        label="Skills & Interests"
+                        description="Select all that apply"
+                        validate-on="change"
+                        required>
+                        <e-checkbox-option value="frontend" label="Frontend" description="React, Vue, Angular"></e-checkbox-option>
+                        <e-checkbox-option value="backend" label="Backend" description="Node.js, Python, Go"></e-checkbox-option>
+                        <e-checkbox-option value="devops" label="DevOps" description="Docker, K8s, CI/CD"></e-checkbox-option>
+                        <e-checkbox-option value="mobile" label="Mobile" description="iOS, Android, Flutter"></e-checkbox-option>
+                    </e-input>
+
+                    <e-input type="toggle"
+                        name="newsletter"
+                        label="Subscribe to Newsletter"
+                        description="Receive monthly updates and tips"
+                        on-label="Yes"
+                        off-label="No">
+                    </e-input>
+
+                    <e-input type="textarea"
+                        name="bio"
+                        label="Short Bio"
+                        placeholder="Tell us about yourself..."
+                        description="Share a brief introduction"
+                        max="500"
+                        rows="4">
+                    </e-input>
+
+                    <e-input type="range"
+                        name="satisfaction"
+                        label="Satisfaction Level"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value-type="percentage"
+                        description="How satisfied are you with our platform?">
+                    </e-input>
+
+                    <e-input type="color"
+                        name="theme_color"
+                        label="Preferred Theme Color"
+                        value="#6366f1"
+                        description="Choose your accent color">
+                    </e-input>
+
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                        <button type="button" onclick="validateAdvancedForm()" style="background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.3s ease;">
+                            <i class="fas fa-check-circle"></i> Validate Form
+                        </button>
+                        <button type="button" onclick="resetAdvancedForm()" style="background: var(--light-gray); color: var(--dark); padding: 12px 30px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.3s ease;">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </form>
+
+                <div id="form-status"></div>
+            </div>
+        </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="./dist/index.js"></script>
+    <script src="./demo.js"></script>
+
+</body>
+</html>

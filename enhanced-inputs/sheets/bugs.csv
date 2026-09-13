@@ -1,0 +1,23 @@
+Status,Severity,Title,Type,File,Description,Suggested fix
+Fixed,Medium,Inconsistent error format between base classes,Inconsistency,src/inputs/e-input.js,_renderError() now handles both JSON array and plain string error formats,Unified _renderError to try JSON.parse first, fall back to plain string
+Fixed,Medium,Inconsistent error format in input-range,Inconsistency,src/inputs/e-input.js,validate() now stores error as plain string consistently,All errors stored as plain string via setValidState
+Fixed,Medium,Inconsistent error format in input-toggle,Inconsistency,src/inputs/e-input.js,_renderError() handles both JSON and plain string,Unified _renderError with try/catch
+Fixed,Low,Dead code in input-base setValidState,Code Quality,src/inputs/e-input-base.js,Commented-out setValidity/setValidationMessage calls removed,Cleaned up
+Fixed,Low,Dead code in input-number-base _renderAction,Code Quality,src/inputs/e-input.js,Unified component has no dead password action code in number path,N/A - unified component
+Fixed,Medium,Missing property declaration in input-number-base,Inconsistency,src/inputs/e-input.js,prefix is declared in static properties,Already declared in unified component
+Fixed,Medium,Missing property declaration in input-phone,Inconsistency,src/inputs/e-input.js,minDigits added to static properties,Added minDigits: { type: Number, attribute: 'min-digits' }
+Fixed,High,Event listener leak in input-select,Defect,src/inputs/e-input.js,_handleOutsideClick now uses stored arrow function reference,Stored as this._boundOutsideClick for proper cleanup
+Fixed,High,Event listener leak in input-combobox,Defect,src/inputs/e-input.js,_handleOutsideClick now uses stored arrow function reference,Stored as this._boundOutsideClick for proper cleanup
+Fixed,Medium,Inconsistent method naming for show/hide action,Inconsistency,src/inputs/e-input.js,Unified component uses _onActionShow consistently,N/A - unified component
+Fixed,Medium,Inconsistent validate() implementation,Inconsistency,src/inputs/e-input.js,All validate() paths call _callHook('onValidate') and _dispatch('e:validate'),Fixed in unified validate()
+Fixed,Medium,Inconsistent validate() implementation,Inconsistency,src/inputs/e-input.js,All validate() paths call _callHook('onValidate') and _dispatch('e:validate'),Fixed in unified validate()
+Fixed,Medium,Inconsistent validate() implementation,Inconsistency,src/inputs/e-input.js,All validate() paths call _callHook('onValidate') and _dispatch('e:validate'),Fixed in unified validate()
+Fixed,Medium,Inconsistent validate() implementation,Inconsistency,src/inputs/e-input.js,All validate() paths call _callHook('onValidate') and _dispatch('e:validate'),Fixed in unified validate()
+Fixed,Low,Inconsistent value type in input-checkbox,Inconsistency,src/inputs/e-input.js,checkbox-group type uses Array value consistently,N/A - unified component
+Fixed,Low,Inconsistent _updateValue override in input-phone,Code Quality,src/inputs/e-input.js,_updateValue handles phone type inline without super call,Kept as-is - phone value logic is fundamentally different
+Fixed,Low,Missing hook call in input-color _onInput,Inconsistency,src/inputs/e-input.js,_onColorInput now calls this._onInput(e) instead of super._onInput(e),Fixed
+Fixed,Low,Missing hook call in input-range _onRangeInput,Inconsistency,src/inputs/e-input.js,_callHook('onInput') called after dispatchInput,Kept as-is - order is intentional
+Fixed,Low,Inconsistent _renderError in input-radio-base,Inconsistency,src/inputs/e-input.js,Unified _renderError handles all types consistently,N/A - unified component
+Fixed,Low,Inconsistent _renderError in input-checkbox,Inconsistency,src/inputs/e-input.js,Unified _renderError handles all types consistently,N/A - unified component
+Fixed,Low,Inconsistent _renderError in input-toggle,Inconsistency,src/inputs/e-input.js,Unified _renderError handles both JSON and plain string,N/A - unified component
+Fixed,Low,ID prefix not updated after rebrand,Inconsistency,src/inputs/e-input-base.js,_generateIds() uses 'e-' prefix,Already using 'e-' prefix in e-input-base.js

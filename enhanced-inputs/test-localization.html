@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localization Test</title>
+    <script type="module" src="src/inputs/e-input-range.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .test-case {
+            margin-bottom: 15px;
+        }
+        e-input {
+            display: block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Localization Test for Enhanced Inputs Range</h1>
+    
+    <div class="test-section">
+        <h2>Number Formatting Tests</h2>
+        
+        <div class="test-case">
+            <h3>Default Number (en-US)</h3>
+            <e-input 
+                value-type="number"
+                locale="en-US"
+                min="0"
+                max="10000"
+                value="1234.56">
+            </e-input>
+        </div>
+
+        <div class="test-case">
+            <h3>German Number Formatting</h3>
+            <e-input 
+                value-type="number"
+                locale="de-DE"
+                number-format-options='{"minimumFractionDigits": 2, "maximumFractionDigits": 2}'
+                min="0"
+                max="10000"
+                value="1234.56">
+            </e-input>
+        </div>
+
+        <div class="test-case">
+            <h3>French Number Formatting</h3>
+            <e-input 
+                value-type="number"
+                locale="fr-FR"
+                number-format-options='{"style": "decimal", "minimumFractionDigits": 0, "maximumFractionDigits": 0}'
+                min="0"
+                max="10000"
+                value="1234">
+            </e-input>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Currency Formatting Tests</h2>
+        
+        <div class="test-case">
+            <h3>US Dollars</h3>
+            <e-input 
+                value-type="currency"
+                locale="en-US"
+                currency-code="USD"
+                currency-display="symbol"
+                min="0"
+                max="1000"
+                value="250">
+            </e-input>
+        </div>
+
+        <div class="test-case">
+            <h3>Euros</h3>
+            <e-input 
+                value-type="currency"
+                locale="de-DE"
+                currency-code="EUR"
+                currency-display="symbol"
+                min="0"
+                max="1000"
+                value="250">
+            </e-input>
+        </div>
+
+        <div class="test-case">
+            <h3>Japanese Yen</h3>
+            <e-input 
+                value-type="currency"
+                locale="ja-JP"
+                currency-code="JPY"
+                currency-display="symbol"
+                min="0"
+                max="10000"
+                value="1250">
+            </e-input>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Percentage Formatting Tests</h2>
+        
+        <div class="test-case">
+            <h3>US Percentage</h3>
+            <e-input 
+                value-type="percentage"
+                locale="en-US"
+                min="0"
+                max="100"
+                value="45.67">
+            </e-input>
+        </div>
+
+        <div class="test-case">
+            <h3>German Percentage</h3>
+            <e-input 
+                value-type="percentage"
+                locale="de-DE"
+                min="0"
+                max="100"
+                value="45.67">
+            </e-input>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>DateTime Formatting Tests</h2>
+        
+        <div class="test-case">
+            <h3>US DateTime</h3>
+            <e-input 
+                value-type="datetime"
+                locale="en-US"
+                date-time-format-options='{"year": "numeric", "month": "long", "day": "numeric"}'
+                min="0"
+                max="1000000000"
+                value="1712345678901">
+            </e-input>
+        </div>
+
+        <div class="test-case">
+            <h3>German DateTime</h3>
+            <e-input 
+                value-type="datetime"
+                locale="de-DE"
+                date-time-format-options='{"year": "numeric", "month": "long", "day": "numeric"}'
+                min="0"
+                max="1000000000"
+                value="1712345678901">
+            </e-input>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Relative Time Formatting Tests</h2>
+        
+        <div class="test-case">
+            <h3>Relative Time (Days)</h3>
+            <e-input 
+                value-type="relativetime"
+                locale="en-US"
+                relative-time-format-options='{"numeric": "auto"}'
+                min="-30"
+                max="30"
+                value="5">
+            </e-input>
+        </div>
+    </div>
+
+    <script>
+        // Test that the component is properly registered
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Testing localization implementation...');
+            
+            // Test that all e-input elements are properly defined
+            const rangeInputs = document.querySelectorAll('e-input');
+            console.log(`Found ${rangeInputs.length} e-input elements`);
+            
+            rangeInputs.forEach((element, index) => {
+                console.log(`Element ${index}:`, element);
+                console.log(`Locale: ${element.locale}`);
+                console.log(`Value type: ${element.valueType}`);
+            });
+        });
+    </script>
+</body>
+</html>
