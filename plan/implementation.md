@@ -18,11 +18,11 @@ This plan is grounded in the same stack that ships **Compressy** (`C:/projects/c
 |---|---|---|
 | `design/*.html` | 6 pages, complete | Visual + behavioural source of truth. Standalone, inline `<style>`, inline demo `<script>`, hardcoded demo data, `localStorage` |
 | `plan/stack.md` | written | Mandated stack (Deno Desktop + Deno, Alpine + Mustache; website/API on Workers + Hono + D1) |
-| `desktop-app/` | **empty** | Target for §5 |
-| `website/` | **empty** | Target for §12 |
-| `api/` | **empty** | Target for §13 |
+| `desktop-app/` | **empty** | Target for §6 |
+| `website/` | **empty** | Target for §13 |
+| `api/` | **empty** | Target for §14 |
 | `design/icons/` | 3 SVGs | `powershell.svg`, `bash.svg`, `ubuntu.svg` — the shell picker assets |
-| `plan/known-bugs.csv` | empty header | Running bug list (§15 seeds it) |
+| `plan/known-bugs.csv` | empty header | Running bug list (§16 seeds it) |
 
 ### 1.1 The design pages
 
@@ -108,7 +108,7 @@ interface SavedCommand {
   desc: string;
   tag: string;
   cwd: string;       // Windows abs path; UI fallback "C:\\projects\\app"
-  lines: string[];   // demo transcript — DROPPED in the real app (§7.4)
+  lines: string[];   // demo transcript — DROPPED in the real app (§8.4)
   askMode: AskMode;  // default "every"
   custom?: true;
   fromHub?: string;  // hub id provenance; preserved across edits
@@ -149,15 +149,15 @@ These are real, verified, and each has a one-line fix. Do not reproduce them.
 
 | Defect | Evidence | Fix |
 |---|---|---|
-| Built-in ids don't intersect between pages — every built-in card link lands on the fallback showcase | `index.html` seeds `n1..n7`; `command.html` seeds `c1..c9` + `showcase`; intersection empty | One seed module (§6.3) |
+| Built-in ids don't intersect between pages — every built-in card link lands on the fallback showcase | `index.html` seeds `n1..n7`; `command.html` seeds `c1..c9` + `showcase`; intersection empty | One seed module (§7.3) |
 | `command.html` never unhides `#missing`; unknown ids silently render the showcase | `command.html:396` sets `miss.hidden=true` unconditionally | Real "command not found" state (§8.2) |
-| `rangeSpec` ignores declared bounds whenever params contain `=default` — every demo range | `rangeSpec("18-28=23")` → `{min:0,max:100}` | Strip the `=default` before the bounds regex (§7.2) |
-| Two preview functions disagree for the same token (`s3cr3t` vs `••••••`, `input.mp4` vs `path/to/file`) | `ccExampleFor` (`index:196`) vs `exampleFor` (`command:161`) | One `exampleFor` (§7.2) |
+| `rangeSpec` ignores declared bounds whenever params contain `=default` — every demo range | `rangeSpec("18-28=23")` → `{min:0,max:100}` | Strip the `=default` before the bounds regex (§8.2) |
+| Two preview functions disagree for the same token (`s3cr3t` vs `••••••`, `input.mp4` vs `path/to/file`) | `ccExampleFor` (`index:196`) vs `exampleFor` (`command:161`) | One `exampleFor` (§8.2) |
 | `#count` placeholder says `5 saved` but 7 defaults ship | `index.html:154` vs `:169-177` | Computed only |
 | Every `.tags` second span renders literal `local`, built-ins included | `index.html:216` | Derived from `custom`/`fromHub` |
-| `cc-published` badge can never light up | `setPub` defined at `command.html:220`, never called | Real publish status (§11.4) |
+| `cc-published` badge can never light up | `setPub` defined at `command.html:220`, never called | Real publish status (§8.7) |
 | `saveCustom`, `parseVars` (index), `#missing`, `.cmd[data-id]` are dead | single-occurrence symbols | Deleted in the port |
-| `hub.html` registry maps any unknown `input.*` to `text` | `hub.html:148` permissive fallback | Use the single registry (§7.2) |
+| `hub.html` registry maps any unknown `input.*` to `text` | `hub.html:148` permissive fallback | Use the single registry (§8.2) |
 
 ---
 
@@ -206,7 +206,7 @@ These are real, verified, and each has a one-line fix. Do not reproduce them.
 - No Electron / Tauri / WebView2 — `deno desktop` with `backend: cef` only
 - No React/Vue/Svelte; Alpine + Mustache
 - No bundler and no build step for the frontend — plain static files + `vendor/`
-- No HTTP API inside the desktop app; bindings are the API (§7.1)
+- No HTTP API inside the desktop app; bindings are the API (§8.1)
 
 ---
 
@@ -217,23 +217,302 @@ Mirrors `plan/stack.md` and the pinned set proven in Compressy.
 | Component | Choice | Notes |
 |---|---|---|
 | Runtime | Deno **2.9.6** (installed) | `deno desktop`, node compat |
-| Desktop shell | `deno desktop --backend cef` | **Not** `webview` — blank window on Win11 (§15, bug 1) |
-| Window | `Deno.BrowserWindow` + `win.bind()` + `Deno.serve` | §7.1 |
+| Desktop shell | `deno desktop --backend cef` | **Not** `webview` — blank window on Win11 (§16, bug 1) |
+| Window | `Deno.BrowserWindow` + `win.bind()` + `Deno.serve` | §8.1 |
 | Validation | `npm:zod@^3.25` (lock `3.25.76`) | every binding arg |
 | Paths | `jsr:@std/path@^1` (lock `1.1.6`) | `join`, `resolve`, `dirname` |
-| Tests | `jsr:@std/assert@^1` (lock `1.0.19`) + `deno test` | §14 |
+| Tests | `jsr:@std/assert@^1` (lock `1.0.19`) + `deno test` | §15 |
 | Frontend state | Alpine.js 3.x, vendored into `static/vendor/` | no CDN |
 | Frontend templates | Mustache 4.2.0 for the website; app uses `templates.js` compiled strings (Compressy pattern) | |
-| Editor | CodeMirror 6 — `state`, `view`, `autocomplete`, `commands`, `language`, `legacy-modes` | versions from `design/add.html:7` (§7.5) |
+| **Input rendering** | **`enhanced-inputs`** — Lit 3 web components, sibling library in `enhanced-inputs/` | **Every** input in the app renders through this (§4) |
 | Process spawn | `node:child_process` `spawn`/`spawnSync` with `windowsHide: true` | `Deno.Command` lacks the flag in 2.9.5/2.9.6 (`denoland/deno#34627`) |
-| Website | Cloudflare Workers + Hono 4.13.3 + Mustache + linkedom 0.18.13 + D1, Bun | §12 |
-| Packaging | `deno desktop --compress xz` → MSI + Inno Setup installer | §10 |
+| Website | Cloudflare Workers + Hono 4.13.3 + Mustache + linkedom 0.18.13 + D1, Bun | §13 |
+| Packaging | `deno desktop --compress xz` → MSI + Inno Setup installer | §11 |
 
 All frontend libraries are downloaded once into `static/vendor/` during implementation and served locally. No CDN at runtime.
 
 ---
 
-## 4. Architecture
+## 4. Input rendering — `enhanced-inputs/`
+
+The app has **no hand-written `<input>` markup**. Every control — the five settings toggles, the variable panel, the hub search box, the publish form, the Learn filters — renders through the sibling library in `enhanced-inputs/`. The `{{input.*}}` grammar is what *describes* a variable; this library is what *renders* it.
+
+This section is a verified contract, not a readme summary. Every claim below was read out of `src/` and cross-checked against `design/` usage. Where the library's own docs disagree with its code, this section follows the code and flags the divergence.
+
+### 4.1 What the library is
+
+| Fact | Value |
+|---|---|
+| Package | `enhanced-inputs@0.2.0`, MIT, author Khizar Hasan, repo `redoxbird/enhanced-inputs` |
+| Runtime | **Lit 3.3.1** web components; `LitElement` + `html` |
+| Build | `node build.mjs` → esbuild, **IIFE**, `globalName: 'EnhancedInputs'`, target `es2017`, minified |
+| Output | `dist/index.js` (276 KB) + `dist/inputs/*.js` (18 files, 1.3 MB total) + `dist/themes/*.css` (6 themes) |
+| Deps | `lit`, `maska` 3.2.0, `@leeoniya/ufuzzy` 1.0.19, `@simonwep/pickr` 1.9.1, `range-slider-element` 2.1.1; peer `zod` ^4 |
+| Node | `>=18`; lockfile v3, 672 packages |
+
+**Two component surfaces exist, and only one should be used.** The primary API is the unified `<e-input type="…">` (one 1310-line class, `src/inputs/e-input.js`), which is what all six demos, the readme, and the shipped CSS target. The secondary surface is 16 standalone `input-*` tags (`<input-text>`, `<input-select>`, …) that are registered and exported but referenced nowhere in the docs, used nowhere in the demos, and styled by none of the six themes.
+
+> **Decision: use `<e-input type="…">` exclusively.** The standalone tags emit a **different event prefix** (`input:error`, `input:validate` instead of `e:error`, `e:validate`), which is the single highest-impact open defect in the library's own audit sheet. Mixing the two surfaces breaks any listener written for the other. Do not use, document, or bundle the `input-*` tags.
+
+### 4.2 The `type` attribute is NOT the 135-token registry
+
+This is the single most important integration fact. The `{{input.*}}` grammar has **135 named tokens**; `<e-input type>` accepts **16 values**. They are different axes and must not be conflated.
+
+`render()` dispatches on `type` (`e-input.js:405-422`):
+
+| `type` | Renderer | Notes |
+|---|---|---|
+| `text` (default) | `_renderText()` | also the fallthrough for `email`, `url`, `search` |
+| `password` | `_renderPassword()` | show/hide action + strength meter |
+| `number` | `_renderNumber()` | `−`/`+` stepper buttons |
+| `phone` | `_renderPhone()` | country `<select>` + `type="tel"`, masked |
+| `date` | `_renderSingle()` or `_renderDateRange()` when `range` | defaults `action-button="date-picker"` |
+| `color` | `_renderColor()` | Pickr swatch + hex text field |
+| `range` | `_renderRange()` | `<range-slider>`, dual-thumb when `range` |
+| `select` | `_renderSelect()` | readonly input + listbox; **not** searchable |
+| `combobox` | `_renderCombobox()` | uFuzzy search, chips, virtual scrolling |
+| `radio` | `_renderRadio()` | `<fieldset role="radiogroup">` |
+| `checkbox-group` | `_renderCheckboxGroup()` | `<fieldset>` of checkboxes, array value |
+| `toggle` | `_renderToggle()` | switch; `on-label`/`off-label` |
+| `checkbox` | `_renderCheckbox()` | single boolean |
+| `textarea` | `_renderTextarea()` | rows/cols + char counter |
+
+The real `<input>`'s `type` comes from a separate map, `_getInputType()` (`e-input.js:310-316`): `phone→tel`, `color|range|select|combobox|textarea|radio→text`, `toggle→checkbox`, everything else passed through. Note `textarea` and `checkbox-group` are **missing from that map** — a latent inconsistency, harmless today because both have dedicated renderers.
+
+### 4.3 Mapping the 135 grammar tokens onto the library
+
+The registry's ten widgets collapse cleanly onto the library's types. The mapping is a fixed table, not a heuristic:
+
+| Registry widget | Count | `<e-input type>` | Extra attributes |
+|---|---|---|---|
+| `text` | 53 | `text` | `format` for the 18 structured subtypes (below) |
+| `select` | 30 | `select` | one `<e-select-option>` per option |
+| `file` | 13 | `text` | `action-button="browse"` + a Deno-side picker (§4.7) |
+| `number` | 12 | `number` | `min`/`max`/`step` from token defaults |
+| `range` | 9 | `range` | `min`/`max`/`step` from `rangeSpec()`; `range` when dual-thumb |
+| `checkbox` | 7 | `checkbox` (or `toggle`) | `=off` default → unchecked |
+| `color` | 4 | `color` | `swatches` for the design's palette |
+| `password` | 4 | `password` | `strength-meter`, `action-button="show"` |
+| `date` | 2 | `date` | native input always works; picker optional |
+| `radio` | 1 | `radio` | one `<e-radio-option>` per option |
+
+**The 53 `text` tokens are not 53 types.** They map to one element with a `format` attribute, which already covers the structured ones (`e-input.js:1091-1110`):
+
+```
+email · url · uuid · cuid · cuid2 · ulid · iso-date · iso-datetime
+emoji · base64 · hex · jwt · nanoid · ipv4 · ipv6
+```
+
+Plus the independent boolean/string refinements on the same element: `email`, `url`, `regex`, `starts-with`, `ends-with`, `includes`, `lowercase`, `uppercase`, `min`, `max`.
+
+This is a **better** decomposition than the registry's: `input.email`, `input.url` and `input.search` are distinct token names but one control with different `format`/`type` values. Build a `widgetToEInput(token)` table in `registry.ts` (§8.2) so the mapping lives with the token table rather than in render code.
+
+### 4.4 Revealing a value — the parity fix
+
+`_getInputType()` maps `password→'password'`, which masks the value. But the grammar's `password` widget covers `{{input.password}}`, `{{input.token}}`, `{{input.apikey}}`, `{{input.secret}}` — API keys and deploy tokens, which the user must be able to **read back** to verify they pasted the right thing. A masked-by-default token field is a usability defect inherited from the library.
+
+Use `action-button="show"` with `strength-meter="false"` for `apikey`/`token`/`secret` (reveal on demand, no strength scoring), and the full `password` behaviour — meter on — only for the literal `{{input.password}}`. The strength meter's `weak|medium|strong` output is meaningless for a 64-char base64 key.
+
+### 4.5 The colour picker and the design's palette
+
+`type="color"` bundles **Pickr** statically (it is inlined into `dist/index.js`, not lazily imported), configured `theme: 'monolith'`, `useAsButton: true`, inside a `.i-picker` container (`e-input.js:349-355`).
+
+Two consequences:
+
+1. **Bundle cost.** Pickr, zod, maska and uFuzzy are all statically imported and inlined with no `external` config in `build.mjs`. Every artifact that touches any of them carries all of them — the 18 per-input files total **1.3 MB**. For a desktop app shipped inside a Deno binary, ship `dist/index.js` once rather than 18 files, and let Alpine load it from `static/vendor/`.
+2. **Swatches.** Pickr's default palette is 15 generic colours. Pass `swatches` from the design's tokens (`--accent` `#0969da`, `--success` `#1a7f37`, `--danger` `#cf222e`, `--warn` `#9a6700`, plus the `#1677ff` the demo uses) so the picker offers the app's actual palette.
+
+The `theme-mode` attribute exists but is never read (`e-input.js:76`) — dead. Colour correctness comes from the theme CSS, not the attribute.
+
+### 4.6 Events: subscribe to `e:*`, never `input:*`
+
+`_dispatch()` (`e-input-base.js:75-78`) emits `CustomEvent` with `{bubbles: true, composed: true, detail: { value, valid, error }}`.
+
+| Event | Fired when | `detail` extras |
+|---|---|---|
+| `e:init` | element connected | — |
+| `e:input` | value changed by the user | — |
+| `e:change` | commit / blur / reset | — |
+| `e:validate` | after every validation run | `{ valid, error }` |
+| `e:success` | validation passed | — |
+| `e:error` | validation failed | `{ error }` |
+
+Plus **hook events** `hook:onInit`, `hook:onBeforeRender`, `hook:onAfterRender`, `hook:onInput`, `hook:onChange`, `hook:onBlur`, `hook:onValidate`, `hook:onSuccess`, `hook:onError`. These do **not** bubble and are **not** composed — a listener must be attached to the element itself, not delegated at the document. Since the app injects these elements dynamically, bind hooks per element after insertion; use the bubbling `e:*` events for the Alpine-level delegation.
+
+### 4.7 Files: the picker is the host's job
+
+The library has no file input. Render `type="text"` with `action-button="browse"` and handle the click in the app:
+
+```js
+// static/app.js — after the element upgrades
+el.addEventListener('e:action', (e) => {
+  if (e.detail.action !== 'browse') return;
+  const picked = await bindings.pickFile(widgetHint);   // §7.4
+  if (picked) el.value = picked;
+});
+```
+
+`bindings.pickFile` / `bindings.pickFolder` already exist in the contract (§7.4) and use the Compressy PowerShell-dialog pattern. Do **not** attempt `showDirectoryPicker()` or `<input type="file" webkitdirectory>` as `design/add.html:350-371` does — the CEF webview cannot reveal absolute paths, which is why Compressy shells out to `FolderBrowserDialog`.
+
+### 4.8 Option supply: slotted elements, never a JSON attribute
+
+`_collectOptions()` (`e-input.js:219-240`) reads **child custom elements** chosen by `type`, normalises each to `{value, text, label, description, badge, disabled, selected}`, then hides them (`display: none` — they are data-only):
+
+| `type` | Option tag |
+|---|---|
+| `select` | `<e-select-option>` |
+| `combobox` | `<e-combobox-option>` |
+| `radio` | `<e-radio-option>` |
+| `checkbox-group` | `<e-checkbox-option>` |
+
+There is **no `options` JSON attribute**. The options are children, so the app must build real DOM rather than a string template:
+
+```js
+const sel = document.createElement('e-input');
+sel.type = 'select';
+sel.name = token.iid;
+for (const opt of token.optionsArr) {
+  const o = document.createElement('e-select-option');
+  o.value = opt;
+  const meta = token.options?.find(m => m.value === opt);   // author metadata (§7.2)
+  o.textContent = meta?.label || opt;
+  if (meta?.description) o.setAttribute('description', meta.description);
+  sel.appendChild(o);
+}
+```
+
+This is also where the grammar's per-option author metadata (the `options: [{value,label,description}]` array in `VarMetaSchema`) becomes real: `e-radio-option` and `e-checkbox-option` render a `badge` and a `description`, and `e-select-option` renders only the label — matching the design's `SHOWCASE` metadata where every option carries a label and description.
+
+`multiple` is a real property; `select` and `combobox` both honour it, but only `combobox` renders chips (`_renderChips()`), and only `combobox` is searchable. For a `select` token the app should prefer `combobox` when `optionsArr.length > 8` — the design's `input.timezone` (4 options), `input.currency` (4) and `input.country` (7) are all at or under that line, but a hub command can declare any list.
+
+### 4.9 Validation: one validator or two — pick one
+
+The library validates with **zod 4** (`z.string()`, `z.coerce.number()`, `z.iso.date()`, `format` switch), and reports through `setValidState()` → `e:error` + `internals.setValidity({customError: true}, msg)`.
+
+Two things to know:
+
+- **`this.error` is a JSON string, not a message.** Leaf modules stash `JSON.stringify([{ message }])` and their renderers `JSON.parse` it. Only `e-input.js:443-446` parses defensively; the standalone bases do not. Read `detail.error` from the event (which carries the raw value) rather than the property, or parse defensively.
+- **There is no standard `ValidityState`.** `checkValidity()`, `reportValidity()`, `setCustomValidity()`, `willValidate`, `validationMessage` and a `validity` getter **do not exist anywhere in the library** — grep-confirmed. Form participation works (`static formAssociated`, `attachInternals`, `setFormValue`, `formResetCallback`, `formStateRestoreCallback`) but validity is exposed only as the `valid`/`error` properties and the `e:validate`/`e:error` events.
+
+Since the app's own grammar module validates too (required/non-empty, numeric finiteness — §8.2), **do not run both validators on the same field.** Decision: the library validates presentation-level constraints it already understands (`required`, `min`, `max`, `step`, `format`, `regex`, `min`/`max` length); the app's pre-run gate in `runner.ts` (§8.4) remains the authority on whether a command may execute. Wire the library's `e:validate` to gate the Run button; keep the unresolved-token guard as the last line of defence.
+
+### 4.10 Styling: `.i-*` classes and `--input-*` tokens
+
+**There is no component-level styling.** No `static styles`, no `adoptedStyleSheets`, no `css\`` template, no `<style>` injection — grep-confirmed zero matches across `src/`. `createRenderRoot()` returns **light DOM by default** and only attaches a shadow root when the `shadow` attribute is set (`e-input-base.js:38-40`).
+
+Styling is 100% external CSS, shipped as six hand-authored themes in `dist/themes/`. The contract is:
+
+- **CSS custom properties**, prefixed `--input-*`, plus a bare `--primary` as the accent. ~49 core properties: `--input-bg`, `--input-border`, `--input-border-focus`, `--input-text`, `--input-label-color`, `--input-font-family`, `--input-height`, `--input-padding-x/y`, `--input-radius`, `--input-gap`, `--input-shadow*`, `--input-error-*`, `--input-disabled-*`, `--track-size`, `--thumb-size`, `--toggle-*`.
+- **`.i-*` class names** — ~95 tokens, the real styling hook (`.i-field`, `.i-wrapper`, `.i-label`, `.i-input`, `.i-description`, `.i-error`, `.i-error-visible`, `.i-dropdown`, `.i-option`, `.i-chips`, `.i-toggle-track`, `.i-strength-meter`, …).
+
+Three hazards:
+
+1. **The readme documents `.e-*` class names that do not exist.** `.e-wrapper`, `.e-label`, `.e-input`, `.e-description`, `.e-error`, `.e-error-visible`, `.e-input-error` — zero matches in `src/`, in the themes, or in `demo.css`. The `e-` names come from generated element **IDs** in `_generateIds()`. Style against `.i-*`.
+2. **Never use the `shadow` attribute.** With no registered shadow styles and no `part=`/`::part`/slot hooks anywhere in the library, `<e-input shadow>` renders **completely unstyled and unreachable** by the theme CSS.
+3. **Theme coverage is uneven and token sets differ.** Only `default.css` styles `i-toggle`, `i-chip` and `i-strength-meter`; `material.css` has just 11 `.i-*` classes and lacks the `i-icon` family, dropdown, options and group styles. `classic.css` and `carbon.css` never define `--primary`. **Use `default.css` and adapt it to the design's tokens** rather than switching themes.
+
+**Chosen approach: write one app theme.** Take `dist/themes/default.css`, remap its `:root` block onto the design's tokens (the `design/index.html` `:root`, §9), and vendor the result as `static/vendor/enhanced-inputs.css`. The design's palette is GitHub-flavoured; the library's default theme is Tailwind-flavoured. Remapping the tokens is a smaller and more honest change than restyling 72 `.i-*` selectors, and it keeps the library's own layout rules intact.
+
+```css
+/* static/vendor/enhanced-inputs.css — token remap layer, loaded after the theme */
+:root {
+  --input-border:        var(--border);
+  --input-border-focus:  var(--accent);
+  --input-border-error:  var(--danger);
+  --input-bg:            #fff;
+  --input-text:          var(--fg);
+  --input-label-color:   var(--fg);
+  --input-placeholder:   var(--muted);
+  --primary:             var(--accent);
+  --input-radius:        var(--radius);
+  --input-font-family:   var(--font-body);
+  --input-font-size:     14px;
+  --input-height:        36px;
+  --input-padding-x:     12px;
+  --input-padding-y:     6px;
+  --input-shadow-focus:  var(--focus-ring);
+}
+/* masked/code-ish values use the design's mono face */
+.i-input[data-token-widget="password"], .i-input[data-token-widget="file"] { font-family: var(--font-mono); font-size: 12px; }
+```
+
+### 4.11 What the library does NOT do — host responsibilities
+
+Verified by exhaustive read; these are assumed present but are **not** provided:
+
+| Need | Reality | Who provides it |
+|---|---|---|
+| Range slider | `<range-slider>` from `range-slider-element` — declared as a dependency but **never imported in `src/`** | Host. For `type="range"` this is **mandatory**. Vendor it and register the tag before any range input mounts |
+| Date picker | `<wc-datepicker>` — **not in `package.json` at all**; demos load it from a CDN | Optional. The native `<input type="date">` works without it (`_getInputType()` maps `date→date`); ship without the picker |
+| File picker | — | Host (§4.7) |
+| Icons | Inline Tabler SVGs inside `e-input.js` | Library (fine) |
+| `unstyled` | Declared in two modules, initialised, **never read** | Dead — ignore it |
+| `theme-mode` | Declared, never read | Dead — ignore it |
+
+> **Range is the one hard external dependency.** If `<range-slider>` is not registered, every `type="range"` field (9 of the 135 tokens, including `input.crf`, `input.volume`, `input.percent`) renders an inert unknown element. The app must vendor `range-slider-element@2.1.1` and load it in every page that can render a variable panel — or accept that ranges degrade to a plain number field, which is the safer default for v1. **Decision: vendor it.** The design's `.rrange` output (a slider plus a numeric readout) is a real affordance the number field does not replace.
+
+### 4.12 Integration into the app
+
+```
+desktop-app/static/vendor/
+  e-input.js              # built IIFE from enhanced-inputs/dist/index.js
+  enhanced-inputs.css     # default.css + the token remap layer (§4.10)
+  range-slider.js         # range-slider-element, registered before mount
+  themes/                 # (not copied — one app theme instead)
+```
+
+`build:ei` task: `node enhanced-inputs/build.mjs` then copy `dist/index.js` + `dist/themes/default.css` into `static/vendor/`. Because `dist/` is gitignored at the repo root, **the built artifact must be produced by the desktop app's build chain, not committed**. Add the copy to `build:dir`/`build:msi` prerequisites so a fresh clone cannot build a binary with a missing input layer.
+
+Load order matters — the IIFE both defines the classes and registers the tags:
+
+```html
+<link rel="stylesheet" href="/vendor/enhanced-inputs.css">
+<script defer src="/vendor/e-input.js"></script>   <!-- registers <e-input> + option tags -->
+<script defer src="/vendor/range-slider.js"></script>
+<script defer src="/templates.js"></script>
+<script defer src="/grammar.js"></script>
+<script defer src="/app.js"></script>
+<script defer src="/vendor/alpine.min.js"></script>
+```
+
+**Consumers must not import a class.** `src/index.js` uses `export *`, which cannot forward `export default`, so only five named option classes are importable and `EInput` is **not** exported at all. `dist/index.js` is an IIFE with zero `export` statements despite `package.json` declaring `"module"` and an ESM `exports` entry. Side-effect registration is the **only** consumption mode that works — and it is the one this app needs.
+
+### 4.13 Grammar-aware rendering
+
+The bridge between §1.2 and this library is one function. `parseVarInstances()` yields a `Token`; a `renderToken(token, value)` helper builds the element:
+
+```
+Token{type:'select', optionsArr:[…]}          → <e-input type="select">   + <e-select-option>×N
+Token{type:'range', rangeDef:{min,max}}       → <e-input type="range" min max step>
+Token{type:'checkbox', checkedDef:false}      → <e-input type="checkbox"> (value {''} when unchecked)
+Token{type:'text', name:'input.email'}        → <e-input type="text" format="email">
+Token{type:'file', name:'input.dir'}          → <e-input type="text" action-button="browse">
+Token{iid, occ, total}                        → name={token.iid}   ← occurrence-keyed identity
+```
+
+The `iid` is the element `name` and the value-map key, so a repeated token (`{{input.dir}}` twice, `input.dir` and `input.dir#2`) produces two independently-named elements — which is exactly what the design's occurrence badges promise ("each gets its own value + metadata").
+
+### 4.14 Known library defects the app must work around
+
+From the library's own audit sheets (65 rows in `report.csv`, 31 still open) plus this pass's findings. Only the ones that affect integration:
+
+| Issue | Impact | App's handling |
+|---|---|---|
+| Event prefix split-brain (`input:*` vs `e:*`) | A listener written for one is silent on the other | Use `<e-input>` only (§4.1); never the `input-*` tags |
+| Dropdown a11y gaps: no `aria-activedescendant`, `aria-controls`, `aria-multiselectable` | Combobox/select listbox unassociated for screen readers | Accept for v1; log in `plan/known-bugs.csv` |
+| `this.error` is a JSON string | Naive `.error` reads show JSON | Read `detail.error` from events; parse defensively |
+| No `ValidityState` / `checkValidity` | Cannot use native form validation APIs | Use `e:validate` + the app's pre-run gate (§4.9) |
+| `range-slider` never imported | Ranges render inert | Vendor + register (§4.11) |
+| `wc-datepicker` undeclared | `type="date"` picker inert | Native date input; no picker (§4.11) |
+| `shadow` mode unstyled, no `part` hooks | Shadow mode unusable | Never set `shadow` |
+| Readme documents `.e-*` classes | Styling by the docs does nothing | Style `.i-*` (§4.10) |
+| Themes destroyed by a clean build | `build.mjs` neither generates nor copies themes or `.d.ts` | Vendor `default.css` into the app (§4.12) |
+| 1.3 MB across 18 per-input bundles | Redundant duplication of lit/zod/maska/pickr/uFuzzy | Ship `dist/index.js` only (§4.5) |
+| `npm test` runs jest with **zero test files** | No safety net in the library | App-authored rendering tests (§15) |
+
+---
+
+## 5. Architecture
 
 ```mermaid
 flowchart LR
@@ -241,7 +520,6 @@ flowchart LR
         P["index / command / add / learn / hub / publish"]
         AL["Alpine state"]
         CM["CodeMirror 6"]
-    end
     subgraph Deno["Deno runtime (same process)"]
         S["Deno.serve — static only"]
         B["bindings.ts — zod-validated"]
@@ -269,7 +547,7 @@ Four rules, carried over from Compressy:
 
 ---
 
-## 5. Project layout
+## 6. Project layout
 
 ```
 command-centre/
@@ -321,17 +599,17 @@ command-centre/
 │   │   ├── publish_test.ts
 │   │   └── helpers.ts
 │   └── clean.ts
-├── website/                    # Cloudflare Workers + Hono hub site   (§12)
-└── api/                        # standalone Worker for hub routes      (§13)
+├── website/                    # Cloudflare Workers + Hono hub site   (§13)
+└── api/                        # standalone Worker for hub routes      (§14)
 ```
 
 `static/` is embedded via `--include ./static`; `design/icons/` is copied into `static/icons/` at setup because the app can only serve from its embedded root.
 
 ---
 
-## 6. Contracts (`types.ts`)
+## 7. Contracts (`types.ts`)
 
-### 6.1 Grammar types
+### 7.1 Grammar types
 
 ```ts
 export const WidgetSchema = z.enum([
@@ -345,7 +623,6 @@ export interface Token {
   iid: string;          // instance key: key, or key+"#"+occ
   occ: number;          // 1-based occurrence within the template
   total: number;        // instances sharing this key
-  type: Widget;         // position 1 — the registry name
   name: string;         // "input.<slug>"
   /** Position 3 — raw colon section, normalised (select/radio: options, range: bounds, checkbox: flag text). */
   params: string;
@@ -360,7 +637,7 @@ export interface Token {
 }
 ```
 
-### 6.2 Command + values
+### 7.2 Command + values
 
 ```ts
 export const VarMetaSchema = z.object({
@@ -380,7 +657,6 @@ export const SavedCommandSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(60),
   cmd: z.string().min(1),
-  desc: z.string().max(120).default(""),
   tag: z.string().default("custom"),
   cwd: z.string().default(""),
   askMode: z.enum(["every", "once"]).default("every"),
@@ -396,7 +672,8 @@ export const VarValuesSchema = z.record(z.record(z.string()));
 export const ShellPrefsSchema = z.record(z.string());
 ```
 
-### 6.3 Seeds
+
+### 7.3 Seeds
 
 `seeds.ts` exports one `DEFAULT_COMMANDS: SavedCommand[]` with **one id space** (fixing §1.5 row 1). The two files ship 16 distinct templates (7 in `index.html`, 9 in `command.html`; zero are byte-identical). Four are the *same command written twice with different param spellings* — ffmpeg, docker-run, git-log and npm-run each appear in both files. Collapse those four pairs by keeping the richer `index.html` variant (it declares `=default` values, `input.uuid.autogenerate` and specific named types where `command.html` uses bare `input.text`/`input.number`), giving **12 seeds**:
 
@@ -407,9 +684,9 @@ seed-ssh-provision   seed-npm-install      seed-dev-server
 seed-run-tests       seed-build-prod       seed-git-status
 ```
 
-Drop `command.html`'s `SHOWCASE` as a fallback — its curated `vars` metadata (18 entries, 39 curated labels) becomes the authored metadata on `seed-ffmpeg-stream`, which is where it always belonged (§1.5 row 2). Note `SHOWCASE` is the only place in the designs that demonstrates *per-option* labels, so porting it is what makes the metadata system visible. `lines` is dropped entirely (§7.4).
+Drop `command.html`'s `SHOWCASE` as a fallback — its curated `vars` metadata (18 entries, 39 curated labels) becomes the authored metadata on `seed-ffmpeg-stream`, which is where it always belonged (§1.5 row 2). Note `SHOWCASE` is the only place in the designs that demonstrates *per-option* labels, so porting it is what makes the metadata system visible. `lines` is dropped entirely (§8.4).
 
-### 6.4 Binding contract
+### 7.4 Binding contract
 
 ```ts
 export interface Bindings {
@@ -445,7 +722,6 @@ export interface Bindings {
 
   // hub
   hubList(query: HubQuery): Promise<HubPage>;
-  hubPackages(): Promise<Record<string, number>>;
   hubRecents(): Promise<string[]>;
   hubInstall(pkg: string): Promise<{ ok: boolean; version?: string; error?: string }>;
   hubAdd(commandId: string): Promise<SavedCommand>;
@@ -464,7 +740,7 @@ export interface Bindings {
 
 Every handler zod-parses its arguments and returns JSON-able data (or throws; the webview receives `{name, message, stack}`).
 
-### 6.5 Run contract
+### 7.5 Run contract
 
 ```ts
 export const RunRequestSchema = z.object({
@@ -485,8 +761,6 @@ export interface RunProgress {
   exitCode: number | null;
   signal: string | null;
   startedAt: number;
-  durationMs: number;
-}
 
 export interface RunResult {
   exitCode: number | null;
@@ -505,9 +779,9 @@ export interface OutputLine {
 
 ---
 
-## 7. Module detail
+## 8. Module detail
 
-### 7.1 `main.ts` — serve + window + bindings
+### 8.1 `main.ts` — serve + window + bindings
 
 Straight port of Compressy's `main.ts`, with the thumbnail endpoint removed.
 
@@ -523,7 +797,6 @@ function resolveWeb(): URL {
     try { if (Deno.statSync(new URL("index.html", url)).isFile) return url; } catch {}
   }
   return new URL("./static/", import.meta.url);
-}
 ```
 
 `serveStatic()` keeps Compressy's exact hardening: URL-decode **once**, reject any path containing `\`, reject any `..` segment, whitelist extensions against `MIME`, `content-type` + `no-cache` + `x-content-type-options: nosniff`.
@@ -544,7 +817,7 @@ Keep the native frame (no `frameless`) — Compressy reached the same conclusion
 
 **Port is never hardcoded** — `Deno.serve` binds a runtime-chosen 127.0.0.1 port.
 
-### 7.2 `grammar.ts` + `registry.ts` — the shared brain
+### 8.2 `grammar.ts` + `registry.ts` — the shared brain
 
 `registry.ts` holds the single source of truth:
 
@@ -632,7 +905,7 @@ otherwise                         → exampleFor(token)
 
 **Sharing with the browser.** `grammar.ts` is Deno/TS and the webview needs the same logic. Options: (a) a tiny `scripts/build-grammar.ts` that emits `static/grammar.js` from the TS source (types stripped, `export` kept) and runs as a `deno task`; or (b) a hand-maintained mirror guarded by a test that asserts the emitted file matches the source hash. Choose (a) — a generated artifact with a checked-in hash is one source of truth and no drift.
 
-### 7.3 `library.ts` + `store.ts` — command storage
+### 8.3 `library.ts` + `store.ts` — command storage
 
 App-data root: `Deno.env.get("LOCALAPPDATA") ?? USERPROFILE ?? HOME ?? "."` → `command-centre/` (the Compressy pattern, same fallback chain).
 
@@ -659,7 +932,7 @@ export async function writeJsonAtomic(path: string, value: unknown): Promise<voi
 
 `library.ts` operations: `list()`, `get(id)`, `save(cmd)` (upsert, zod-parsed), `remove(id)` (also clears its values/shell entries), `duplicate(id)` (new `u<Date.now()>` id, name + " (copy)"), `search(query)` (case-insensitive substring over name+cmd+desc+cwd, matching the design exactly), `importJson(doc)` (accepts both a full `SavedCommand` and a §1.4 metadata document), `exportJson(id)` (emits the §1.4 document, byte-compatible).
 
-### 7.4 `runner.ts` — real execution
+### 8.4 `runner.ts` — real execution
 
 Replaces the design's fabricated `lines` array. **The `lines` field is deleted from the command shape**; transcripts come from the process.
 
@@ -689,7 +962,7 @@ Execution model:
 
 **Not a PTY.** Interactive prompts inside a command will block; document this in the UI (a terminal hint line) and surface stderr so the user sees why. A PTY is a v2 item.
 
-### 7.5 CodeMirror 6 (`add.html`)
+### 8.5 CodeMirror 6 (`add.html`)
 
 Port the design's integration as-is; it is already complete and defensive.
 
@@ -699,7 +972,7 @@ Port the design's integration as-is; it is already complete and defensive.
 - Two completion sources: `typeSource` (the 135 registry rows; plus, as *separate* entries, `input.<name>.autogenerate` for the types where the dot-suffix is meaningful — text, number, date, color, password, uuid) and `optionSource` (select/radio option lists, reading the colon section to the left of the cursor). Offer **only** the dot-suffix form; never `:autogenerate` (§1.2).
 - Shell syntax highlighting via `StreamLanguage.define(LM.shell)` + a `HighlightStyle` matching the design's token colours.
 
-### 7.6 `hub.ts` — community data
+### 8.6 `hub.ts` — community data
 
 **Real network, real cache.** The design hardcodes 10 commands; the app fetches them.
 
@@ -712,7 +985,7 @@ Port the design's integration as-is; it is already complete and defensive.
 - `hubRecents()`: the last 5 query strings, matching `cc-hub-recents` semantics (dedupe, unshift, cap 5, written on Enter).
 - Sort preference persisted (`adds` | `name` | `cli`), matching `cc-hub-sort`.
 
-### 7.7 `publish.ts` — export, outbox, submit
+### 8.7 `publish.ts` — export, outbox, submit
 
 - `publishExport(id)` → the §1.4 document (parity with `command.html`'s `metadataDoc`). Written to disk by the handler; the page reports the path in the status line.
 - `publishSubmit(rec)`:
@@ -723,7 +996,7 @@ Port the design's integration as-is; it is already complete and defensive.
 - `publishQueue()` returns the outbox so the page can show pending items — the design wrote to `cc-publish-queue` and never read it back.
 - The metadata-file loader keeps the design's exact acceptance rule: accept when `doc.kind === "command-metadata"` **or** `doc.command` is truthy, and map `command/description/workingDirectory → cmd/desc/cwd`.
 
-### 7.8 `settings.ts`
+### 8.8 `settings.ts`
 
 ```ts
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -743,7 +1016,7 @@ Same `readJson`/`writeJsonAtomic` primitives, same partial-merge tolerance, same
 
 ---
 
-## 8. Behaviour mapping (design → implementation)
+## 9. Behaviour mapping (design → implementation)
 
 | Design element | Implementation |
 |---|---|
@@ -766,7 +1039,7 @@ Same `readJson`/`writeJsonAtomic` primitives, same partial-merge tolerance, same
 | `add.html` `window.__ccValues` / `__ccMeta` | Persisted per command at edit time, so reopening an edit restores author metadata |
 | `learn.html` 129 rows | Generated from `registry.ts` at build time into `static/learn.html` (or rendered client-side) so it cannot drift from the 135-row table. Keep the three modifier cards (`:default`, `.autogenerate`, `=off`) and the widget filter — they are the page's teaching device and match the three grammar positions of §1.2 |
 | `hub.html` `HUB` array | `hubList()`; `counts` feed the rail |
-| `hub.html` `cliState` install sim | `hubInstall()` real probe — §7.6 |
+| `hub.html` `cliState` install sim | `hubInstall()` real probe — §8.6 |
 | `hub.html` `cc-added` | `hub-state.json` `addedIds`, idempotent |
 | `hub.html` `/` focus, Escape clear, ↑/↓ navigate, Enter add | Preserved exactly |
 | `publish.html` `#okBox` + no redirect | Preserved: inline success panel with the same three links |
@@ -776,7 +1049,7 @@ Same `readJson`/`writeJsonAtomic` primitives, same partial-merge tolerance, same
 
 ---
 
-## 9. Frontend structure
+## 10. Frontend structure
 
 `static/app.js` follows the Compressy shape: one IIFE, `document.addEventListener("alpine:init", …)`, `Alpine.data(...)` components, and DOM writes through a `$ = (id) => document.getElementById(id)` helper. Alpine owns state and events; explicit render functions own list DOM.
 
@@ -805,7 +1078,7 @@ Script load order in every page (deferred, document order — `app.js` must prec
 
 ---
 
-## 10. Packaging
+## 11. Packaging
 
 `deno.json`, mirroring Compressy's task set (flags unchanged):
 
@@ -825,8 +1098,9 @@ Script load order in every page (deferred, document order — `app.js` must prec
     "make-icon": "deno run --allow-read --allow-write --allow-env --allow-ffi --allow-run scripts/make-icon.ts",
     "build:grammar": "deno run --allow-read --allow-write scripts/build-grammar.ts",
     "build:learn": "deno run --allow-read --allow-write scripts/build-learn.ts",
-    "build:dir": "deno desktop --backend cef --allow-read --allow-write --allow-run --allow-env --allow-sys --allow-ffi --compress xz --icon ../design/app.ico --include ./static main.ts",
-    "build:msi": "deno desktop --backend cef --allow-read --allow-write --allow-run --allow-env --allow-sys --allow-ffi --compress xz --icon ../design/app.ico --include ./static --output ../dist/CommandCentre-msi/CommandCentre.msi main.ts",
+    "build:inputs": "node ../enhanced-inputs/build.mjs && deno run --allow-read --allow-write scripts/vendor-inputs.ts",
+    "build:dir": "deno task build:grammar && deno task build:learn && deno task build:inputs && deno desktop --backend cef --allow-read --allow-write --allow-run --allow-env --allow-sys --allow-ffi --compress xz --icon ../design/app.ico --include ./static main.ts",
+    "build:msi": "deno task build:grammar && deno task build:learn && deno task build:inputs && deno desktop --backend cef --allow-read --allow-write --allow-run --allow-env --allow-sys --allow-ffi --compress xz --icon ../design/app.ico --include ./static --output ../dist/CommandCentre-msi/CommandCentre.msi main.ts",
     "build:installer": "deno task build:dir && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-installer.ps1",
     "test": "deno test --allow-read --allow-write --allow-env --allow-run --no-check",
     "release": "deno run --allow-read --allow-write --allow-env --allow-net --allow-sys scripts/release.ts"
@@ -845,22 +1119,23 @@ Script load order in every page (deferred, document order — `app.js` must prec
 
 Differences from Compressy and why:
 
-- **No `vendor:vips` task and no `vendor/`** — this app has no native engine. Its only subprocesses are the shells themselves, which are already on `PATH`.
+- **No `vendor:vips` task** — this app has no native engine. Its only subprocesses are the shells themselves, which are already on `PATH`. It does have a `vendor/` tree, but only for JS/CSS assets (Alpine, Mustache, the input layer).
 - **`--allow-net` is required** in `dev` and `build` — the Hub and Publish flows talk to the API. (Compressy needed it only for the release script.)
 - **`--allow-run` in `test`** — the shell resolution and runner tests spawn real processes; without it they fail `NotCapable: Requires run access` (Compressy's bug 2).
-- **`build:grammar` / `build:learn`** — generated artifacts. Run them before `build:dir`; add a test that fails when the generated file is stale (§14).
+- **`build:grammar` / `build:learn` / `build:inputs`** — generated and vendored artifacts, all run as prerequisites of `build:dir`/`build:msi`. `build:inputs` shells out to `enhanced-inputs/build.mjs` (the sibling library) and then copies `dist/index.js` + `dist/themes/default.css` into `static/vendor/` via `scripts/vendor-inputs.ts`. None of these outputs are committed — the repo root `.gitignore` excludes `dist/`, which is why the copy must be a build step and not a one-time manual action (§4.12).
 - **`design/app.ico` is required.** It does not exist yet; generate it with `scripts/make-icon.ts` (PNG-in-ICO, the Compressy approach) from a new `design/icon.png`. **This is a blocker for `build:dir`/`build:msi`** — the `--icon` flag points at a missing file today.
 
 ---
 
-## 11. Phased implementation tasks
+## 12. Phased implementation tasks
 
 ### Phase A — Scaffold & serve
 1. `desktop-app/deno.json` (imports, desktop block, tasks) + `version.ts`
-2. `main.ts` static server: MIME map, single decode, `..`/`\` rejection, index fallback (§7.1)
+2. `main.ts` static server: MIME map, single decode, `..`/`\` rejection, index fallback (§8.1)
 3. `static/index.html` from `design/index.html` — strip the demo `<script>`, add the script tags, add the Alpine root
-4. `static/styles.css` from the six design `<style>` blocks + the shared `:root` (§9)
+4. `static/styles.css` from the six design `<style>` blocks + the shared `:root` (§10)
 5. Vendor Alpine + Mustache into `static/vendor/`; copy `design/icons/*.svg` into `static/icons/`
+5b. **Vendor the input layer** (§4.12): build `enhanced-inputs` (`node enhanced-inputs/build.mjs`), copy `dist/index.js` + `dist/themes/default.css` into `static/vendor/`, write the token-remap layer (§4.10), and vendor `range-slider-element`. Add all of it to the `build:dir`/`build:msi` prerequisites — `dist/` is gitignored, so a fresh clone has nothing to copy
 6. `scripts/make-icon.ts` + generate `design/app.ico` (blocks Phase G builds)
 7. Smoke: `deno task dev` → window opens, page renders, assets load, no console errors
 
@@ -872,8 +1147,10 @@ Differences from Compressy and why:
 
 ### Phase C — Library & persistence
 12. `types.ts` + `store.ts` + `settings.ts`
-13. `seeds.ts` — merged seed set with one id space (§6.3)
+13. `seeds.ts` — merged seed set with one id space (§7.3)
 14. `library.ts` — CRUD, search, duplicate, import/export + `tests/library_test.ts`
+14b. `widgetToEInput(token)` in `registry.ts` — the fixed widget→`<e-input type>` table (§4.3), plus the `format` lookup for the 53 `text` tokens
+14c. `renderToken(token, value)` — the grammar-aware element builder (§4.13); occurrence-keyed `name` from `token.iid`, option children from `token.optionsArr` + author metadata
 15. `bindings.ts` — library + settings + values + shells bindings; wire into `main.ts`
 
 ### Phase D — Runner
@@ -885,9 +1162,11 @@ Differences from Compressy and why:
 19. `templates.js` — command card, terminal block, detail rows, hub card, publish record
 20. `app.js` `commands` component — list, search, tag filter, sort, view toggle, shell cycle, variable panel, run, cancel, terminal actions
 21. `app.js` `detail` component — badges, raw/preview, metadata table, export
-22. `app.js` `author` component — CodeMirror mount (§7.5), live preview, variable controls, metadata editors, options editor, ↻ Regenerate, save/edit/duplicate; `pickFolder()` for cwd
+22. `app.js` `author` component — CodeMirror mount (§8.5), live preview, variable controls via `renderToken` (§4.13), metadata editors, options editor, ↻ Regenerate, save/edit/duplicate; `bindings.pickFile`/`pickFolder` for the `file` widget's `action-button="browse"` (§4.7)
 23. `app.js` `learn` component — rows generated from the registry
 24. Status bar with real version + platform + installed shells
+24b. **Event wiring for the input layer** (§4.6): delegate `e:input`/`e:change`/`e:validate` at the component root; attach `hook:*` per element after insertion (they do not bubble). Gate the Run button on `e:validate` (§4.9)
+24c. `tests/inputs_test.ts` — `renderToken` produces the right tag/type/attributes for every widget family; option children carry author labels; `iid` becomes `name`; repeated tokens yield distinct names
 
 ### Phase F — Hub & publish
 25. `hub.ts` — fetch/cache/TTL, `package:` + weighted search (ported verbatim), rail counts, install probe, add-to-mine, recents, sort
@@ -899,22 +1178,22 @@ Differences from Compressy and why:
 ### Phase G — Polish & packaging
 30. Error states: command-not-found page, per-command run failures, install failures, offline banners, empty states
 31. Close-during-run guard; close-during-authoring dirty guard
-32. Full smoke pass (§14) + `deno task build` → `dist/CommandCentre/` + `dist/CommandCentre-msi/CommandCentre.msi`
+32. Full smoke pass (§15) + `deno task build` → `dist/CommandCentre/` + `dist/CommandCentre-msi/CommandCentre.msi`
 33. `scripts/installer.iss` + `scripts/build-installer.ps1` (Inno Setup) for `CommandCentre-setup.exe`
-34. `scripts/release.ts` → assets + `releases.json` (§12.5)
+34. `scripts/release.ts` → assets + `releases.json` (§13.5)
 
 ### Phase H — Website & API
-35. `website/` scaffold per §12 (wrangler, element system, hub pages, JSON-LD, sitemap)
-36. `api/` Worker per §13 (hub routes + D1 schema + seed import from `website/public/data/`)
+35. `website/` scaffold per §13 (wrangler, element system, hub pages, JSON-LD, sitemap)
+36. `api/` Worker per §14 (hub routes + D1 schema + seed import from `website/public/data/`)
 37. Point `settings.hubApiBase` at the deployed API; end-to-end hub + publish verification
 
 ---
 
-## 12. Website (`website/`) — Cloudflare Workers + Hono
+## 13. Website (`website/`) — Cloudflare Workers + Hono
 
 The website is the **public face** of the Community Hub: browsable commands, SEO pages, install instructions, and the download endpoint for the desktop app. It follows the Compressy element-system architecture exactly.
 
-### 12.1 Structure
+### 13.1 Structure
 
 ```
 website/
@@ -951,7 +1230,7 @@ website/
 
 Copy from `C:/projects/compressy/website` verbatim: `wrangler.jsonc` (rename `name`, replace the KV id), `bunfig.toml`, `tsconfig.json`, `src/elements/{registry,expander}.ts`, `src/layouts/base.html`, `test/text-preload.ts`, and the `element` scaffolding pattern. Do **not** copy `public/` or `site.config.json`.
 
-### 12.2 Routes
+### 13.2 Routes
 
 | Route | Behaviour |
 |---|---|
@@ -964,7 +1243,7 @@ Copy from `C:/projects/compressy/website` verbatim: `wrangler.jsonc` (rename `na
 | `GET /packages/{cli}` | per-package landing page |
 | `GET *` | slug expansion with KV cache; `*.html` probes `301` to clean URLs |
 
-### 12.3 Element system
+### 13.3 Element system
 
 Same contract as Compressy (`src/elements/README.md`): classless `public/*.html`, structure from `<e-*>` tags, expansion depth-first **innermost-first**, `variant="…"` for shapes with unknown-variant fallback, `slot="…"` children consumed by the parent, and unknown `<e-*>` left in the output as a visible missing-element signal.
 
@@ -972,11 +1251,11 @@ Starting element set for this site: `e-hero`, `e-cards` (`icons|rows`), `e-steps
 
 `e-code` is the only genuinely new element: `file`/`lang`/`copy` attrs, mono block, optional copy button wired in `app.js` with the same delegated `data-copy-*` pattern Compressy uses for SHA strings.
 
-### 12.4 Caching
+### 13.4 Caching
 
 Keep Compressy's scheme unchanged: `revFor(dataJson)` = sha256 of `site + REGISTRY_VERSION + layout + all partial sources + data JSON`; per-page key = `rev:slug:sha256(source,16)`; KV `expirationTtl: 2_592_000`; writes via `execCtx.waitUntil`. Bump `REGISTRY_VERSION` for mapper changes invisible to the hash.
 
-### 12.5 Data files
+### 13.5 Data files
 
 | File | Producer | Consumers |
 |---|---|---|
@@ -986,7 +1265,7 @@ Keep Compressy's scheme unchanged: `revFor(dataJson)` = sha256 of `site + REGIST
 
 Keep Compressy's rule: `site.data` lists bare names, `loadData` memoizes per isolate, and a missing/corrupt file degrades to empty rather than failing the request.
 
-### 12.6 Tests (port the enforcement, keep it honest)
+### 13.6 Tests (port the enforcement, keep it honest)
 
 - **Manifest sync**: `SLUGS` ↔ `public/*.html` (with `404` excluded on the disk side).
 - **Classless guard**: no `class=` / `style=` in `public/*.html`.
@@ -996,11 +1275,11 @@ Keep Compressy's rule: `site.data` lists bare names, `loadData` memoizes per iso
 
 ---
 
-## 13. API (`api/`) — the hub backend
+## 14. API (`api/`) — the hub backend
 
 Same stack as the website (Hono + Workers) but a separate deployable, because the desktop app must reach it without a browser and it writes to D1.
 
-### 13.1 Routes
+### 14.1 Routes
 
 | Method | Route | Purpose |
 |---|---|---|
@@ -1013,12 +1292,12 @@ Same stack as the website (Hono + Workers) but a separate deployable, because th
 | `POST` | `/hub/commands/:id/install` | record CLI availability |
 | `DELETE` | `/hub/commands/:id/install` | uninstall |
 | `GET` | `/hub/recents` | recent queries for the client id |
-| `POST` | `/hub/submissions` | publish submission (body = §7.7 record) |
+| `POST` | `/hub/submissions` | publish submission (body = §8.7 record) |
 | `GET` | `/hub/submissions/:id` | submission status + reviewer notes |
 | `POST` | `/hub/metadata/validate` | authoritative shape check for an uploaded metadata document |
 | `GET` | `/hub/export/commands.json` | full corpus export for the website's static render |
 
-### 13.2 D1 schema
+### 14.2 D1 schema
 
 ```sql
 CREATE TABLE packages (
@@ -1058,19 +1337,24 @@ CREATE INDEX idx_submissions_status ON submissions(status, created_at DESC);
 
 `client_id` is an anonymous per-install UUID generated by the desktop app and stored in settings — the design has no account concept and `author`/`email` are typed per submission, so an anonymous client id is the honest model. Auth is a v2 item.
 
-### 13.3 Validation parity
+### 14.3 Validation parity
 
 `POST /hub/metadata/validate` implements the *same* acceptance rule the desktop app and `publish.html` use (`kind === "command-metadata"` or a truthy `command`), and additionally checks that every `{{…}}` in `command` parses against the 135-token registry — a check the client cannot be trusted to perform. Rejections return the exact failing token so the author can fix it.
 
 ---
 
-## 14. Verification
+## 15. Verification
 
 | Check | How |
 |---|---|
 | Dev server | `deno task dev` → window opens, all six pages render, no console errors |
 | Grammar parity | `tests/grammar_test.ts` green; assert `static/grammar.js` hash matches `grammar.ts` |
 | Registry completeness | Test asserts 135 names, the widget histogram, and that `learn.html`'s generated rows cover every name |
+| Widget→element mapping | Every one of the 135 tokens resolves through `widgetToEInput()` to a real `<e-input type>`; no token falls through to an accidental default. Assert the three `text`-family collapses (`email`/`url`/`search` → `text` + `format`) and the 13 `file` tokens → `text` + `action-button="browse"` |
+| Input rendering | Render one token per widget family in a real window; confirm the tag upgrades (no unstyled/unknown element), the theme applies, and `type="range"` is live (proves `range-slider` was registered) |
+| Occurrence identity | A template with `{{input.dir}}` twice produces two elements with `name="input.dir"` and `name="input.dir#2"`, each holding an independent value |
+| Event wiring | Set a value, blur, and confirm `e:input` + `e:change` + `e:validate` fire on the component root (delegation works) while `hook:onValidate` fires only on the element (no bubbling) |
+| Range dependency absent | Temporarily unregister `range-slider` and confirm the 9 range tokens degrade visibly rather than silently — then re-register |
 | Library round-trip | Create → export → import → deep-equal; duplicate gives a fresh id; delete clears values |
 | Metadata compatibility | Export a command and feed it to the design's `publish.html` loader in a browser — it must accept the file and fill the summary |
 | Execution | Run a real command per shell; verify stdout, stderr, exit code, `cwd`, and duration against a manual run in the same shell |
@@ -1087,30 +1371,39 @@ CREATE INDEX idx_submissions_status ON submissions(status, created_at DESC);
 
 ---
 
-## 15. Risks & mitigations
+## 16. Risks & mitigations
 
 | Risk | Likelihood | Mitigation |
-|---|---|---|
+| **CodeMirror bundled from `esm.sh` breaks offline** | **High** if unaddressed | Vendor the six packages into `static/vendor/codemirror/` with a local importmap; keep the textarea fallback |
+| **`range-slider` never loaded** — the library declares `range-slider-element` but never imports it. Every range token renders an inert unknown element | **High** | Vendor and register it before any variable panel mounts (§4.11). Listed as a hard prerequisite in Phase A step 5b |
+| **Mixing the two component surfaces** — the standalone `input-*` tags emit `input:*` events while `<e-input>` emits `e:*`; a listener for one is silently deaf to the other | **High** if unaddressed | Use `<e-input type="…">` exclusively (§4.1). Do not bundle or reference the `input-*` tags |
+| **Styling against the documented `.e-*` classes** — the readme's class contract does not exist; the real names are `.i-*` | **High** if unaddressed | Style `.i-*` + `--input-*` only, using the vendored `default.css` + token remap (§4.10). Never trust the readme's CSS section |
+| **`shadow` attribute renders unstyled** — no shadow-scoped styles and no `part=` hooks exist anywhere in the library | Medium | Never set `shadow`; stay in light DOM |
+| **`enhanced-inputs/dist/` is gitignored and its build does not emit themes or `.d.ts`** — a clean build produces JS only | Medium | `build:inputs` vendors `dist/index.js` + `dist/themes/default.css` as an explicit build step; never rely on `dist/` existing in a fresh clone (§4.12) |
+| **No tests in the library** (`npm test` runs jest against zero files) | Medium | Cover the integration from the app side: `tests/inputs_test.ts` (§13 Phase E) plus the rendering checks above |
+| **`this.error` is a JSON string** — naive reads show serialized JSON | Low | Read `detail.error` from events; parse defensively (§4.9) |
 | **`design/app.ico` does not exist** — `build:dir`/`build:msi` fail on the `--icon` flag | **Certain** | Phase A step 6 generates it from a new `design/icon.png`. Do this before any build |
 | **CEF vs WebView2 blank window on Win11** (`denoland/deno#35645`) | **High** | Stay on `--backend cef` (Compressy's workaround after the same failure). Switch back only after the upstream fix ships stable + a smoke test. Also note WebView2 sanitizes `input[type=file]` paths, which is why `pickFolder()` is Deno-side |
-| **`deno task test` missing `--allow-run`** — runner tests fail `NotCapable` | **High** | The task in §10 already includes it. Keep it |
+| **`deno task test` missing `--allow-run`** — runner tests fail `NotCapable` | **High** | The task in §11 already includes it. Keep it |
 | **DLL/filesystem lock on dev restart** (`os error 5`) | Medium | Kill lingering `laufey.exe`/`deno.exe` before `deno task dev` (Compressy's bug 3) |
-| **CodeMirror bundled from `esm.sh` breaks offline** | **High** if unaddressed | Vendor the six packages into `static/vendor/codemirror/` with a local importmap; keep the textarea fallback |
 | **Interactive commands block** (no PTY) | Medium | Terminal hint line + stderr surfacing; a run that produces no output for N seconds gets a "waiting — this command may need input" note. PTY deferred |
 | **Killing a shell leaves grandchildren alive** | Medium | Kill the tree (`taskkill /T /F`), and verify in the cancellation test |
 | **Shells differ in quoting semantics** | Medium | Never build a command *string* for argument list; pass the resolved line to the shell's own `-Command`/`-lc` flag so the shell parses it exactly once, as a user would |
-| **Grammar drift between `grammar.ts` and `static/grammar.js`** | Medium | Generated artifact + staleness test (§14) |
+| **Grammar drift between `grammar.ts` and `static/grammar.js`** | Medium | Generated artifact + staleness test (§15) |
 | **Hub corpus is unbounded; design only ever had 10 rows** | Medium | Server-side paging (`limit` 60, matching `PAGE`), server-side counts, client re-ranking of the current page only |
 | **Publish submissions are anonymous** | Low | Documented as v1 behaviour; `client_id` gives a stable thread and the schema has room for auth later |
 | **Deno version drift in `deno desktop`** | Low | Pin 2.9.6; read current docs before upgrading |
 
 ---
 
-## 16. Open questions
+## 17. Open questions
 
 1. **`design/app.ico`** — no icon asset exists. Generate from a new `design/icon.png` via `scripts/make-icon.ts`. *Blocker for Phase F; create in Phase A.*
 2. **Hub API origin** — the deployed `api/` URL is not yet known. Park it in `settings.hubApiBase` with an empty default meaning "bundled endpoint", and use `http://localhost:8787` during Phase F development.
-3. **Seed metadata depth** — the design's `SHOWCASE` carries curated labels, descriptions and per-option labels for 18 variables. Porting all of it into `seed-ffmpeg-stream` is the richest demonstration of the metadata system, but it is authoring work. Default: port it, since §6.3 depends on it to replace the showcase fallback.
+3. **Seed metadata depth** — the design's `SHOWCASE` carries curated labels, descriptions and per-option labels for 18 variables. Porting all of it into `seed-ffmpeg-stream` is the richest demonstration of the metadata system, but it is authoring work. Default: port it, since §7.3 depends on it to replace the showcase fallback.
 4. **Tag vocabulary** — the design uses `video`, `ship`, `security`, `git`, `setup`, `develop`, `network`, `custom`, `test`. Free-form tags with a datalist of observed values, or a fixed enum? Default: free-form with suggestions, since the hub corpus will grow.
 5. **Per-command shell default** — the design stores a shell per command (`cc-shells`). Should a command also carry a *suggested* shell in its metadata so a hub command can declare "this is bash"? Default: yes, as an optional `shell` field on `SavedCommand`, falling back to the per-user pick. Requires a small addition to the metadata document — coordinate with the `version: 1` → `version: 2` bump.
 6. **Windows-only shells on the seed set** — `seed-ssh-provision` and other Unix-flavoured seeds need bash. Default: ship them, but mark the shell requirement in metadata so the card shows "needs Bash" when Bash is absent.
+7. **Library defects upstream vs local fixes** — `enhanced-inputs` has 31 open audit rows, and two that matter to us are real code defects, not app problems: the `input:*`/`e:*` event split, and combobox dropdown a11y (`aria-activedescendant`/`aria-controls` missing). The app works around both (single surface; delegated events). Fixing them *in the library* would be better for every consumer but is a separate workstream — `enhanced-inputs/` is a sibling repo under active audit (`TODO.md`, `sheets/report.csv`). Default: work around in the app for v1, and log both in `plan/known-bugs.csv` with a pointer to the library sheet.
+8. **Pickr's palette vs the design's tokens** — 15 generic swatches by default; the design implies an app-specific set. Default: pass `swatches` from the design's `:root` (§4.5). Confirm the exact palette when the UI is built.
+9. **`select` vs `combobox` threshold** — only `combobox` is searchable, and it renders chips when `multiple`. Default: `combobox` above 8 options (§4.8). Revisit if the hub corpus starts shipping long option lists.
