@@ -41,26 +41,36 @@ All six are `div class="app-window"` shells with a `nav.tabs` (My commands / Com
 
 ### 1.2 The `{{input.*}}` grammar (the core asset — port verbatim)
 
-One regex drives everything:
+**Canonical form:** `{{input.<type>[:<default>]}}` plus one optional dot-suffix modifier on the type.
 
 ```js
 /^input\.([a-z0-9]+)(\.autogenerate)?(?::([\s\S]*))?$/
 ```
 
+Three positions, and `learn.html`'s three modifier cards are exactly these three — do not conflate them:
+
+| # | Position | Syntax | Meaning |
+|---|---|---|---|
+| 1 | **type** | `input.uuid` | the token name, must exist in the 135-row registry |
+| 2 | **dot-suffix modifier** | `input.uuid.autogenerate` | prefill a generated value, still editable after |
+| 3 | **colon default** | `input.text:hello` | the default value, in whatever form that type takes |
+
+**Everything after `:` is a default value**, never a modifier. What a default looks like depends on the type:
+
+| Type | Default form | Example |
+|---|---|---|
+| text / number / date / color / password / file | the literal value | `{{input.color:#f6f6f6}}` `{{input.port:8080}}` |
+| select / radio | comma list of options, optionally `=<default>` | `{{input.select:zip,tar.gz}}` `{{input.select:zip,tar.gz=tar.gz}}` |
+| range | `<min>-<max>`, optionally `=<default>` | `{{input.range:18-28}}` `{{input.range:0-100=75}}` |
+| checkbox | the flag text, optionally `=off` | `{{input.checkbox:--rm}}` `{{input.checkbox:--dry-run=off}}` |
+
+The two compound types put their default inside the colon section with `=`: for select/radio the last `=value` wins if that value contains no comma; for range it is parsed separately from the bounds.
+
 Outer delimiters are matched with `/\{\{\s*([^{}]*?)\s*\}\}/g` (non-greedy, no nesting). A token whose name is absent from the type registry is **not** a token: it stays in the template and renders verbatim. This is what makes the syntax safe to sprinkle inside arbitrary shell text.
 
-| Form | Example | Meaning |
-|---|---|---|
-| `{{input.<name>}}` | `{{input.dir}}` | typed input with registry defaults |
-| `:default` | `{{input.color:#f6f6f6}}` `{{input.port:8080}}` | prefill |
-| `.autogenerate` | `{{input.uuid.autogenerate}}` | prefill a generated value, still editable |
-| `:autogenerate` | `{{input.date:autogenerate}}` | same, alternate spelling |
-| select/radio options | `{{input.select:zip,tar.gz}}` | comma list |
-| select/radio options + default | `{{input.select:zip,tar.gz=tar.gz}}` | last `=value` wins if it contains no comma |
-| range min-max | `{{input.range:18-28}}` | slider bounds |
-| range + default | `{{input.range:0-100=75}}` | bounds + initial |
-| checkbox flag | `{{input.checkbox:--rm}}` | emits `--rm` when checked, `""` when not |
-| checkbox start off | `{{input.checkbox:--dry-run=off}}` | `1\|t\|true\|on\|checked\|yes\|y` truthy; `0\|f\|false\|off\|unchecked\|no\|n` falsy |
+**Checkbox truthiness** (`=off` suffix, case-insensitive): checked set `1\|t\|true\|on\|checked\|yes\|y`; unchecked set `0\|f\|false\|off\|unchecked\|no\|n`. Bare `{{input.checkbox:--rm}}` starts **checked**.
+
+> **Undocumented parser tolerance — do not document, consider dropping.** All four parsers also accept `:autogenerate` after the colon (`if (raw.toLowerCase() === "autogenerate") { auto = true; raw = ""; }`), treating it as position 2 written in position 3. It appears in **zero** documented examples and zero demo commands. It is very likely an unintended consequence of the single-regex parse, and it is mildly harmful: it makes `{{input.text:autogenerate}}` generate a random string instead of using the literal default `autogenerate`. Keep the code path for backward compatibility when reading stored commands, but do not use or document the form, and never offer it in autocomplete.
 
 **Type registry: 135 tokens**, identical key set and widget assignment in `index.html` (`CC_INPUT_TYPES`) and `command.html` (`CC_TYPES`) — verified programmatically, 0 mismatches. Widget histogram: `text` 53, `select` 30, `file` 13, `number` 12, `range` 9, `checkbox` 7, `color` 4, `password` 4, `date` 2, `radio` 1.
 
@@ -330,14 +340,18 @@ export const WidgetSchema = z.enum([
 export type Widget = z.infer<typeof WidgetSchema>;
 
 export interface Token {
-  key: string;          // name + (auto ? ".autogenerate" : "") + (params ? ":"+params : "") + (=off)
+  /** Identity: name + dot-suffix + colon-default + checkbox-off. See §1.2 for the three positions. */
+  key: string;
   iid: string;          // instance key: key, or key+"#"+occ
   occ: number;          // 1-based occurrence within the template
   total: number;        // instances sharing this key
-  type: Widget;
+  type: Widget;         // position 1 — the registry name
   name: string;         // "input.<slug>"
-  params: string;       // normalised param text
+  /** Position 3 — raw colon section, normalised (select/radio: options, range: bounds, checkbox: flag text). */
+  params: string;
+  /** Position 2 — the `.autogenerate` dot-suffix is present. */
   auto: boolean;
+  /** Position 3's resolved default value. Empty string means "none declared". */
   default: string;
   optionsArr: string[] | null;
   checkedDef: boolean | null;   // checkbox only
@@ -682,7 +696,7 @@ Port the design's integration as-is; it is already complete and defensive.
 - Importmap in `add.html:7`, verbatim versions: `@codemirror/state@6.7.4`, `@codemirror/view@6.43.11`, `@codemirror/autocomplete@6.20.3`, `@codemirror/commands@6.11.0`, `@codemirror/language@6.11.3`, `@codemirror/legacy-modes@6.5.2`, each with `deps` pins. **Vendor these locally** (`static/vendor/codemirror/*`) instead of `esm.sh` — the app must work offline.
 - Mount over `#cmd`; on any failure keep the plain `<textarea>` and `console.warn`. `cmdText()` reads `window.__cmView.state.doc` when mounted, else `cmd.value` — every reader must go through it.
 - Decoration plugin: parseable tokens → `cc-tok`, unparseable → `cc-tok-bad`.
-- Two completion sources: `typeSource` (over the 135 registry rows plus the `.autogenerate` synthetic entries for text/number/date/color/password/uuid) and `optionSource` (select/radio option lists, reading the params fragment to the left of the cursor).
+- Two completion sources: `typeSource` (the 135 registry rows; plus, as *separate* entries, `input.<name>.autogenerate` for the types where the dot-suffix is meaningful — text, number, date, color, password, uuid) and `optionSource` (select/radio option lists, reading the colon section to the left of the cursor). Offer **only** the dot-suffix form; never `:autogenerate` (§1.2).
 - Shell syntax highlighting via `StreamLanguage.define(LM.shell)` + a `HighlightStyle` matching the design's token colours.
 
 ### 7.6 `hub.ts` — community data
@@ -750,7 +764,7 @@ Same `readJson`/`writeJsonAtomic` primitives, same partial-merge tolerance, same
 | `add.html` form (name, cmd, desc, cwd, preview, askmode) | Same fields; plus a **tag** field (the design's `add.html` has none, but every command needs one) |
 | `#cwdbtn` Browse + `#cwdfiles` webkitdirectory + `showDirectoryPicker` | Replaced by `pickFolder()` (Windows FolderBrowserDialog via the Compressy PowerShell pattern). The webview file input cannot reveal absolute paths |
 | `add.html` `window.__ccValues` / `__ccMeta` | Persisted per command at edit time, so reopening an edit restores author metadata |
-| `learn.html` 129 rows | Generated from `registry.ts` at build time into `static/learn.html` (or rendered client-side) so it cannot drift from the 135-row table |
+| `learn.html` 129 rows | Generated from `registry.ts` at build time into `static/learn.html` (or rendered client-side) so it cannot drift from the 135-row table. Keep the three modifier cards (`:default`, `.autogenerate`, `=off`) and the widget filter — they are the page's teaching device and match the three grammar positions of §1.2 |
 | `hub.html` `HUB` array | `hubList()`; `counts` feed the rail |
 | `hub.html` `cliState` install sim | `hubInstall()` real probe — §7.6 |
 | `hub.html` `cc-added` | `hub-state.json` `addedIds`, idempotent |
@@ -854,7 +868,7 @@ Differences from Compressy and why:
 8. `registry.ts` — 135 rows + 7 aliases + built-in defaults, transcribed from `index.html:182`
 9. `grammar.ts` — `parseToken`, `parseVarInstances`, `parseVars`, `renderCmd`, `exampleFor`, `rangeSpec` (fixed), `ccAutoGenerate`
 10. `scripts/build-grammar.ts` → `static/grammar.js`; staleness test
-11. `tests/grammar_test.ts` — every form in §1.2, occurrence keying, alias resolution, unknown-token passthrough, `rangeSpec("18-28=23")` → `{min:18,max:28}`, `exampleFor` parity across all 135 types
+11. `tests/grammar_test.ts` — the three positions of §1.2 in isolation and combined; every colon-default form per type; occurrence keying; alias resolution; unknown-token passthrough; `rangeSpec("18-28=23")` → `{min:18,max:28}`; `exampleFor` parity across all 135 types. Explicitly assert that the dot-suffix and the colon-default are parsed as **different** fields (`.autogenerate` sets `auto`, never `default`), and that the legacy `:autogenerate` tolerance still parses correctly for stored commands while `{{input.text:autogenerate}}` is treated as a literal default.
 
 ### Phase C — Library & persistence
 12. `types.ts` + `store.ts` + `settings.ts`
