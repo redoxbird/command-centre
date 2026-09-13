@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Learn inputs — Command Center</title>
+<style>
+/* OD-LAYOUT-PRIMITIVES v1 */
+@layer od-layout {
+:where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+.od-stack { display: flex; flex-direction: column; gap: var(--od-gap, 8px); }
+.od-row { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+.od-row-top { display: flex; align-items: flex-start; gap: var(--od-gap, 8px); }
+.od-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--od-gap, 8px); }
+.od-fill { flex: 1 1 0; min-width: 0; }
+.od-fixed { flex: none; }
+.od-grid { display: grid; gap: var(--od-gap, 12px); grid-template-columns: repeat(var(--od-cols, 3), minmax(0, 1fr)); }
+.od-stat,.od-field,.od-cell { display: grid; gap: var(--od-gap, 2px); }
+:where(.od-stat,.od-field,.od-cell) > :where(*) { display: block; }
+.od-tile { display: grid; grid-template-rows: auto 1fr; }
+:where(.od-tile) > :where(*) { display: block; }
+.od-media { display: block; width: 100%; height: auto; aspect-ratio: var(--od-ratio, auto); }
+.od-media-cover { object-fit: cover; }
+.od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.od-clamp-2,.od-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.od-clamp-2 { -webkit-line-clamp: 2; } .od-clamp-3 { -webkit-line-clamp: 3; }
+.od-lines-2 { min-height: calc(2 * 1.4em); }
+.od-nowrap { white-space: nowrap; } .od-keep { word-break: keep-all; overflow-wrap: anywhere; }
+.od-screen { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; }
+.od-scroll { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+.od-rail { display: flex; gap: var(--od-gap, 8px); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; padding-inline: var(--od-rail-pad, 16px); scroll-padding-inline: var(--od-rail-pad, 16px); }
+.od-rail::-webkit-scrollbar { display: none; }
+:where(.od-rail) > :where(*) { flex: none; scroll-snap-align: start; }
+:where(.od-rail) > :where(:last-child) { margin-inline-end: var(--od-rail-pad, 16px); }
+.od-spacer { flex: none; visibility: hidden; pointer-events: none; }
+.od-touch { min-width: 44px; min-height: 44px; }
+}
+/* /OD-LAYOUT-PRIMITIVES v1 */
+:root{
+--bg:#ffffff;--surface:#f6f8fa;--fg:#1f2328;--muted:#656d76;
+--border:#d0d7de;--border-soft:#d8dee4;
+--accent:#0969da;--accent-hover:#0550ae;
+--success:#1a7f37;--danger:#cf222e;--warn:#9a6700;
+--font-body:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+--font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+--radius:6px;--focus-ring:0 0 0 3px rgba(9,105,218,.3);
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;min-height:100vh;display:flex;justify-content:center;padding:0}
+.app-window{width:100%;background:var(--bg);overflow:hidden}
+.tabs{display:flex;gap:4px;padding:12px 20px 0;align-items:center}
+.tabs a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:var(--radius)}
+.tabs a:hover{background:var(--surface);color:var(--fg)}
+.tabs a.on{color:var(--fg);font-weight:600;background:var(--surface);border:1px solid var(--border)}
+.tabs a:not(.on){border:1px solid transparent}
+.tabs a.learn{margin-left:auto;font-weight:400;color:var(--muted)}
+.tabs a.learn.on{font-weight:600;color:var(--fg)}
+.main{padding:8px 20px 22px;max-width:1280px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 0}
+h1{font-size:24px;margin:2px 0 0;letter-spacing:-.01em;line-height:1.25}
+.lede{color:var(--muted);margin:4px 0 12px;max-width:62ch}
+.lede code{font-family:var(--font-mono);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:0 4px;color:var(--fg)}
+.mods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 12px}
+.mod{border:1px solid var(--border);border-radius:var(--radius);background:#fff;padding:10px 12px}
+.mod strong{display:block;font-size:13px}
+.mod code{font-family:var(--font-mono);font-size:12px;color:var(--accent)}
+.mod span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+.toolbar input,.toolbar select{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:14px;font-family:inherit;color:var(--fg);outline:none;min-height:36px}
+.toolbar input{flex:1 1 220px;min-width:0}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--accent);box-shadow:var(--focus-ring)}
+.count{font-size:12px;font-weight:600;background:var(--surface);border:1px solid var(--border);border-radius:9999px;padding:2px 10px;color:var(--muted);white-space:nowrap}
+.box{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0}
+tbody th.group{text-align:left;font-size:12px;font-weight:600;color:var(--fg);background:var(--surface);border-bottom:1px solid var(--border);border-top:1px solid var(--border);padding:8px 12px}
+tbody tr.row{border-bottom:1px solid var(--border-soft)}
+tbody tr.row:last-child{border-bottom:none}
+td{padding:10px 12px;vertical-align:middle}
+td.opt{width:30%}
+td.see{width:34%}
+td.use{color:var(--muted);width:36%}
+.tok{font-family:var(--font-mono);font-size:12px;font-weight:600;display:block;overflow-wrap:anywhere}
+.pill{display:inline-block;font-size:11px;font-weight:600;border-radius:9999px;padding:0 8px;margin-top:4px;border:1px solid var(--border-soft);background:#ddf4ff;color:var(--accent)}
+.pill.num{background:var(--surface);color:var(--fg)}
+.pill.choice{background:#fff8c5;color:var(--warn);border-color:var(--border-soft)}
+.pill.flag{background:#dafbe1;color:var(--success);border-color:#a9d3ab}
+.see .demo{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.see input[type="text"],.see input[type="number"],.see input[type="date"],.see input[type="password"],.see select{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;min-height:32px;max-width:180px;background:#fff;color:var(--fg)}
+.see input[type="color"]{width:40px;height:32px;padding:2px;border:1px solid var(--border);border-radius:6px;background:#fff}
+.see input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent)}
+.see input[type="range"]{accent-color:var(--accent);width:130px}
+.see .flag{font-family:var(--font-mono);font-size:12px}
+.see .radio-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:9999px;padding:4px 10px;font-size:12px}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+.foot{padding:12px 2px 0;color:var(--muted);font-size:12px}
+.foot a{color:var(--accent)}
+a:focus-visible,input:focus-visible,select:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+@media(max-width:760px){.mods{grid-template-columns:1fr}}
+@media(max-width:640px){
+thead{display:none}
+table,tbody,tr,td{display:block;width:100%}
+tbody th.group{position:sticky;top:0}
+tbody tr.row{border:1px solid var(--border-soft);border-radius:6px;margin:8px;overflow:hidden}
+td{padding:8px 12px}
+td.use{padding-bottom:12px}
+.box{border:none;background:transparent}
+table{background:transparent}
+tbody{display:grid;gap:0;background:transparent}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app-window">
+<nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a href="hub.html">Community Hub</a><a class="learn on" href="learn.html" aria-current="page">Learn</a></nav>
+<div class="main">
+<p class="eyebrow">Reference</p>
+<h1>Learn inputs</h1>
+<p class="lede">Every <code>{{…}}</code> option from Add. See it, then copy it. Full list, one line each.</p>
+<div class="mods">
+<div class="mod"><strong><code>:default</code> prefill</strong><span><code>{{input.text:hello}}</code> · <code>{{input.select:zip,tar.gz=tar.gz}}</code></span></div>
+<div class="mod"><strong><code>.autogenerate</code> fill</strong><span><code>{{input.uuid.autogenerate}}</code> — editable after</span></div>
+<div class="mod"><strong><code>=off</code> start off</strong><span><code>{{input.checkbox:--dry-run=off}}</code> unchecked first</span></div>
+</div>
+<div class="toolbar">
+<input id="q" type="search" placeholder="Filter options… e.g. port, color, select" aria-label="Filter options" />
+<select id="w" aria-label="Filter by widget"><option value="">All widgets</option><option value="file">File</option><option value="text">Text</option><option value="number">Number</option><option value="date">Date · Color · Secret</option><option value="select">Choice</option><option value="checkbox">Flag</option><option value="range">Range</option></select>
+<span class="count" id="count"></span>
+</div>
+<div class="box">
+<table aria-label="All input options">
+<thead><tr><th scope="col">Option</th><th scope="col">See it</th><th scope="col">Use</th></tr></thead>
+<tbody id="rows">
+<tr><th class="group" colspan="3">File — pick a path</th></tr>
+<tr class="row" data-w="file" data-n="input.file file path"><td class="opt"><span class="tok">{{input.file}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="input.mp4" aria-label="File sample" /></span></td><td class="use">Source file to read.</td></tr>
+<tr class="row" data-w="file" data-n="input.path file directory path"><td class="opt"><span class="tok">{{input.path}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="./src/app.js" aria-label="Path sample" /></span></td><td class="use">File or folder path.</td></tr>
+<tr class="row" data-w="file" data-n="input.dir directory path"><td class="opt"><span class="tok">{{input.dir}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="./dist" aria-label="Dir sample" /></span></td><td class="use">Folder only.</td></tr>
+<tr class="row" data-w="file" data-n="input.output output path"><td class="opt"><span class="tok">{{input.output}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="output.mp4" aria-label="Output sample" /></span></td><td class="use">Where to write.</td></tr>
+<tr class="row" data-w="file" data-n="input.subtitle subtitle file"><td class="opt"><span class="tok">{{input.subtitle}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="subs.srt" aria-label="Subtitle sample" /></span></td><td class="use">Captions file.</td></tr>
+<tr class="row" data-w="file" data-n="input.poster poster image"><td class="opt"><span class="tok">{{input.poster}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="poster.jpg" aria-label="Poster sample" /></span></td><td class="use">Cover image.</td></tr>
+<tr class="row" data-w="file" data-n="input.thumbnail thumbnail image"><td class="opt"><span class="tok">{{input.thumbnail}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="thumb.jpg" aria-label="Thumbnail sample" /></span></td><td class="use">Preview image.</td></tr>
+<tr class="row" data-w="file" data-n="input.template template file"><td class="opt"><span class="tok">{{input.template}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="template.hbs" aria-label="Template sample" /></span></td><td class="use">Template to fill.</td></tr>
+<tr class="row" data-w="file" data-n="input.config config file"><td class="opt"><span class="tok">{{input.config}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="config.json" aria-label="Config sample" /></span></td><td class="use">Settings file.</td></tr>
+<tr class="row" data-w="file" data-n="input.logfile log file"><td class="opt"><span class="tok">{{input.logfile}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="app.log" aria-label="Log sample" /></span></td><td class="use">Log to tail.</td></tr>
+<tr class="row" data-w="file" data-n="input.workdir working directory"><td class="opt"><span class="tok">{{input.workdir}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="C:\projects\app" aria-label="Workdir sample" /></span></td><td class="use">Run folder.</td></tr>
+<tr class="row" data-w="file" data-n="input.varfile var file"><td class="opt"><span class="tok">{{input.varfile}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="vars.tfvars" aria-label="Varfile sample" /></span></td><td class="use">Variables file.</td></tr>
+<tr class="row" data-w="file" data-n="input.planfile plan file"><td class="opt"><span class="tok">{{input.planfile}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><input type="text" value="plan.out" aria-label="Planfile sample" /></span></td><td class="use">Saved plan.</td></tr>
+<tr><th class="group" colspan="3">Text — short values</th></tr>
+<tr class="row" data-w="text" data-n="input.text free text"><td class="opt"><span class="tok">{{input.text}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="hello" aria-label="Text sample" /></span></td><td class="use">Any short text.</td></tr>
+<tr class="row" data-w="text" data-n="input.message short message"><td class="opt"><span class="tok">{{input.message}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="hello world" aria-label="Message sample" /></span></td><td class="use">One-line message.</td></tr>
+<tr class="row" data-w="text" data-n="input.title title"><td class="opt"><span class="tok">{{input.title}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="Release notes" aria-label="Title sample" /></span></td><td class="use">Short heading.</td></tr>
+<tr class="row" data-w="text" data-n="input.description longer description"><td class="opt"><span class="tok">{{input.description}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="Small fix release" aria-label="Description sample" /></span></td><td class="use">Longer blurb.</td></tr>
+<tr class="row" data-w="text" data-n="input.username user name"><td class="opt"><span class="tok">{{input.username}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="ada" aria-label="Username sample" /></span></td><td class="use">Login name.</td></tr>
+<tr class="row" data-w="text" data-n="input.hostname host name"><td class="opt"><span class="tok">{{input.hostname}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="web-01" aria-label="Hostname sample" /></span></td><td class="use">Server host.</td></tr>
+<tr class="row" data-w="text" data-n="input.domain domain name"><td class="opt"><span class="tok">{{input.domain}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="example.com" aria-label="Domain sample" /></span></td><td class="use">Domain only.</td></tr>
+<tr class="row" data-w="text" data-n="input.ip ip address"><td class="opt"><span class="tok">{{input.ip}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="192.168.1.10" aria-label="IP sample" /></span></td><td class="use">IPv4 address.</td></tr>
+<tr class="row" data-w="text" data-n="input.email email address"><td class="opt"><span class="tok">{{input.email}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="you@example.com" aria-label="Email sample" /></span></td><td class="use">Email address.</td></tr>
+<tr class="row" data-w="text" data-n="input.url url link"><td class="opt"><span class="tok">{{input.url}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="https://example.com" aria-label="URL sample" /></span></td><td class="use">Web link.</td></tr>
+<tr class="row" data-w="text" data-n="input.search search string"><td class="opt"><span class="tok">{{input.search}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="button styles" aria-label="Search sample" /></span></td><td class="use">Search query.</td></tr>
+<tr class="row" data-w="text" data-n="input.regex regular expression"><td class="opt"><span class="tok">{{input.regex}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="[a-z]+" aria-label="Regex sample" /></span></td><td class="use">Pattern to match.</td></tr>
+<tr class="row" data-w="text" data-n="input.filename file name"><td class="opt"><span class="tok">{{input.filename}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="app.js" aria-label="Filename sample" /></span></td><td class="use">Name, no path.</td></tr>
+<tr class="row" data-w="text" data-n="input.glob glob pattern"><td class="opt"><span class="tok">{{input.glob}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="*.js" aria-label="Glob sample" /></span></td><td class="use">Wildcard set.</td></tr>
+<tr class="row" data-w="text" data-n="input.pattern match pattern"><td class="opt"><span class="tok">{{input.pattern}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="*.test.js" aria-label="Pattern sample" /></span></td><td class="use">Match rule.</td></tr>
+<tr class="row" data-w="text" data-n="input.duration duration"><td class="opt"><span class="tok">{{input.duration}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="00:01:20" aria-label="Duration sample" /></span></td><td class="use">Length of media.</td></tr>
+<tr class="row" data-w="text" data-n="input.seek seek position"><td class="opt"><span class="tok">{{input.seek}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="00:00:10" aria-label="Seek sample" /></span></td><td class="use">Jump to time.</td></tr>
+<tr class="row" data-w="text" data-n="input.script script name"><td class="opt"><span class="tok">{{input.script}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="build" aria-label="Script sample" /></span></td><td class="use">npm script.</td></tr>
+<tr class="row" data-w="text" data-n="input.package package name"><td class="opt"><span class="tok">{{input.package}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="opencode" aria-label="Package sample" /></span></td><td class="use">Package id.</td></tr>
+<tr class="row" data-w="text" data-n="input.version version string"><td class="opt"><span class="tok">{{input.version}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="1.2.0" aria-label="Version sample" /></span></td><td class="use">Version label.</td></tr>
+<tr class="row" data-w="text" data-n="input.semver semver"><td class="opt"><span class="tok">{{input.semver}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="1.2.0" aria-label="Semver sample" /></span></td><td class="use">Strict x.y.z.</td></tr>
+<tr class="row" data-w="text" data-n="input.branch git branch"><td class="opt"><span class="tok">{{input.branch}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="main" aria-label="Branch sample" /></span></td><td class="use">Branch name.</td></tr>
+<tr class="row" data-w="text" data-n="input.tag git tag"><td class="opt"><span class="tok">{{input.tag}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="v1.2.0" aria-label="Tag sample" /></span></td><td class="use">Release tag.</td></tr>
+<tr class="row" data-w="text" data-n="input.commit commit ref"><td class="opt"><span class="tok">{{input.commit}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="a1b2c3d" aria-label="Commit sample" /></span></td><td class="use">Commit hash.</td></tr>
+<tr class="row" data-w="text" data-n="input.author author name"><td class="opt"><span class="tok">{{input.author}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="Ada Lovelace" aria-label="Author sample" /></span></td><td class="use">Who wrote it.</td></tr>
+<tr class="row" data-w="text" data-n="input.repos repository"><td class="opt"><span class="tok">{{input.repos}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="open-design/app" aria-label="Repos sample" /></span></td><td class="use">Repo path.</td></tr>
+<tr class="row" data-w="text" data-n="input.org organization"><td class="opt"><span class="tok">{{input.org}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="acme" aria-label="Org sample" /></span></td><td class="use">Org handle.</td></tr>
+<tr class="row" data-w="text" data-n="input.cimage container image any"><td class="opt"><span class="tok">{{input.cimage}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="node:20" aria-label="Cimage sample" /></span></td><td class="use">Any image ref.</td></tr>
+<tr class="row" data-w="text" data-n="input.containername container name"><td class="opt"><span class="tok">{{input.containername}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="web" aria-label="Container name sample" /></span></td><td class="use">Container label.</td></tr>
+<tr class="row" data-w="text" data-n="input.mount volume mapping"><td class="opt"><span class="tok">{{input.mount}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="./data:/data" aria-label="Mount sample" /></span></td><td class="use">Volume map.</td></tr>
+<tr class="row" data-w="text" data-n="input.network network name"><td class="opt"><span class="tok">{{input.network}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="app-net" aria-label="Network sample" /></span></td><td class="use">Network id.</td></tr>
+<tr class="row" data-w="text" data-n="input.memory memory limit"><td class="opt"><span class="tok">{{input.memory}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="512m" aria-label="Memory sample" /></span></td><td class="use">RAM cap.</td></tr>
+<tr class="row" data-w="text" data-n="input.entrypoint entrypoint command"><td class="opt"><span class="tok">{{input.entrypoint}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="npm start" aria-label="Entrypoint sample" /></span></td><td class="use">Start command.</td></tr>
+<tr class="row" data-w="text" data-n="input.header http header"><td class="opt"><span class="tok">{{input.header}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="Authorization: Bearer TOKEN" aria-label="Header sample" /></span></td><td class="use">One header.</td></tr>
+<tr class="row" data-w="text" data-n="input.query query string"><td class="opt"><span class="tok">{{input.query}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="q=hello&amp;page=2" aria-label="Query sample" /></span></td><td class="use">URL params.</td></tr>
+<tr class="row" data-w="text" data-n="input.cidr cidr range"><td class="opt"><span class="tok">{{input.cidr}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="10.0.0.0/24" aria-label="CIDR sample" /></span></td><td class="use">IP block.</td></tr>
+<tr class="row" data-w="text" data-n="input.sql sql query"><td class="opt"><span class="tok">{{input.sql}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="SELECT * FROM users" aria-label="SQL sample" /></span></td><td class="use">DB query.</td></tr>
+<tr class="row" data-w="text" data-n="input.mac mac address"><td class="opt"><span class="tok">{{input.mac}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="02:42:ac:11:00:02" aria-label="MAC sample" /></span></td><td class="use">Hardware id.</td></tr>
+<tr class="row" data-w="text" data-n="input.database database name"><td class="opt"><span class="tok">{{input.database}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="appdb" aria-label="Database sample" /></span></td><td class="use">DB name.</td></tr>
+<tr class="row" data-w="text" data-n="input.table table name"><td class="opt"><span class="tok">{{input.table}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="users" aria-label="Table sample" /></span></td><td class="use">Table name.</td></tr>
+<tr class="row" data-w="text" data-n="input.dbuser db user"><td class="opt"><span class="tok">{{input.dbuser}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="admin" aria-label="DB user sample" /></span></td><td class="use">DB login.</td></tr>
+<tr class="row" data-w="text" data-n="input.cron cron expression"><td class="opt"><span class="tok">{{input.cron}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="0 * * * *" aria-label="Cron sample" /></span></td><td class="use">Schedule rule.</td></tr>
+<tr class="row" data-w="text" data-n="input.colorname color name"><td class="opt"><span class="tok">{{input.colorname}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="steelblue" aria-label="Color name sample" /></span></td><td class="use">Named color.</td></tr>
+<tr class="row" data-w="text" data-n="input.namespace namespace"><td class="opt"><span class="tok">{{input.namespace}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="default" aria-label="Namespace sample" /></span></td><td class="use">Scope name.</td></tr>
+<tr class="row" data-w="text" data-n="input.deployment deployment name"><td class="opt"><span class="tok">{{input.deployment}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="web" aria-label="Deployment sample" /></span></td><td class="use">Deploy id.</td></tr>
+<tr class="row" data-w="text" data-n="input.service service name"><td class="opt"><span class="tok">{{input.service}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="api" aria-label="Service sample" /></span></td><td class="use">Service id.</td></tr>
+<tr class="row" data-w="text" data-n="input.pod pod name"><td class="opt"><span class="tok">{{input.pod}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="web-0" aria-label="Pod sample" /></span></td><td class="use">Pod id.</td></tr>
+<tr class="row" data-w="text" data-n="input.context context name"><td class="opt"><span class="tok">{{input.context}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="prod" aria-label="Context sample" /></span></td><td class="use">Config context.</td></tr>
+<tr class="row" data-w="text" data-n="input.profile cloud profile"><td class="opt"><span class="tok">{{input.profile}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="default" aria-label="Profile sample" /></span></td><td class="use">Cloud profile.</td></tr>
+<tr class="row" data-w="text" data-n="input.bucket bucket name"><td class="opt"><span class="tok">{{input.bucket}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="assets" aria-label="Bucket sample" /></span></td><td class="use">Bucket id.</td></tr>
+<tr class="row" data-w="text" data-n="input.bucketkey bucket key"><td class="opt"><span class="tok">{{input.bucketkey}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="video/input.mp4" aria-label="Bucket key sample" /></span></td><td class="use">Object key.</td></tr>
+<tr class="row" data-w="text" data-n="input.workspace workspace name"><td class="opt"><span class="tok">{{input.workspace}}</span><span class="pill num">text</span></td><td class="see"><span class="demo"><input type="text" value="main" aria-label="Workspace sample" /></span></td><td class="use">Workspace id.</td></tr>
+<tr class="row" data-w="text" data-n="input.uuid uuid v4"><td class="opt"><span class="tok">{{input.uuid}}</span><span class="pill num">text · id</span></td><td class="see"><span class="demo"><input type="text" value="123e4567-e89b-…" aria-label="UUID sample" /></span></td><td class="use">Unique id.</td></tr>
+<tr><th class="group" colspan="3">Number — counts and ports</th></tr>
+<tr class="row" data-w="number" data-n="input.number numeric value"><td class="opt"><span class="tok">{{input.number}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="42" aria-label="Number sample" /></span></td><td class="use">Any number.</td></tr>
+<tr class="row" data-w="number" data-n="input.port port number"><td class="opt"><span class="tok">{{input.port:8080}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="8080" aria-label="Port sample" /></span></td><td class="use">TCP port.</td></tr>
+<tr class="row" data-w="number" data-n="input.count count"><td class="opt"><span class="tok">{{input.count:5}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="5" aria-label="Count sample" /></span></td><td class="use">How many.</td></tr>
+<tr class="row" data-w="number" data-n="input.quantity quantity"><td class="opt"><span class="tok">{{input.quantity}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="2" aria-label="Quantity sample" /></span></td><td class="use">Amount.</td></tr>
+<tr class="row" data-w="number" data-n="input.bitrate bitrate value"><td class="opt"><span class="tok">{{input.bitrate}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="2500" aria-label="Bitrate sample" /></span></td><td class="use">Kbps rate.</td></tr>
+<tr class="row" data-w="number" data-n="input.fps frames per second"><td class="opt"><span class="tok">{{input.fps}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="30" aria-label="FPS sample" /></span></td><td class="use">Frame rate.</td></tr>
+<tr class="row" data-w="number" data-n="input.speed speed multiplier"><td class="opt"><span class="tok">{{input.speed}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="1.5" aria-label="Speed sample" /></span></td><td class="use">Speed factor.</td></tr>
+<tr class="row" data-w="number" data-n="input.replicas replica count"><td class="opt"><span class="tok">{{input.replicas}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="3" aria-label="Replicas sample" /></span></td><td class="use">Copies to run.</td></tr>
+<tr class="row" data-w="number" data-n="input.cpu cpu limit"><td class="opt"><span class="tok">{{input.cpu}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="2" aria-label="CPU sample" /></span></td><td class="use">CPU units.</td></tr>
+<tr class="row" data-w="number" data-n="input.timeout timeout seconds"><td class="opt"><span class="tok">{{input.timeout}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="30" aria-label="Timeout sample" /></span></td><td class="use">Wait limit.</td></tr>
+<tr class="row" data-w="number" data-n="input.retries retry count"><td class="opt"><span class="tok">{{input.retries}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="3" aria-label="Retries sample" /></span></td><td class="use">Retry times.</td></tr>
+<tr class="row" data-w="number" data-n="input.delay delay seconds"><td class="opt"><span class="tok">{{input.delay}}</span><span class="pill num">number</span></td><td class="see"><span class="demo"><input type="number" value="5" aria-label="Delay sample" /></span></td><td class="use">Pause length.</td></tr>
+<tr><th class="group" colspan="3">Date · Color · Secret — pickers</th></tr>
+<tr class="row" data-w="date" data-n="input.date calendar date"><td class="opt"><span class="tok">{{input.date:2026-01-15}}</span><span class="pill">date</span></td><td class="see"><span class="demo"><input type="date" value="2026-01-15" aria-label="Date sample" /></span></td><td class="use">Calendar day.</td></tr>
+<tr class="row" data-w="date" data-n="input.since since date alias"><td class="opt"><span class="tok">{{input.since}}</span><span class="pill">date</span></td><td class="see"><span class="demo"><input type="date" value="2026-01-15" aria-label="Since sample" /></span></td><td class="use">Start date.</td></tr>
+<tr class="row" data-w="date" data-n="input.color color swatch hex"><td class="opt"><span class="tok">{{input.color:#1677ff}}</span><span class="pill">color</span></td><td class="see"><span class="demo"><input type="color" value="#1677ff" aria-label="Color sample" /><span class="flag">#1677ff</span></span></td><td class="use">Brand color.</td></tr>
+<tr class="row" data-w="date" data-n="input.password masked secret"><td class="opt"><span class="tok">{{input.password}}</span><span class="pill">secret</span></td><td class="see"><span class="demo"><input type="password" value="s3cr3t" aria-label="Password sample" /></span></td><td class="use">Hidden secret.</td></tr>
+<tr><th class="group" colspan="3">Choice — select and radio</th></tr>
+<tr class="row" data-w="select" data-n="input.select choice list"><td class="opt"><span class="tok">{{input.select:zip,tar.gz}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Select sample"><option>zip</option><option>tar.gz</option></select></span></td><td class="use">Pick one.</td></tr>
+<tr class="row" data-w="select" data-n="input.radio single choice"><td class="opt"><span class="tok">{{input.radio:yes,no}}</span><span class="pill choice">radio</span></td><td class="see"><span class="demo"><span class="radio-pill"><input type="radio" checked aria-label="Yes" /> yes</span><span class="radio-pill"><input type="radio" aria-label="No" /> no</span></span></td><td class="use">One of few.</td></tr>
+<tr class="row" data-w="select" data-n="input.extension file extension"><td class="opt"><span class="tok">{{input.extension:mp4,mkv,mov}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Extension sample"><option>mp4</option><option>mkv</option><option>mov</option></select></span></td><td class="use">Output type.</td></tr>
+<tr class="row" data-w="select" data-n="input.container container format"><td class="opt"><span class="tok">{{input.container}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Container sample"><option>mp4</option><option>mkv</option></select></span></td><td class="use">Media wrapper.</td></tr>
+<tr class="row" data-w="select" data-n="input.vcodec video codec"><td class="opt"><span class="tok">{{input.vcodec}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Video codec sample"><option>libx264</option><option>libx265</option><option>vp9</option></select></span></td><td class="use">Video encoder.</td></tr>
+<tr class="row" data-w="select" data-n="input.acodec audio codec"><td class="opt"><span class="tok">{{input.acodec}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Audio codec sample"><option>aac</option><option>mp3</option><option>opus</option></select></span></td><td class="use">Audio encoder.</td></tr>
+<tr class="row" data-w="select" data-n="input.preset encoder preset"><td class="opt"><span class="tok">{{input.preset}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Preset sample"><option>fast</option><option>medium</option><option>slow</option></select></span></td><td class="use">Speed vs size.</td></tr>
+<tr class="row" data-w="select" data-n="input.resolution resolution"><td class="opt"><span class="tok">{{input.resolution}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Resolution sample"><option>1920x1080</option><option>1280x720</option></select></span></td><td class="use">Frame size.</td></tr>
+<tr class="row" data-w="select" data-n="input.samplerate audio sample rate"><td class="opt"><span class="tok">{{input.samplerate}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Sample rate sample"><option>44100</option><option>48000</option></select></span></td><td class="use">Audio rate.</td></tr>
+<tr class="row" data-w="select" data-n="input.channels audio channels"><td class="opt"><span class="tok">{{input.channels}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Channels sample"><option>1</option><option>2</option><option>6</option></select></span></td><td class="use">Channel count.</td></tr>
+<tr class="row" data-w="select" data-n="input.env environment"><td class="opt"><span class="tok">{{input.env}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Env sample"><option>development</option><option>staging</option><option>production</option></select></span></td><td class="use">Deploy target.</td></tr>
+<tr class="row" data-w="select" data-n="input.pkgmanager package manager"><td class="opt"><span class="tok">{{input.pkgmanager}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Package manager sample"><option>npm</option><option>bun</option></select></span></td><td class="use">Tool to run.</td></tr>
+<tr class="row" data-w="select" data-n="input.remote git remote"><td class="opt"><span class="tok">{{input.remote}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Remote sample"><option>origin</option><option>upstream</option></select></span></td><td class="use">Remote name.</td></tr>
+<tr class="row" data-w="select" data-n="input.logformat git log format"><td class="opt"><span class="tok">{{input.logformat}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Log format sample"><option>oneline</option><option>short</option><option>full</option></select></span></td><td class="use">Log style.</td></tr>
+<tr class="row" data-w="select" data-n="input.mode mode"><td class="opt"><span class="tok">{{input.mode}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Mode sample"><option>development</option><option>production</option></select></span></td><td class="use">Run mode.</td></tr>
+<tr class="row" data-w="select" data-n="input.loglevel log level"><td class="opt"><span class="tok">{{input.loglevel}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Log level sample"><option>info</option><option>debug</option></select></span></td><td class="use">Verbosity.</td></tr>
+<tr class="row" data-w="select" data-n="input.image container image"><td class="opt"><span class="tok">{{input.image}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Image sample"><option>nginx</option><option>caddy</option></select></span></td><td class="use">Known image.</td></tr>
+<tr class="row" data-w="select" data-n="input.restart restart policy"><td class="opt"><span class="tok">{{input.restart}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Restart sample"><option>always</option><option>no</option></select></span></td><td class="use">Restart rule.</td></tr>
+<tr class="row" data-w="select" data-n="input.protocol protocol"><td class="opt"><span class="tok">{{input.protocol}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Protocol sample"><option>https</option><option>ssh</option></select></span></td><td class="use">Link scheme.</td></tr>
+<tr class="row" data-w="select" data-n="input.method http method"><td class="opt"><span class="tok">{{input.method}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Method sample"><option>GET</option><option>POST</option></select></span></td><td class="use">Request verb.</td></tr>
+<tr class="row" data-w="select" data-n="input.engine db engine"><td class="opt"><span class="tok">{{input.engine}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Engine sample"><option>postgres</option><option>mysql</option></select></span></td><td class="use">DB kind.</td></tr>
+<tr class="row" data-w="select" data-n="input.language language"><td class="opt"><span class="tok">{{input.language}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Language sample"><option>en</option><option>es</option><option>fr</option></select></span></td><td class="use">Content lang.</td></tr>
+<tr class="row" data-w="select" data-n="input.locale locale"><td class="opt"><span class="tok">{{input.locale}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Locale sample"><option>en-US</option><option>fr-FR</option></select></span></td><td class="use">Region format.</td></tr>
+<tr class="row" data-w="select" data-n="input.timezone timezone"><td class="opt"><span class="tok">{{input.timezone}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Timezone sample"><option>UTC</option><option>Asia/Tokyo</option></select></span></td><td class="use">Time zone.</td></tr>
+<tr class="row" data-w="select" data-n="input.currency currency"><td class="opt"><span class="tok">{{input.currency}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Currency sample"><option>USD</option><option>EUR</option></select></span></td><td class="use">Money unit.</td></tr>
+<tr class="row" data-w="select" data-n="input.country country code"><td class="opt"><span class="tok">{{input.country}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Country sample"><option>US</option><option>GB</option></select></span></td><td class="use">Country pick.</td></tr>
+<tr class="row" data-w="select" data-n="input.format output format"><td class="opt"><span class="tok">{{input.format}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Format sample"><option>json</option><option>yaml</option><option>table</option></select></span></td><td class="use">Print shape.</td></tr>
+<tr class="row" data-w="select" data-n="input.shell shell"><td class="opt"><span class="tok">{{input.shell}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Shell sample"><option>bash</option><option>zsh</option></select></span></td><td class="use">Shell kind.</td></tr>
+<tr class="row" data-w="select" data-n="input.os os"><td class="opt"><span class="tok">{{input.os}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="OS sample"><option>linux</option><option>macos</option></select></span></td><td class="use">Target OS.</td></tr>
+<tr class="row" data-w="select" data-n="input.arch cpu arch"><td class="opt"><span class="tok">{{input.arch}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Arch sample"><option>x64</option><option>arm64</option></select></span></td><td class="use">Chip arch.</td></tr>
+<tr class="row" data-w="select" data-n="input.region cloud region"><td class="opt"><span class="tok">{{input.region}}</span><span class="pill choice">select</span></td><td class="see"><span class="demo"><select aria-label="Region sample"><option>us-east-1</option><option>eu-west-1</option></select></span></td><td class="use">Cloud zone.</td></tr>
+<tr><th class="group" colspan="3">Flag — on / off</th></tr>
+<tr class="row" data-w="checkbox" data-n="input.checkbox flag"><td class="opt"><span class="tok">{{input.checkbox:--rm}}</span><span class="pill flag">flag</span></td><td class="see"><span class="demo"><input type="checkbox" checked aria-label="Flag sample" /><span class="flag">--rm</span></span></td><td class="use">Toggle a flag.</td></tr>
+<tr class="row" data-w="checkbox" data-n="input.flag custom flag"><td class="opt"><span class="tok">{{input.flag}}</span><span class="pill flag">flag</span></td><td class="see"><span class="demo"><input type="checkbox" checked aria-label="Custom flag sample" /><span class="flag">--flag</span></span></td><td class="use">Custom switch.</td></tr>
+<tr class="row" data-w="checkbox" data-n="input.confirm confirm toggle"><td class="opt"><span class="tok">{{input.confirm:--yes}}</span><span class="pill flag">flag</span></td><td class="see"><span class="demo"><input type="checkbox" checked aria-label="Confirm sample" /><span class="flag">--yes</span></span></td><td class="use">Confirm step.</td></tr>
+<tr class="row" data-w="checkbox" data-n="input.verbose verbose flag"><td class="opt"><span class="tok">{{input.verbose}}</span><span class="pill flag">flag</span></td><td class="see"><span class="demo"><input type="checkbox" checked aria-label="Verbose sample" /><span class="flag">--verbose</span></span></td><td class="use">More logs.</td></tr>
+<tr class="row" data-w="checkbox" data-n="input.quiet quiet flag"><td class="opt"><span class="tok">{{input.quiet}}</span><span class="pill flag">flag</span></td><td class="see"><span class="demo"><input type="checkbox" aria-label="Quiet sample" /><span class="flag">--quiet</span></span></td><td class="use">Less output.</td></tr>
+<tr class="row" data-w="checkbox" data-n="input.force force flag"><td class="opt"><span class="tok">{{input.force}}</span><span class="pill flag">flag</span></td><td class="see"><span class="demo"><input type="checkbox" aria-label="Force sample" /><span class="flag">--force</span></span></td><td class="use">Skip checks.</td></tr>
+<tr class="row" data-w="checkbox" data-n="input.dryrun dry-run flag"><td class="opt"><span class="tok">{{input.dryrun}}</span><span class="pill flag">flag</span></td><td class="see"><span class="demo"><input type="checkbox" aria-label="Dry run sample" /><span class="flag">--dry-run</span></span></td><td class="use">Preview only.</td></tr>
+<tr><th class="group" colspan="3">Range — sliders</th></tr>
+<tr class="row" data-w="range" data-n="input.range range slider"><td class="opt"><span class="tok">{{input.range:0-100}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="0" max="100" value="50" aria-label="Range sample" /></span></td><td class="use">Any slider.</td></tr>
+<tr class="row" data-w="range" data-n="input.percent percent slider"><td class="opt"><span class="tok">{{input.percent}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="0" max="100" value="50" aria-label="Percent sample" /></span></td><td class="use">0–100 %.</td></tr>
+<tr class="row" data-w="range" data-n="input.month month slider"><td class="opt"><span class="tok">{{input.month}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="1" max="12" value="6" aria-label="Month sample" /></span></td><td class="use">Month 1–12.</td></tr>
+<tr class="row" data-w="range" data-n="input.day day slider"><td class="opt"><span class="tok">{{input.day}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="1" max="31" value="15" aria-label="Day sample" /></span></td><td class="use">Day 1–31.</td></tr>
+<tr class="row" data-w="range" data-n="input.hour hour slider"><td class="opt"><span class="tok">{{input.hour}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="0" max="23" value="12" aria-label="Hour sample" /></span></td><td class="use">Hour 0–23.</td></tr>
+<tr class="row" data-w="range" data-n="input.minute minute slider"><td class="opt"><span class="tok">{{input.minute}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="0" max="59" value="30" aria-label="Minute sample" /></span></td><td class="use">Minute 0–59.</td></tr>
+<tr class="row" data-w="range" data-n="input.second second slider"><td class="opt"><span class="tok">{{input.second}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="0" max="59" value="30" aria-label="Second sample" /></span></td><td class="use">Second 0–59.</td></tr>
+<tr class="row" data-w="range" data-n="input.crf quality crf"><td class="opt"><span class="tok">{{input.crf:18-28}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="18" max="28" value="23" aria-label="CRF sample" /></span></td><td class="use">Lower is better.</td></tr>
+<tr class="row" data-w="range" data-n="input.volume volume level"><td class="opt"><span class="tok">{{input.volume}}</span><span class="pill choice">range</span></td><td class="see"><span class="demo"><input type="range" min="0" max="100" value="70" aria-label="Volume sample" /></span></td><td class="use">Loudness.</td></tr>
+</tbody>
+</table>
+<div class="empty" id="empty" hidden>No options match. Try another search.</div>
+</div>
+<p class="foot">Same parser as Add — <code>{{input.color:#1677ff}}</code>, <code>{{input.uuid.autogenerate}}</code>, <code>{{input.checkbox:--dry-run=off}}</code>. Unknown <code>{{braces}}</code> stay literal. <a href="add.html">Try it in Add →</a></p>
+</div>
+</div>
+<script>
+var q=document.getElementById("q"),w=document.getElementById("w"),rows=Array.prototype.slice.call(document.querySelectorAll("#rows tr.row")),count=document.getElementById("count"),empty=document.getElementById("empty");
+function paint(){
+var f=q.value.trim().toLowerCase(),wf=w.value,shown=0;
+rows.forEach(function(r){
+var ok=(!wf||r.getAttribute("data-w")===wf)&&(r.getAttribute("data-n")||"").toLowerCase().indexOf(f)>=0;
+r.style.display=ok?"":"none";if(ok)shown++;
+});
+var groups=document.querySelectorAll("#rows th.group");
+groups.forEach(function(g){
+var next=g.parentElement.nextElementSibling,any=false;
+while(next&&!next.querySelector("th.group")){
+if(next.style.display!=="none")any=true;
+next=next.nextElementSibling;
+}
+g.parentElement.style.display=any?"":"none";
+});
+count.textContent=shown+" options";empty.hidden=shown>0;
+}
+q.addEventListener("input",paint);w.addEventListener("change",paint);paint();
+</script>
+</body>
+</html>

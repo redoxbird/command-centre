@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Command Center</title>
+<style>
+/* OD-LAYOUT-PRIMITIVES v1 — structure only */
+@layer od-layout {
+:where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+.od-stack { display:flex; flex-direction:column; gap:var(--od-gap,8px); }
+.od-row { display:flex; align-items:center; gap:var(--od-gap,8px); }
+.od-row-top { display:flex; align-items:flex-start; gap:var(--od-gap,8px); }
+.od-cluster { display:flex; flex-wrap:wrap; align-items:center; gap:var(--od-gap,8px); }
+.od-fill { flex:1 1 0; min-width:0; }
+.od-fixed { flex:none; }
+.od-grid { display:grid; gap:var(--od-gap,12px); grid-template-columns:repeat(var(--od-cols,3),minmax(0,1fr)); }
+.od-stat,.od-field,.od-cell { display:grid; gap:var(--od-gap,2px); }
+:where(.od-stat,.od-field,.od-cell) > :where(*) { display:block; }
+.od-tile { display:grid; grid-template-rows:auto 1fr; }
+:where(.od-tile) > :where(*) { display:block; }
+.od-media { display:block; width:100%; height:auto; aspect-ratio:var(--od-ratio,auto); }
+.od-media-cover { object-fit:cover; }
+.od-truncate { display:block; max-width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.od-clamp-2,.od-clamp-3 { display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+.od-clamp-2 { -webkit-line-clamp:2; } .od-clamp-3 { -webkit-line-clamp:3; }
+.od-lines-2 { min-height:calc(2 * 1.4em); }
+.od-nowrap { white-space:nowrap; } .od-keep { word-break:keep-all; overflow-wrap:anywhere; }
+.od-screen { display:grid; grid-template-rows:auto minmax(0,1fr) auto; height:100%; }
+.od-scroll { overflow-y:auto; overscroll-behavior:contain; min-height:0; }
+.od-rail { display:flex; gap:var(--od-gap,8px); overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none; padding-inline:var(--od-rail-pad,16px); scroll-padding-inline:var(--od-rail-pad,16px); }
+.od-rail::-webkit-scrollbar { display:none; }
+:where(.od-rail) > :where(*) { flex:none; scroll-snap-align:start; }
+:where(.od-rail) > :where(:last-child) { margin-inline-end:var(--od-rail-pad,16px); }
+.od-spacer { flex:none; visibility:hidden; pointer-events:none; }
+.od-touch { min-width:44px; min-height:44px; }
+}
+/* /OD-LAYOUT-PRIMITIVES v1 */
+:root{
+--bg:#ffffff; --surface:#f6f8fa; --fg:#1f2328; --muted:#656d76;
+--border:#d0d7de; --border-soft:#d8dee4;
+--accent:#0969da; --accent-hover:#0550ae; --accent-on:#ffffff;
+--success:#1a7f37; --danger:#cf222e; --warn:#9a6700;
+--font-body:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+--font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+--radius:6px; --focus-ring:0 0 0 3px rgba(9,105,218,.3);
+}
+*{box-sizing:border-box} html,body{margin:0;padding:0}
+body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;min-height:100vh;display:flex;justify-content:center;padding:0}
+.app-window{width:100%;background:var(--bg);border:none;border-radius:0;overflow:hidden;box-shadow:none;}
+.app-head{display:flex;align-items:center;gap:12px;padding:18px 20px 6px;flex-wrap:wrap}
+.app-head h1{font-size:24px;line-height:1.25;margin:0;letter-spacing:-.01em}
+.count{font-size:12px;font-weight:600;background:var(--surface);border:1px solid var(--border);border-radius:9999px;padding:2px 10px;color:var(--muted)}
+.tabs{display:flex;gap:4px;padding:12px 20px 0}
+.tabs a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:var(--radius)}
+.tabs a:hover{background:var(--surface);color:var(--fg)}
+.tabs a.on{color:var(--fg);font-weight:600;background:var(--surface);border:1px solid var(--border)}
+.tabs a:not(.on){border:1px solid transparent}
+.tabs a.learn{margin-left:auto;font-weight:400}
+.search{margin-left:auto;display:flex;gap:8px}
+.search input{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:14px;font-family:inherit;min-width:220px;outline:none}
+.search input:focus{border-color:var(--accent);box-shadow:var(--focus-ring)}
+.list{padding:12px 20px 8px;display:flex;flex-direction:column;gap:12px}
+.cmd{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
+.cmd-top{display:flex;align-items:flex-start;gap:12px;padding:12px 14px}
+.cmd-icon{width:32px;height:32px;flex:none;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;font-family:var(--font-mono);font-size:14px;color:var(--accent);font-weight:700}
+.cmd-icon-btn{cursor:pointer;padding:0;font:inherit}
+.cmd-icon-btn img{width:20px;height:20px;display:block}
+.cmd-icon-btn:hover{border-color:var(--accent)}
+.cmd-icon-btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.cmd-main{flex:1 1 0;min-width:0}
+.cmd-main h2{margin:0;font-size:14px;font-weight:600}
+.cmd-main h2 a{color:inherit;text-decoration:none}
+.cmd-main h2 a:hover{color:var(--accent);text-decoration:underline}
+.cmd-main p{margin:2px 0 6px;color:var(--muted);font-size:12px}
+.cmdline{font-family:var(--font-mono);font-size:12px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:var(--radius);padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+.cmdline .dim{color:#8b949e}
+.cmdline .pwd{color:#3fb950;font-weight:600}
+.cmdline .ex{color:#79c0ff;background:rgba(56,139,253,.15);border:1px solid rgba(56,139,253,.4);border-radius:4px;padding:0 4px}
+.tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.tags span{font-size:12px;background:#ddf4ff;border:1px solid var(--border-soft);color:var(--accent);border-radius:9999px;padding:0 8px}
+.cmd-side{flex:none;display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.btn{font-family:inherit;font-size:14px;border-radius:var(--radius);border:1px solid transparent;padding:5px 16px;cursor:pointer;line-height:1.5;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:32px}
+.btn-run{background:#1f883d;color:#fff;border-color:rgba(31,35,40,.15);font-weight:500;min-width:84px}
+.btn-run:hover{background:var(--success)}
+.btn-run[disabled]{opacity:.6;cursor:wait}
+.btn-ghost{background:var(--surface);color:var(--fg);border-color:var(--border)}
+.btn-ghost:hover{background:#f3f4f6}
+.btn:focus-visible,a:focus-visible,input:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.status{font-size:12px;color:var(--muted);text-align:right;min-height:18px}
+.status.ok{color:var(--success)} .status.run{color:var(--accent)}
+.vars{border-top:1px solid var(--border);background:var(--surface);padding:12px 14px}
+.vars[hidden]{display:none}
+.vars-h{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.vrows{display:grid;gap:8px;margin-bottom:8px}
+.vrow{display:grid;gap:4px}
+.vrow label{font-size:12px;font-weight:600}
+.vrow label .vt{font-weight:400;color:var(--muted)}
+.vrow input{font-family:inherit;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;outline:none;width:100%;color:var(--fg)}
+.vrow input.mono{font-family:var(--font-mono);font-size:12px}
+.vrow input:focus{border-color:var(--accent);box-shadow:var(--focus-ring)}
+.vrow input.bad{border-color:var(--danger)}
+.filerow{display:flex;gap:8px;align-items:center}
+.filerow input{flex:1 1 0;min-width:0}
+.filerow .btn{flex:none;white-space:nowrap}
+.verr{font-size:12px;color:var(--danger);margin-bottom:8px}
+.verr[hidden]{display:none}
+.vacts{display:flex;gap:8px;flex-wrap:wrap}
+.linklike{background:none;border:none;padding:0;font:inherit;font-size:12px;color:var(--accent);cursor:pointer;text-align:right}
+.linklike:hover{text-decoration:underline}
+.linklike:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.linklike[hidden]{display:none}
+.vbadge{font-size:11px;font-weight:600;background:#fff8c5;border:1px solid var(--border-soft);color:var(--warn);border-radius:9999px;padding:0 8px}
+.vrow select{font-family:inherit;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;outline:none;width:100%;color:var(--fg)}
+.vrow select:focus{border-color:var(--accent);box-shadow:var(--focus-ring)}
+.vrow input[type="radio"],.vrow input[type="checkbox"]{width:16px;height:16px;flex:none;padding:0;border:none;background:none;accent-color:var(--accent)}
+.vrow input[type="range"]{background:transparent;border:none;padding:0;accent-color:var(--accent)}
+.vrow label.ropt,.vrow label.check{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400}
+.vrow label.check span{font-family:var(--font-mono);font-size:12px}
+.rgroup{display:flex;gap:14px;flex-wrap:wrap}
+.rrange{display:flex;align-items:center;gap:10px}
+.rrange input[type="range"]{flex:1}
+.rout{font-family:var(--font-mono);font-size:12px;min-width:48px;text-align:right;color:var(--muted)}
+.crow{display:flex;align-items:center;gap:10px}
+.crow input[type="color"]{width:44px;height:32px;flex:none;padding:2px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer}
+.chex{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.term{border-top:1px solid var(--border);background:#0d1117;color:#e6edf3;display:none}
+.cmd.open .term{display:block}
+.term-bar{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid #30363d;font-size:12px;color:#8b949e;flex-wrap:wrap}
+.term-bar .dot{width:8px;height:8px;border-radius:50%;background:#30363d}
+.term-bar .dot.live{background:#1f883d}
+.term-bar .sp{flex:1}
+.term-bar button{background:transparent;border:1px solid #30363d;color:#e6edf3;border-radius:6px;font-size:12px;padding:5px 12px;min-height:32px;cursor:pointer;font-family:inherit}
+.term-bar button:hover{border-color:#8b949e}
+.term-bar button:focus-visible{outline:none;box-shadow:0 0 0 2px #e6edf3}
+.term-body{font-family:var(--font-mono);font-size:12px;line-height:1.6;padding:12px 14px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-word;min-height:64px}
+.term-body .dim{color:#8b949e}.term-body .grn{color:#3fb950}.term-body .blu{color:#79c0ff}.term-body .red{color:#ff7b72}
+.term-empty{color:#8b949e}
+.cursor{display:inline-block;width:8px;height:14px;background:#e6edf3;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+.add-wrap{padding:8px 20px 22px}
+.add-card{border:1px dashed var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;background:#fff}
+.add-card p{margin:0;color:var(--muted);font-size:13px}
+.add-card strong{display:block;color:var(--fg);font-size:14px}
+.foot{padding:0 20px 18px;color:var(--muted);font-size:12px}
+@media(max-width:640px){.cmd-top{flex-direction:column}.cmd-side{flex-direction:row;width:100%;align-items:center}.cmd-side .btn-run{flex:1}.cmd-side .status{text-align:left;flex:1}.search{width:100%}.search input{flex:1;min-width:0}.vacts .btn{flex:1}body{padding:12px 8px}}
+</style>
+</head>
+<body>
+<div class="app-window">
+<nav class="tabs" aria-label="Primary"><a class="on" href="index.html" aria-current="page">My commands</a><a href="hub.html">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
+<div class="app-head">
+<h1>Commands</h1><span class="count" id="count">5 saved</span>
+<div class="search"><input id="q" type="search" placeholder="Filter commands…" aria-label="Filter commands" /></div>
+<a class="btn btn-run" href="add.html">+ Add command</a>
+</div>
+<div class="list" id="list"></div>
+<div class="add-wrap">
+<div class="add-card">
+<div class="cmd-icon">+</div>
+<div class="od-fill"><strong>Add a reusable command</strong><p>Save a script, deploy step or git shortcut once, run it anytime with one click.</p></div>
+<a class="btn btn-ghost" href="add.html">+ Add command</a>
+</div>
+</div>
+<p class="foot">Demo transcripts are simulated locally for preview. New commands added via Add are stored in this browser (localStorage).</p>
+</div>
+<script>
+const DEFAULTS=[
+{id:"n1",name:"Convert video to streaming MP4",cmd:"ffmpeg -i {{input.file}} -c:v {{input.vcodec:libx264,libx265,vp9,av1=libx264}} -crf {{input.range:18-28=23}} {{input.checkbox:-movflags +faststart}} {{input.uuid.autogenerate}}.{{input.extension:mp4,mkv,mov=mp4}}",desc:"Pick codec, quality and container — the output file is named by a generated id.",tag:"video",cwd:"C:\\projects\\media",askMode:"every",lines:["$ ffmpeg -i {{input.file}} -c:v {{input.vcodec:libx264,libx265,vp9,av1=libx264}} -crf {{input.range:18-28=23}} {{input.checkbox:-movflags +faststart}} {{input.uuid.autogenerate}}.{{input.extension:mp4,mkv,mov=mp4}}","dim|frame= 2400 fps= 85 q=23.0 size= 12.4MiB time=00:01:20","grn|✓ done · video written (simulated)"]},
+{id:"n2",name:"Ship a release bundle",cmd:"deno run -A --src {{input.dir}} --dest {{input.dir}} --format {{input.select:zip,tar.gz=tar.gz}} --id {{input.uuid.autogenerate}}",desc:"Source and destination stay separate — each {{input.dir}} gets its own value.",tag:"ship",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ deno run -A --src {{input.dir}} --dest {{input.dir}} --format {{input.select:zip,tar.gz=tar.gz}} --id {{input.uuid.autogenerate}}","dim|bundle packed (simulated)","grn|✓ shipped · exit 0 (simulated)"]},
+{id:"n3",name:"Run container (ports & image)",cmd:"docker run {{input.checkbox:--rm}} -p {{input.port:8080}}:80 --name {{input.text:web}} {{input.image:nginx,caddy,httpd=nginx}}",desc:"Start a web server container with your port, name and image.",tag:"ship",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ docker run {{input.checkbox:--rm}} -p {{input.port:8080}}:80 --name {{input.text:web}} {{input.image:nginx,caddy,httpd=nginx}}","dim|Unable to find image locally — pulling (simulated)","grn|✓ up · container running (simulated)"]},
+{id:"n4",name:"Browse history since a date",cmd:"git log --since={{input.date:2026-01-15}} --pretty={{input.logformat:oneline,short,full=oneline}} -{{input.count:5}}",desc:"Readable commit history from a date, in your format.",tag:"git",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ git log --since={{input.date:2026-01-15}} --pretty={{input.logformat:oneline,short,full=oneline}} -{{input.count:5}}","dim|5 commits shown (simulated)","grn|✓ done · exit 0 (simulated)"]},
+{id:"n5",name:"Brand a preview page",cmd:"npm run preview -- --accent={{input.color:#1677ff}} --since={{input.date:2026-01-15}} --token={{input.password.autogenerate}}",desc:"Preview with a brand color, a since-date and a generated token.",tag:"develop",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ npm run preview -- --accent={{input.color:#1677ff}} --since={{input.date:2026-01-15}} --token={{input.password.autogenerate}}","dim|preview ready on :5173 (simulated)","grn|✓ done · exit 0 (simulated)"]},
+{id:"n6",name:"Run script with mode",cmd:"npm run {{input.select:dev,build,test,lint}} -- --mode={{input.radio:development,production=production}} {{input.checkbox:--watch}} {{input.checkbox:--dry-run=off}}",desc:"Run a package script in a mode, optionally watching — dry-run starts off.",tag:"develop",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ npm run {{input.select:dev,build,test,lint}} -- --mode={{input.radio:development,production=production}} {{input.checkbox:--watch}} {{input.checkbox:--dry-run=off}}","dim|script started (simulated)","grn|✓ done · exit 0 (simulated)"]},
+{id:"n7",name:"Provision preview environment",cmd:"ssh {{input.username:deployer}}@{{input.hostname:web-01}} \"docker run -d --name {{input.text:preview}}-{{input.uuid.autogenerate}} -p {{input.port:8080}}:80 {{input.image:nginx,caddy=nginx}}\"",desc:"SSH deploy with a generated container id — autogenerate inline inside one token.",tag:"ship",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ ssh {{input.username:deployer}}@{{input.hostname:web-01}} \"docker run -d --name {{input.text:preview}}-{{input.uuid.autogenerate}} -p {{input.port:8080}}:80 {{input.image:nginx,caddy=nginx}}\"","dim|container up (simulated)","grn|✓ provisioned · exit 0 (simulated)"]},
+];
+function load(){try{const c=JSON.parse(localStorage.getItem("cc-commands")||"[]");if(Array.isArray(c)&&c.length)return c;}catch(e){}return null;}
+function saveCustom(list){const custom=list.filter(x=>x.custom);try{localStorage.setItem("cc-commands",JSON.stringify(custom));}catch(e){}}
+let customs=load()||[];
+let all=[...DEFAULTS,...customs];
+const CC_INPUT_TYPES=[["input.file","file","File path"],["input.text","text","Free text"],["input.number","number","Numeric value"],["input.date","date","Calendar date"],["input.color","color","Color swatch (hex)"],["input.password","password","Masked secret"],["input.uuid","text","UUID v4"],["input.email","text","Email address"],["input.url","text","URL"],["input.search","text","Search string"],["input.regex","text","Regular expression"],["input.message","text","Short message"],["input.title","text","Title"],["input.description","text","Longer description"],["input.username","text","User name"],["input.hostname","text","Host name"],["input.domain","text","Domain name"],["input.ip","text","IP address"],["input.port","number","Port number"],["input.count","number","Count"],["input.quantity","number","Quantity"],["input.percent","range","Percent slider","0-100"],["input.month","range","Month slider","1-12"],["input.day","range","Day-of-month slider","1-31"],["input.hour","range","Hour slider","0-23"],["input.minute","range","Minute slider","0-59"],["input.second","range","Second slider","0-59"],["input.bitrate","number","Bitrate value (k)"],["input.extension","select","File extension","mp4,mkv,mov,mp3,wav,avi,flv,webm"],["input.container","select","Container format","mp4,mkv,mov,avi,webm"],["input.vcodec","select","Video codec","libx264,libx265,vp9,av1,mpeg4"],["input.acodec","select","Audio codec","aac,mp3,opus,flac,vorbis"],["input.preset","select","Encoder preset","ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow"],["input.crf","range","Quality CRF (lower is better)","0-51"],["input.resolution","select","Resolution","1920x1080,1280x720,3840x2160,640x480"],["input.fps","number","Frames per second"],["input.samplerate","select","Audio sample rate","44100,48000,22050,96000"],["input.channels","select","Audio channels","1,2,6"],["input.duration","text","Duration (e.g. 00:01:20)"],["input.volume","range","Volume level","0-100"],["input.speed","number","Speed multiplier"],["input.seek","text","Seek position (e.g. 00:00:10)"],["input.subtitle","file","Subtitle file"],["input.poster","file","Poster image"],["input.thumbnail","file","Thumbnail image"],["input.path","file","File or directory path"],["input.dir","file","Directory path"],["input.filename","text","File name"],["input.glob","text","Glob pattern (e.g. *.js)"],["input.pattern","text","Match pattern"],["input.output","file","Output path"],["input.template","file","Template file"],["input.config","file","Config file"],["input.logfile","file","Log file"],["input.env","select","Environment","development,staging,production"],["input.script","text","Script name"],["input.package","text","Package name"],["input.pkgmanager","select","Package manager","npm,bun,yarn,pnpm"],["input.version","text","Version string"],["input.semver","text","Semver (e.g. 1.2.3)"],["input.branch","text","Git branch"],["input.tag","text","Git tag"],["input.remote","select","Git remote","origin,upstream"],["input.commit","text","Commit ref or message"],["input.author","text","Author name"],["input.since","date","History since date"],["input.logformat","select","Git log format","oneline,short,medium,full"],["input.repos","text","Repository"],["input.org","text","Organization"],["input.token","password","API token"],["input.apikey","password","API key"],["input.secret","password","Secret value"],["input.mode","select","Mode","development,production"],["input.loglevel","select","Log level","error,warn,info,debug"],["input.image","select","Container image","nginx,httpd,caddy,node,postgres"],["input.cimage","text","Container image (any)"],["input.containername","text","Container name"],["input.mount","text","Volume mapping"],["input.network","text","Network name"],["input.replicas","number","Replica count"],["input.memory","text","Memory limit (e.g. 512m)"],["input.cpu","number","CPU limit"],["input.workdir","file","Working directory"],["input.entrypoint","text","Entrypoint command"],["input.restart","select","Restart policy","no,always,on-failure,unless-stopped"],["input.protocol","select","Protocol","http,https,ssh,ftp"],["input.method","select","HTTP method","GET,POST,PUT,PATCH,DELETE"],["input.header","text","HTTP header (Key: value)"],["input.query","text","Query string"],["input.cidr","text","CIDR range"],["input.sql","text","SQL query"],["input.mac","text","MAC address"],["input.database","text","Database name"],["input.table","text","Table name"],["input.dbuser","text","DB user"],["input.engine","select","DB engine","postgres,mysql,sqlite,mongo"],["input.language","select","Language","en,es,fr,de,zh,ja"],["input.locale","select","Locale","en-US,en-GB,es-ES,fr-FR,de-DE"],["input.timezone","select","Timezone","UTC,America/New_York,Europe/London,Asia/Tokyo"],["input.currency","select","Currency","USD,EUR,GBP,JPY"],["input.country","select","Country code","US,GB,DE,FR,ES,IN,JP"],["input.cron","text","Cron expression"],["input.timeout","number","Timeout seconds"],["input.retries","number","Retry count"],["input.delay","number","Delay seconds"],["input.format","select","Output format","json,yaml,text,table"],["input.shell","select","Shell","bash,sh,zsh,fish"],["input.os","select","OS","linux,macos,windows"],["input.arch","select","CPU arch","x64,arm64"],["input.flag","checkbox","Flag (custom value via :flag)"],["input.confirm","checkbox","Confirm toggle"],["input.verbose","checkbox","Verbose flag","--verbose"],["input.quiet","checkbox","Quiet flag","--quiet"],["input.force","checkbox","Force flag","--force"],["input.dryrun","checkbox","Dry-run flag","--dry-run"],["input.colorname","text","Color name"],["input.hexcolor","color","Hex color"],["input.bgcolor","color","Background color"],["input.fgcolor","color","Foreground color"],["input.namespace","text","Namespace"],["input.deployment","text","Deployment name"],["input.service","text","Service name"],["input.pod","text","Pod name"],["input.context","text","Context name"],["input.region","select","Cloud region","us-east-1,us-west-2,eu-west-1,eu-central-1,ap-south-1"],["input.profile","text","Cloud profile"],["input.bucket","text","Bucket name"],["input.bucketkey","text","Bucket key"],["input.workspace","text","Workspace name"],["input.varfile","file","Var file"],["input.planfile","file","Plan file"],["input.select","select","Choice list","mp4,mkv,mov"],["input.radio","radio","Single choice","yes,no"],["input.checkbox","checkbox","Flag","--flag"],["input.range","range","Range slider","0-100"]];
+function lookupType(name){for(var i=0;i<CC_INPUT_TYPES.length;i++){if(CC_INPUT_TYPES[i][0]===name)return CC_INPUT_TYPES[i];}return null;}
+function parseToken(inner){inner=String(inner||"").trim();const m=inner.match(/^input\.([a-z0-9]+)(\.autogenerate)?(?::([\s\S]*))?$/);if(!m)return null;const name="input."+m[1];const def=lookupType(name);if(!def)return null;const widget=def[1];let auto=!!m[2];let raw=(m[3]!=null?m[3]:"").trim();if(raw.toLowerCase()==="autogenerate"){auto=true;raw="";}let params=raw,defVal="",optsArr=null,checkedDef=null;if(widget==="select"||widget==="radio"){if(raw===""){params=def[3]||"";optsArr=params?params.split(",").map(s=>s.trim()).filter(s=>s!==""):[];}else{const dm=raw.match(/^(.*)=\s*([^=,]+?)\s*$/);if(dm&&dm[1].trim()!==""&&dm[2].trim()!==""&&dm[2].indexOf(",")<0){const lo=dm[1].split(",").map(s=>s.trim()).filter(s=>s!=="");if(lo.length){optsArr=lo;defVal=dm[2].trim();params=lo.join(",")+"="+defVal;}else{optsArr=raw.split(",").map(s=>s.trim()).filter(s=>s!=="");params=optsArr.join(",");}}else{optsArr=raw.split(",").map(s=>s.trim()).filter(s=>s!=="");params=optsArr.join(",");}}}else if(widget==="range"){params=raw===""?(def[3]||""):raw;const rmd=params.match(/=\s*(-?\d+(?:\.\d+)?)\s*$/);if(rmd)defVal=rmd[1];}else if(widget==="checkbox"){if(raw===""){params=def[3]||"";checkedDef=true;if(params!=="")defVal=params;}else{const cm=raw.match(/^(.*)=\s*([^\s=]+?)\s*$/);if(cm&&cm[1].trim()!==""&&/^(1|t|true|on|checked|yes|y|0|f|false|off|unchecked|no|n)$/i.test(cm[2].trim())){params=cm[1].trim()||"--flag";checkedDef=/^(1|t|true|on|checked|yes|y)$/i.test(cm[2].trim());defVal=params;}else{params=raw;checkedDef=true;defVal=params;}}}else{if(params==="")params=def[3]||"";defVal=params;}let key=name+(auto?".autogenerate":"")+(params!==""?":"+params:"");if(widget==="checkbox"&&checkedDef===false)key+="=off";return {key:key,type:widget,name:name,params:params,auto:auto,default:defVal,optionsArr:optsArr,checkedDef:checkedDef,token:"{{"+inner+"}}"};}
+function parseVars(t){const out=[],seen=new Set();const re=/\{\{\s*([^{}]*?)\s*\}\}/g;let m;while((m=re.exec(String(t||"")))){const p=parseToken(m[1]);if(p&&!seen.has(p.key)){seen.add(p.key);out.push(p);}}return out;}
+function ccInstanceKey(base,occ){return occ<=1?base:base+"#"+occ;}
+function parseVarInstances(t){var out=[],counts={};var re=/\{\{\s*([^{}]*?)\s*\}\}/g,m;while((m=re.exec(String(t||"")))){var p=null;try{p=parseToken(m[1]);}catch(e){p=null;}if(!p)continue;var occ=(counts[p.key]||0)+1;counts[p.key]=occ;p.occ=occ;p.iid=ccInstanceKey(p.key,occ);out.push(p);}var totals={};out.forEach(function(v){totals[v.key]=(totals[v.key]||0)+1;});out.forEach(function(v){v.total=totals[v.key]||1;});return out;}
+function vKey(v){return (v&&(v.iid||v.key))||"";}
+function vStored(map,v){if(!map)return undefined;const k=vKey(v);if(k in map)return map[k];if(v.key in map)return map[v.key];return undefined;}
+function ccHumanize(n){var s=String(n||"").replace(/^input\./,"").replace(/[-_]+/g," ").trim();return s?s.charAt(0).toUpperCase()+s.slice(1):"Value";}
+function ccLabel(v){var lbl=ccHumanize(v.name);if(v.total>1)lbl+=" "+v.occ;if(v.auto)lbl+=" (auto)";return lbl;}
+function ccUuid(){try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();}catch(e){}return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(ch){var r=Math.random()*16|0,vv=ch==="x"?r:(r&0x3|0x8);return vv.toString(16);});}
+function ccRandStr(n){var chs="abcdefghijklmnopqrstuvwxyz0123456789",s="";for(var i=0;i<(n||8);i++)s+=chs[Math.floor(Math.random()*chs.length)];return s;}
+function ccAutogen(v){var n=v.name,w=v.type;if(n==="input.uuid")return ccUuid();if(w==="password")return "pw-"+ccRandStr(12);if(w==="color")return "#"+("000000"+Math.floor(Math.random()*16777215).toString(16)).slice(-6);if(w==="date"||n==="input.since"){try{return new Date().toISOString().slice(0,10);}catch(e){return "2026-09-12";}}if(w==="number"){if(n==="input.port")return String(3000+Math.floor(Math.random()*6000));return String(1+Math.floor(Math.random()*999));}if(w==="text"||w==="file")return ccRandStr(8);if(w==="range"){var rm=(v.params||"").match(/(-?\d+)\s*-\s*(-?\d+)/);if(rm)return String(Math.round((+rm[1]+ +rm[2])/2));return "50";}return ccExampleFor(v);}
+function renderCmd(t,vals){const counts={};return String(t||"").replace(/\{\{\s*([^{}]*?)\s*\}\}/g,(m,inner)=>{const p=parseToken(inner);if(!p||!vals)return m;const occ=(counts[p.key]||0)+1;counts[p.key]=occ;const k=ccInstanceKey(p.key,occ);if(k in vals)return vals[k];if(p.key in vals)return vals[p.key];return m;});}
+function ccExampleFor(v){var n=v.name,w=v.type,p=v.params||"";if(n==="input.uuid")return "123e4567-e89b-12d3-a456-426614174000";if(w==="select"||w==="radio"){var o=(v.optionsArr&&v.optionsArr.length?v.optionsArr:p.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";}));if(!o.length)return "opt";if(v.default&&o.indexOf(v.default)>=0)return v.default;return o[0];}if(w==="range"){if(v.default!==""&&isFinite(+v.default))return String(+v.default);var rm=p.match(/(-?\d+)\s*-\s*(-?\d+)/);if(rm)return String(Math.round((+rm[1]+ +rm[2])/2));return "50";}if(w==="checkbox"){if(v.checkedDef===false)return "";return p||"--flag";}if(v.default!=="")return v.default;if(w==="color")return "#1677ff";if(w==="date")return "2026-09-12";if(w==="password")return "s3cr3t";if(w==="file"){var FM={"input.file":"input.mp4","input.output":"output.mp4","input.subtitle":"subs.srt","input.poster":"poster.jpg","input.thumbnail":"thumb.jpg"};return FM[n]||"input.mp4";}if(w==="number"){var NM={"input.port":"8080","input.bitrate":"2500","input.fps":"30","input.count":"3","input.quantity":"2"};return NM[n]||"42";}var TM={"input.email":"you@example.com","input.url":"https://example.com","input.branch":"main","input.text":"hello"};if(TM[n])return TM[n];return "hello";}
+function paintCmdline(box,pwdEl,template,cwd){pwdEl.textContent=cwd||"C:\\projects\\app";box.innerHTML="";var re=/\{\{\s*([^{}]*?)\s*\}\}/g,last=0,m;var src=String(template||"");while((m=re.exec(src))){if(m.index>last)box.appendChild(document.createTextNode(src.slice(last,m.index)));var p=parseToken(m[1]);if(p){var ex=document.createElement("span");ex.className="ex";ex.textContent=ccExampleFor(p);ex.title=p.token;box.appendChild(ex);}else{box.appendChild(document.createTextNode(m[0]));}last=m.index+m[0].length;}if(last<src.length)box.appendChild(document.createTextNode(src.slice(last)));}
+function optList(params){return String(params||"").split(",").map(s=>s.trim()).filter(s=>s!=="");}
+function rangeSpec(params){const parts=String(params||"").split(":");const mm=(parts[0]||"").trim().match(/^(-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)$/);let min=mm?parseFloat(mm[1]):0,max=mm?parseFloat(mm[2]):100;if(!isFinite(min))min=0;if(!isFinite(max))max=100;if(max<=min)max=min+100;let step=parts.length>1?parseFloat(parts[1]):1;if(!isFinite(step)||step<=0)step=1;return {min:min,max:max,step:step};}
+function getVals(id){try{return JSON.parse(localStorage.getItem("cc-var-values")||"{}")[id]||null;}catch(e){return null;}}
+function setVals(id,v){try{const o=JSON.parse(localStorage.getItem("cc-var-values")||"{}");o[id]=v;localStorage.setItem("cc-var-values",JSON.stringify(o));}catch(e){}}
+function delVals(id){try{const o=JSON.parse(localStorage.getItem("cc-var-values")||"{}");delete o[id];localStorage.setItem("cc-var-values",JSON.stringify(o));}catch(e){}}
+const SHELLS={powershell:{label:"PowerShell",icon:"icons/powershell.svg",pre:"PS ",post:"> "},bash:{label:"Bash",icon:"icons/bash.svg",pre:"",post:" $ "},ubuntu:{label:"Ubuntu",icon:"icons/ubuntu.svg",pre:"",post:" $ "}};
+const SHELL_ORDER=["powershell","bash","ubuntu"];
+function getShell(id){try{const m=JSON.parse(localStorage.getItem("cc-shells")||"{}");if(m&&SHELL_ORDER.indexOf(m[id])>=0)return m[id];}catch(e){}return "powershell";}
+function setShell(id,s){try{const m=JSON.parse(localStorage.getItem("cc-shells")||"{}");m[id]=s;localStorage.setItem("cc-shells",JSON.stringify(m));}catch(e){}}
+function paintPrompt(elm,id){const sh=SHELLS[getShell(id)]||SHELLS.powershell;const spans=elm.querySelectorAll(".cmdline span");if(spans.length>=3){spans[0].textContent=sh.pre;spans[2].textContent=sh.post;}}
+const list=document.getElementById("list"),q=document.getElementById("q"),count=document.getElementById("count");
+function paint(filter=""){
+list.innerHTML="";
+const rows=all.filter(c=>(c.name+" "+c.cmd+" "+(c.desc||"")+" "+(c.cwd||"")).toLowerCase().includes(filter.toLowerCase()));
+count.textContent=rows.length+" saved";
+rows.forEach(c=>{
+const el=document.createElement("section");el.className="cmd";el.dataset.id=c.id;
+el.innerHTML=`<div class="cmd-top"><button type="button" class="cmd-icon cmd-icon-btn" data-shellbtn aria-label="Shell: ${SHELLS[getShell(c.id)].label} — activate to change shell" title="Shell: ${SHELLS[getShell(c.id)].label} (click to change)"><img src="${SHELLS[getShell(c.id)].icon}" alt="" /></button>
+<div class="cmd-main"><h2></h2><p></p><div class="cmdline"><span class="dim">PS </span><span class="pwd"></span><span class="dim">&gt; </span><span class="c"></span></div><div class="tags"><span></span><span>local</span></div></div>
+<div class="cmd-side"><button class="btn btn-run">▶ Run</button><div class="status" role="status">Ready</div><button class="linklike vedit" type="button" hidden>Edit values</button></div></div>
+<div class="vars" hidden><div class="vars-h"></div><div class="vrows"></div><div class="verr" hidden></div><div class="vacts"><button class="btn btn-run vgo" type="button">Run with values</button><button class="btn btn-ghost vreset" type="button" hidden>Reset saved</button></div></div>
+<div class="term" aria-live="polite"><div class="term-bar"><span class="dot"></span><span>terminal — <span class="tname"></span></span><span class="sp"></span><button type="button" data-a="copy">Copy</button><button type="button" data-a="clear">Clear</button><button type="button" data-a="hide">Hide</button></div><div class="term-body"><span class="term-empty">Not run yet — press Run to execute.</span></div></div>`;
+const h2=el.querySelector("h2");const tl=document.createElement("a");tl.href="command.html?id="+encodeURIComponent(c.id);tl.textContent=c.name;h2.appendChild(tl);el.querySelector("p").textContent=c.desc||"";
+paintCmdline(el.querySelector(".c"),el.querySelector(".cmdline .pwd"),c.cmd,c.cwd);paintPrompt(el,c.id);el.querySelector(".tags span").textContent=c.tag||"command";el.querySelector(".tname").textContent=c.name;
+const run=el.querySelector(".btn-run"),st=el.querySelector(".status"),body=el.querySelector(".term-body"),dot=el.querySelector(".dot");
+const vars=parseVarInstances(c.cmd),askMode=c.askMode==="once"?"once":"every";
+const varsBox=el.querySelector(".vars"),vrows=el.querySelector(".vrows"),verr=el.querySelector(".verr"),vgo=el.querySelector(".vgo"),vreset=el.querySelector(".vreset"),vedit=el.querySelector(".vedit");
+function savedVals(){return askMode==="once"?getVals(c.id):null;}
+function completeVals(v){if(!v)return false;return vars.every(x=>{const got=vStored(v,x);if(got===undefined)return false;if(x.type==="checkbox"||x.type==="radio"||x.type==="select"||x.type==="range"||x.type==="color")return true;return String(got).trim()!=="";});}
+if(vars.length){const b=document.createElement("span");b.className="vbadge";b.textContent=vars.length+(vars.length===1?" input":" inputs");el.querySelector(".tags").appendChild(b);const sv0=savedVals();if(completeVals(sv0)){st.textContent="Saved values ready";vedit.hidden=false;vreset.hidden=false;}else{st.textContent="Needs input";}}
+function buildRows(){vrows.innerHTML="";verr.hidden=true;const sv=savedVals()||{};const last=el._last||{};const getters=[];vars.forEach((v,i)=>{const w=document.createElement("div");w.className="vrow";const lb=document.createElement("label");lb.textContent=ccLabel(v)+" ";const sp=document.createElement("span");sp.className="vt";sp.textContent="· "+v.type+(v.total>1?" · "+v.occ+" of "+v.total:"")+" · "+v.token;if(v.auto){const ap=document.createElement("span");ap.className="vbadge";ap.textContent="auto";ap.style.marginLeft="6px";lb.appendChild(ap);}lb.appendChild(sp);w.appendChild(lb);let pre=vStored(sv,v);if(pre==null)pre=vStored(last,v);if(pre==null)pre=(v.auto&&!v.default)?ccAutogen(v):ccExampleFor(v);if(v.type==="select"||v.type==="radio"){const opts=optList(v.params);if(!opts.length){const inp=document.createElement("input");inp.type="text";inp.setAttribute("aria-label","Value "+(i+1)+" ("+v.type+")");inp.value=pre;w.appendChild(inp);getters.push({v:v,el:inp,kind:"text"});}else if(v.type==="select"){const s=document.createElement("select");s.setAttribute("aria-label","Value "+(i+1)+" (select)");opts.forEach(o=>{const op=document.createElement("option");op.value=o;op.textContent=o;s.appendChild(op);});if(opts.indexOf(pre)>=0)s.value=pre;w.appendChild(s);getters.push({v:v,el:s,kind:"select"});}else{const g=document.createElement("div");g.className="rgroup";const rname="vr_"+String(c.id).replace(/[^a-zA-Z0-9_-]/g,"")+"_"+i;opts.forEach((o,oi)=>{const l=document.createElement("label");l.className="ropt";const r=document.createElement("input");r.type="radio";r.name=rname;r.value=o;if((pre&&pre===o)||(!pre&&oi===0))r.checked=true;l.appendChild(r);const t=document.createElement("span");t.textContent=o;l.appendChild(t);g.appendChild(l);});w.appendChild(g);getters.push({v:v,el:g,kind:"radio"});}}else if(v.type==="checkbox"){const on=v.params!==""?v.params:"true";const l=document.createElement("label");l.className="check";const cb=document.createElement("input");cb.type="checkbox";cb.checked=(pre===on);cb.setAttribute("aria-label","Value "+(i+1)+" (checkbox)");l.appendChild(cb);const t=document.createElement("span");t.textContent=on;l.appendChild(t);w.appendChild(l);getters.push({v:v,el:cb,kind:"check",on:on});}else if(v.type==="range"){const rs=rangeSpec(v.params);const wrap=document.createElement("div");wrap.className="rrange";const r=document.createElement("input");r.type="range";r.min=rs.min;r.max=rs.max;r.step=rs.step;r.setAttribute("aria-label","Value "+(i+1)+" (range "+rs.min+" to "+rs.max+")");let start=parseFloat(pre);r.value=isFinite(start)?Math.min(rs.max,Math.max(rs.min,start)):rs.min;const out=document.createElement("output");out.className="rout";out.textContent=r.value;r.addEventListener("input",()=>{out.textContent=r.value;});wrap.appendChild(r);wrap.appendChild(out);w.appendChild(wrap);getters.push({v:v,el:r,kind:"range"});}else if(v.type==="color"){const cwrap=document.createElement("div");cwrap.className="crow";const ci=document.createElement("input");ci.type="color";ci.setAttribute("aria-label","Value "+(i+1)+" (color)");ci.value=/^#[0-9a-fA-F]{6}$/.test(pre)?pre:"#0969da";const hx=document.createElement("span");hx.className="chex";hx.textContent=ci.value;ci.addEventListener("input",function(){hx.textContent=ci.value;});cwrap.appendChild(ci);cwrap.appendChild(hx);w.appendChild(cwrap);getters.push({v:v,el:ci,kind:"color"});}else{const inp=document.createElement("input");if(v.type==="number"){inp.type="number";inp.inputMode="numeric";}else if(v.type==="date"){inp.type="date";}else if(v.type==="password"){inp.type="password";}else{inp.type="text";if(v.type==="file"){inp.classList.add("mono");inp.placeholder="e.g. input.mp4";}}inp.setAttribute("aria-label","Value "+(i+1)+" ("+v.type+")");inp.value=pre;if(v.type==="file"){const isDir=v.name==="input.dir"||v.name==="input.workdir";const fr=document.createElement("div");fr.className="filerow";const pk=document.createElement("button");pk.type="button";pk.className="btn btn-ghost";pk.textContent=isDir?"Select Folder":"Select File";const fi=document.createElement("input");fi.type="file";fi.hidden=true;fi.setAttribute("aria-label",(isDir?"Folder":"File")+" picker for Value "+(i+1));if(isDir){fi.setAttribute("webkitdirectory","");fi.setAttribute("directory","");}pk.addEventListener("click",()=>fi.click());fi.addEventListener("change",()=>{if(!fi.files||!fi.files.length)return;let pick=fi.files[0].name||"";if(isDir){const rel=fi.files[0].webkitRelativePath||pick;pick=(rel.split("/")[0]||pick)||pick;}inp.value=pick;if(inp.classList)inp.classList.remove("bad");fi.value="";});fr.appendChild(inp);fr.appendChild(pk);fr.appendChild(fi);w.appendChild(fr);}else{if(v.auto&&(v.type==="text"||v.type==="number"||v.type==="date"||v.type==="password")){const fr2=document.createElement("div");fr2.className="filerow";const rg=document.createElement("button");rg.type="button";rg.className="btn btn-ghost";rg.textContent="↻ Regenerate";rg.setAttribute("aria-label","Regenerate value for "+ccLabel(v));rg.addEventListener("click",()=>{inp.value=ccAutogen(v);if(inp.classList)inp.classList.remove("bad");});fr2.appendChild(inp);fr2.appendChild(rg);w.appendChild(fr2);}else{w.appendChild(inp);}}getters.push({v:v,el:inp,kind:v.type});}vrows.appendChild(w);});el._getters=getters;el.querySelector(".vars-h").textContent="This command needs "+vars.length+(vars.length===1?" value":" values")+" — fill to run";vreset.hidden=!(askMode==="once"&&completeVals(savedVals()));}
+function openVars(){buildRows();varsBox.hidden=false;el.classList.add("open");const f=vrows.querySelector("input");if(f)f.focus();}
+function runCmd(vals){
+const rendered=vars.length?renderCmd(c.cmd,vals||{}):c.cmd;
+el.querySelector(".c").textContent=rendered;
+el.classList.add("open");run.disabled=true;st.textContent="Running…";st.className="status run";dot.classList.add("live");
+body.innerHTML="";const sh0=SHELLS[getShell(c.id)]||SHELLS.powershell;const lines=[sh0.pre+(c.cwd||"C:\\projects\\app")+sh0.post+rendered].concat((c.lines||[]).slice(1));let i=0;
+const step=()=>{
+if(i>=lines.length){st.textContent="Done · exit 0";st.className="status ok";run.disabled=false;run.textContent="↻ Run again";const cur=document.createElement("span");cur.className="cursor";body.appendChild(cur);return;}
+const raw=lines[i++];const bar=raw.indexOf("|");const cls=bar>0?raw.slice(0,bar):"";const txt=bar>0?raw.slice(bar+1):raw;
+const div=document.createElement("div");if(cls)div.className=cls;div.textContent=txt;body.appendChild(div);body.scrollTop=body.scrollHeight;
+setTimeout(step,260);
+};step();
+}
+const shBtn=el.querySelector("[data-shellbtn]");
+if(shBtn)shBtn.addEventListener("click",()=>{const cur=getShell(c.id);const next=SHELL_ORDER[(SHELL_ORDER.indexOf(cur)+1)%SHELL_ORDER.length];setShell(c.id,next);const sh=SHELLS[next];const img=shBtn.querySelector("img");if(img)img.src=sh.icon;shBtn.setAttribute("aria-label","Shell: "+sh.label+" — activate to change shell");shBtn.title="Shell: "+sh.label+" (click to change)";paintPrompt(el,c.id);});
+run.addEventListener("click",()=>{
+if(!vars.length){runCmd(null);return;}
+const sv=savedVals();
+if(askMode==="once"&&completeVals(sv)){runCmd(sv);return;}
+openVars();
+});
+vgo.addEventListener("click",()=>{
+const vals={};let bad=null;
+(el._getters||[]).forEach(g=>{let val="";if(g.kind==="check"){val=g.el.checked?g.on:"";}else if(g.kind==="radio"){const s=g.el.querySelector("input:checked");val=s?s.value:"";}else if(g.kind==="select"||g.kind==="range"){val=g.el.value;}else{val=g.el.value.trim();}vals[vKey(g.v)]=val;if(g.kind==="check"||g.kind==="radio"||g.kind==="select"||g.kind==="range"||g.kind==="color")return;const elm=g.el;if(!val||(g.kind==="number"&&!isFinite(Number(val)))){bad=bad||g;if(elm.classList)elm.classList.add("bad");}else if(elm.classList)elm.classList.remove("bad");});
+if(bad){verr.textContent="Fill every value — numbers need numeric input, dates need a date.";verr.hidden=false;if(bad.el&&bad.el.focus)bad.el.focus();return;}
+verr.hidden=true;el._last=vals;
+if(askMode==="once"){setVals(c.id,vals);vreset.hidden=false;}
+varsBox.hidden=true;vedit.hidden=false;runCmd(vals);
+});
+vedit.addEventListener("click",openVars);
+vreset.addEventListener("click",()=>{delVals(c.id);el._last=null;st.textContent="Needs input";st.className="status";vreset.hidden=true;vedit.hidden=true;openVars();});
+el.querySelector(".term").addEventListener("click",e=>{
+const a=e.target.dataset&&e.target.dataset.a;if(!a)return;
+if(a==="hide"){el.classList.remove("open");}
+if(a==="clear"){body.innerHTML='<span class="term-empty">Cleared.</span>';}
+if(a==="copy"){navigator.clipboard&&navigator.clipboard.writeText(body.innerText);}
+});
+list.appendChild(el);
+});
+if(!rows.length){list.innerHTML='<p style="color:var(--muted)">No commands match. <a href="add.html" style="color:var(--accent)">Add a new command</a>.</p>';}
+}
+q.addEventListener("input",()=>paint(q.value));
+paint();
+</script>
+</body>
+</html>

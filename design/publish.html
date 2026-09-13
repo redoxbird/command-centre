@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Publish — Command Center</title>
+<style>
+@layer od-layout {
+:where(.od-stack,.od-row) > :where(*){min-width:0}
+.od-stack{display:flex;flex-direction:column;gap:var(--od-gap,8px)}
+.od-row{display:flex;align-items:center;gap:var(--od-gap,8px)}
+.od-fill{flex:1 1 0;min-width:0}.od-fixed{flex:none}
+}
+:root{
+--bg:#ffffff;--surface:#f6f8fa;--fg:#1f2328;--muted:#656d76;
+--border:#d0d7de;--border-soft:#d8dee4;--accent:#0969da;--accent-hover:#0550ae;
+--success:#1a7f37;--danger:#cf222e;
+--font-body:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+--font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+--radius:6px;--focus-ring:0 0 0 3px rgba(9,105,218,.3);
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;min-height:100vh;display:flex;justify-content:center;padding:0}
+.app-window{width:100%;background:var(--bg);border:none;border-radius:0;overflow:hidden;box-shadow:none}
+.tabs{display:flex;gap:4px;padding:12px 20px 0}
+.tabs a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:var(--radius)}
+.tabs a:hover{background:var(--surface);color:var(--fg)}
+.tabs a:not(.on){border:1px solid transparent}
+.tabs a.learn{margin-left:auto;font-weight:400}
+.main{padding:8px 20px 22px;display:flex;flex-direction:column;gap:12px}
+.backlink{font-size:13px;color:var(--accent);text-decoration:none;align-self:flex-start}
+.backlink:hover{text-decoration:underline}
+h1{font-size:24px;margin:2px 0 0;letter-spacing:-.01em}
+.lede{color:var(--muted);margin:0;max-width:62ch}
+.box{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
+.box-h{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;font-weight:600;font-size:14px}
+form{padding:16px;display:flex;flex-direction:column;gap:16px}
+.field{display:grid;gap:6px}
+.field label{font-weight:600;font-size:14px}
+.field .hint{font-weight:400;color:var(--muted);font-size:12px}
+.field input,.field select,.field textarea{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:7px 12px;font-family:inherit;font-size:14px;color:var(--fg);outline:none;width:100%}
+.field textarea{font-family:var(--font-body);font-size:13px;min-height:72px;resize:vertical}
+.field textarea.mono{font-family:var(--font-mono);font-size:12px;min-height:96px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:var(--focus-ring)}
+.err{font-size:12px;color:var(--danger);display:none}
+.field.invalid input,.field.invalid select,.field.invalid textarea{border-color:var(--danger)}
+.field.invalid .err{display:block}
+.cmdsum{border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);padding:10px 12px;display:grid;gap:4px;font-size:13px}
+.cmdsum strong{font-size:13px}
+.cmdsum .tmpl{font-family:var(--font-mono);font-size:12px;white-space:pre-wrap;word-break:break-word}
+.cmdsum .tag{font-size:11px;font-weight:600;background:#ddf4ff;border:1px solid var(--border-soft);color:var(--accent);border-radius:9999px;padding:0 8px;justify-self:start}
+.cmdsum .muted{color:var(--muted);font-size:12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:2px;align-items:center}
+.btn{font-family:inherit;font-size:14px;border-radius:var(--radius);padding:6px 18px;cursor:pointer;border:1px solid transparent;min-height:36px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.btn-p{background:#1f883d;color:#fff;border-color:rgba(31,35,40,.15);font-weight:500}
+.btn-p:hover{background:var(--success)}
+.btn-g{background:var(--surface);color:var(--fg);border-color:var(--border)}
+.btn-g:hover{background:#f3f4f6}
+.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.ok{display:none;border:1px solid #a9d3ab;background:#dafbe1;border-radius:var(--radius);padding:12px;font-size:13px}
+.ok.show{display:block}
+.ok .links{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.ok a{color:var(--success);font-weight:600}
+[hidden]{display:none!important}
+@media(max-width:640px){.actions .btn{flex:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app-window">
+<nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a href="hub.html">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
+<div class="main">
+<a class="backlink" id="backLink" href="index.html">← My commands</a>
+<h1>Publish to Community Hub</h1>
+<p class="lede">Send your command for review. Provide your name and email so reviewers can reach you, plus an install script if reviewers need one to try it.</p>
+<div class="box">
+<div class="box-h">Review submission</div>
+<form id="pubform" novalidate>
+<div class="ok" id="okBox" role="status"></div>
+<div class="field" id="fw-cmd"><label for="cmdSel">Command *</label><select id="cmdSel" aria-describedby="cmdErr"></select><span class="err" id="cmdErr">Pick one of your local commands, or load its metadata file below.</span><div class="cmdsum" id="cmdSummary" hidden></div></div>
+<div class="field" id="fw-file"><label for="metaFile">Metadata file <span class="hint">— .json exported from the command page; fills the command above and locks it</span></label><input id="metaFile" type="file" accept=".json,application/json" /><span class="hint" id="fileStatus">No file loaded — using the selected command.</span><span class="err" id="fileErr">That file is not a command-metadata JSON export.</span></div>
+<div class="field" id="fw-name"><label for="author">Your name *</label><input id="author" maxlength="60" placeholder="e.g. Ada Lovelace" autocomplete="name" /><span class="err">Tell reviewers your name.</span></div>
+<div class="field" id="fw-email"><label for="email">Email address *</label><input id="email" type="email" maxlength="120" placeholder="you@example.com" autocomplete="email" /><span class="err">Enter a valid email so reviewers can reach you.</span></div>
+<div class="field"><label for="install">Install script <span class="hint">— optional, only if reviewers need setup steps</span></label><textarea id="install" class="mono" spellcheck="false" placeholder="e.g.&#10;#!/bin/sh&#10;npm install -g deno"></textarea></div>
+<div class="field"><label for="notes">Notes for reviewers <span class="hint">— optional, one short paragraph</span></label><textarea id="notes" maxlength="500" placeholder="What should reviewers try first?"></textarea></div>
+<div class="actions">
+<button class="btn btn-p" type="submit">Submit for review</button>
+<a class="btn btn-g" id="cancelBtn" href="index.html">Cancel</a>
+</div>
+</form>
+</div>
+</div>
+</div>
+<script>
+function loadCustoms(){try{var c=JSON.parse(localStorage.getItem("cc-commands")||"[]");if(Array.isArray(c))return c;}catch(e){}return [];}
+function getQueue(){try{var q=JSON.parse(localStorage.getItem("cc-publish-queue")||"[]");if(Array.isArray(q))return q;}catch(e){}return [];}
+function el(tag,cls,text){var d=document.createElement(tag);if(cls)d.className=cls;if(text!=null)d.textContent=text;return d;}
+var sel=document.getElementById("cmdSel"),summary=document.getElementById("cmdSummary");
+var customs=loadCustoms();
+var preId=null;
+try{preId=new URLSearchParams(location.search).get("id");}catch(e){preId=null;}
+function cmdName(c){return (c&&c.name)||"(unnamed command)";}
+if(!customs.length){
+var opt=document.createElement("option");opt.value="";opt.textContent="No local commands yet — add one first";
+sel.appendChild(opt);sel.disabled=true;
+var hint=el("span","hint","You have no local commands in this browser. ");
+var link=el("a",null,"Add a command →");link.href="add.html";link.style.color="var(--accent)";
+hint.appendChild(link);
+sel.parentNode.insertBefore(hint,sel.nextSibling);
+}else{
+customs.forEach(function(c){
+var o=document.createElement("option");o.value=String(c.id);o.textContent=cmdName(c)+((c.tag)?(" · "+c.tag):"");
+sel.appendChild(o);
+});
+if(preId){
+var found=false;
+for(var i=0;i<customs.length;i++){if(String(customs[i].id)===String(preId)){found=true;break;}}
+if(found){sel.value=String(preId);lockCommand(true,"Auto-filled from the command page — editing disabled.");}
+}
+}
+function selectedCmd(){
+for(var i=0;i<customs.length;i++){if(String(customs[i].id)===String(sel.value))return customs[i];}
+return null;
+}
+function effectiveCmd(){
+if(window.__metaFile&&window.__metaFile.data){
+var d=window.__metaFile.data;
+return {id:(d.id||"file"),fromFile:true,name:d.name||"(unnamed command)",cmd:d.command||"",desc:d.description||"",tag:d.tag||"",cwd:d.workingDirectory||"",askMode:d.askMode||"every",fileVars:d.variables||[]};
+}
+return selectedCmd();
+}
+function paintSummary(){
+summary.innerHTML="";
+var c=selectedCmd();
+if(!c){summary.hidden=true;return;}
+summary.hidden=false;
+summary.appendChild(el("strong",null,cmdName(c)));
+var tag=el("span","tag",c.tag||"command");summary.appendChild(tag);
+summary.appendChild(el("div","tmpl",c.cmd||""));
+if(c.desc)summary.appendChild(el("div","muted",c.desc));
+}
+sel.addEventListener("change",function(){window.__metaFile=null;lockCommand(false);paintSummary();paintFileStatus();});
+paintSummary();
+window.__metaFile=null;
+function paintFileStatus(){
+var st=document.getElementById("fileStatus"),fw=document.getElementById("fw-file");
+var f=window.__metaFile;
+if(st)st.textContent=f?("Loaded "+f.name+" — command locked to this file."):"No file loaded — using the selected command.";
+if(fw)fw.classList.remove("invalid");
+}
+function lockCommand(disabled,note){
+sel.disabled=!!disabled;
+var ex=document.getElementById("cmdLockNote");
+if(disabled){
+if(!ex){ex=document.createElement("span");ex.className="hint";ex.id="cmdLockNote";sel.parentNode.insertBefore(ex,sel.nextSibling);}
+ex.textContent=note||"Locked — command auto-filled.";
+}else if(ex){ex.remove();}
+}
+function paintSummaryFromFile(doc){
+summary.innerHTML="";
+summary.hidden=false;
+summary.appendChild(el("strong",null,doc.name||"(unnamed command)"));
+if(doc.tag)summary.appendChild(el("span","tag",doc.tag));
+summary.appendChild(el("div","tmpl",doc.command||""));
+if(doc.description)summary.appendChild(el("div","muted",doc.description));
+var n=(doc.variables&&doc.variables.length)||0;
+summary.appendChild(el("div","muted",n+(n===1?" variable":" variables")+" from file"));
+}
+document.getElementById("metaFile").addEventListener("change",function(){
+var fw=document.getElementById("fw-file");
+if(fw)fw.classList.remove("invalid");
+var fl=this.files&&this.files[0];
+if(!fl){window.__metaFile=null;lockCommand(false);paintSummary();paintFileStatus();return;}
+var rd=new FileReader();
+rd.onload=function(){
+try{
+var doc=JSON.parse(rd.result);
+if(!doc||typeof doc!=="object"||(doc.kind!=="command-metadata"&&!doc.command))throw new Error("bad shape");
+window.__metaFile={name:fl.name||"metadata.json",data:doc};
+lockCommand(true,"Locked to "+(fl.name||"metadata.json")+" — pick a different file to change it.");
+paintSummaryFromFile(doc);paintFileStatus();
+}catch(err){
+window.__metaFile=null;
+if(fw)fw.classList.add("invalid");
+paintFileStatus();
+}
+};
+rd.onerror=function(){window.__metaFile=null;if(fw)fw.classList.add("invalid");};
+try{rd.readAsText(fl);}catch(err2){window.__metaFile=null;}
+});
+if(preId){
+var back=document.getElementById("backLink");
+back.href="command.html?id="+encodeURIComponent(preId);
+back.textContent="← Back to command";
+var cancel=document.getElementById("cancelBtn");
+cancel.href="command.html?id="+encodeURIComponent(preId);
+}
+function emailOk(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());}
+document.getElementById("pubform").addEventListener("submit",function(e){
+e.preventDefault();
+var author=document.getElementById("author"),email=document.getElementById("email");
+var okCmd=!!effectiveCmd();
+var okName=author.value.trim().length>1;
+var okEmail=emailOk(email.value);
+document.getElementById("fw-cmd").classList.toggle("invalid",!okCmd);
+document.getElementById("fw-name").classList.toggle("invalid",!okName);
+document.getElementById("fw-email").classList.toggle("invalid",!okEmail);
+if(!okCmd){sel.focus();return;}
+if(!okName){author.focus();return;}
+if(!okEmail){email.focus();return;}
+var c=effectiveCmd();
+var rec={
+id:"p"+Date.now(),
+commandId:String(c.id),
+commandName:cmdName(c),
+source:c.fromFile?"metadata-file":"local-library",
+fromFile:!!c.fromFile,
+metadataFile:(window.__metaFile&&window.__metaFile.name)||null,
+metadata:(window.__metaFile&&window.__metaFile.data)||null,
+author:author.value.trim(),
+email:email.value.trim(),
+installScript:document.getElementById("install").value,
+notes:document.getElementById("notes").value.trim(),
+at:Date.now(),
+status:"pending-review"
+};
+try{var q=getQueue();q.push(rec);localStorage.setItem("cc-publish-queue",JSON.stringify(q));}catch(err){}
+var box=document.getElementById("okBox");box.innerHTML="";
+box.appendChild(el("span",null,"Submitted for review. Reviewers will reach out to "+rec.email+" — status: pending review (simulated locally)."));
+var links=el("div","links");
+var v=null;
+if(!rec.fromFile&&!c.fromFile){v=el("a",null,"View command →");v.href="command.html?id="+encodeURIComponent(rec.commandId);}
+var m=el("a",null,"My commands →");m.href="index.html";
+var h=el("a",null,"Community Hub →");h.href="hub.html";
+if(v)links.appendChild(v);links.appendChild(m);links.appendChild(h);
+box.appendChild(links);
+box.classList.add("show");
+document.getElementById("pubform").querySelectorAll("button[type=submit]")[0].disabled=true;
+box.scrollIntoView();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Command — Command Center</title>
+<style>
+@layer od-layout {
+:where(.od-stack,.od-row) > :where(*){min-width:0}
+.od-stack{display:flex;flex-direction:column;gap:var(--od-gap,8px)}
+.od-row{display:flex;align-items:center;gap:var(--od-gap,8px)}
+.od-fill{flex:1 1 0;min-width:0}.od-fixed{flex:none}
+}
+:root{
+--bg:#ffffff;--surface:#f6f8fa;--fg:#1f2328;--muted:#656d76;
+--border:#d0d7de;--border-soft:#d8dee4;--accent:#0969da;--accent-hover:#0550ae;
+--success:#1a7f37;--danger:#cf222e;--warn:#9a6700;
+--font-body:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+--font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+--radius:6px;--focus-ring:0 0 0 3px rgba(9,105,218,.3);
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;min-height:100vh;display:flex;justify-content:center;padding:0}
+.app-window{width:100%;background:var(--bg);border:none;border-radius:0;overflow:hidden;box-shadow:none}
+.tabs{display:flex;gap:4px;padding:12px 20px 0}
+.tabs a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:var(--radius)}
+.tabs a:hover{background:var(--surface);color:var(--fg)}
+.tabs a:not(.on){border:1px solid transparent}
+.tabs a.learn{margin-left:auto;font-weight:400}
+.main{padding:8px 20px 22px;display:flex;flex-direction:column;gap:12px}
+.backlink{font-size:13px;color:var(--accent);text-decoration:none;align-self:flex-start}
+.backlink:hover{text-decoration:underline}
+h1{font-size:24px;margin:2px 0 0;letter-spacing:-.01em}
+.lede{color:var(--muted);margin:0;max-width:70ch}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:12px;border-radius:9999px;padding:0 8px;border:1px solid var(--border-soft)}
+.badge-tag{background:#ddf4ff;color:var(--accent)}
+.badge-pub{background:#dafbe1;color:var(--success);border-color:#a9d3ab}
+.badge-npub{background:var(--surface);color:var(--muted)}
+.badge-inputs{background:#fff8c5;color:var(--warn)}
+.box{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
+.box-h{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.box-h .count{font-size:12px;font-weight:600;background:#fff;border:1px solid var(--border);border-radius:9999px;padding:0 10px;color:var(--muted)}
+.box-b{padding:16px;display:flex;flex-direction:column;gap:12px}
+.cmdline{font-family:var(--font-mono);font-size:12px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:var(--radius);padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+.cmdline .dim{color:#8b949e}
+.cmdline .pwd{color:#3fb950;font-weight:600}
+.cmdline .ex{color:#79c0ff;background:rgba(56,139,253,.15);border:1px solid rgba(56,139,253,.4);border-radius:4px;padding:0 4px}
+.rawline{font-family:var(--font-mono);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;white-space:pre-wrap;word-break:break-word;color:var(--fg)}
+.kv{display:grid;grid-template-columns:180px minmax(0,1fr);gap:6px 12px;font-size:13px}
+.kv dt{color:var(--muted);font-weight:600}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.kv dd.mono{font-family:var(--font-mono);font-size:12px}
+.mrow{border:1px solid var(--border-soft);border-radius:var(--radius);padding:10px 12px;display:grid;gap:8px;background:#fff}
+.vmeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px}
+.vpill{font-family:var(--font-body);font-size:11px;font-weight:600;background:#ddf4ff;border:1px solid var(--border-soft);color:var(--accent);border-radius:9999px;padding:0 8px}
+.ocpill{font-family:var(--font-body);font-size:11px;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:9999px;padding:0 8px}
+.apill{font-family:var(--font-body);font-size:11px;font-weight:600;background:#fff8c5;border:1px solid #d4a72c;color:var(--warn);border-radius:9999px;padding:0 8px}
+.vex{color:var(--success);background:#dafbe1;border:1px solid #a9d3ab;border-radius:4px;padding:0 6px;font-weight:600}
+.mlabel{font-size:13px}
+.mlabel strong{display:block;font-size:13px}
+.mlabel span{display:block;color:var(--muted);font-size:12px}
+.optable{width:100%;border-collapse:collapse;font-size:12px}
+.optable th{text-align:left;color:var(--muted);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--border)}
+.optable td{padding:4px 8px;border-bottom:1px solid var(--border-soft);vertical-align:top}
+.optable tr:last-child td{border-bottom:none}
+.optable td.mono{font-family:var(--font-mono)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-family:inherit;font-size:14px;border-radius:var(--radius);padding:6px 18px;cursor:pointer;border:1px solid transparent;min-height:36px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.btn-p{background:#1f883d;color:#fff;border-color:rgba(31,35,40,.15);font-weight:500}
+.btn-p:hover{background:var(--success)}
+.btn-g{background:var(--surface);color:var(--fg);border-color:var(--border)}
+.btn-g:hover{background:#f3f4f6}
+.btn:focus-visible,a:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.status{font-size:12px;color:var(--muted)}
+.status.ok{color:var(--success)}
+.empty{border:1px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);background:#fff}
+.empty a{color:var(--accent)}
+[hidden]{display:none!important}
+@media(max-width:640px){.kv{grid-template-columns:1fr}.actions .btn{flex:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app-window">
+<nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a href="hub.html">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
+<div class="main">
+<a class="backlink" href="index.html">← My commands</a>
+<div id="missing" class="empty" hidden>No command found for this link. It may have been removed from this browser.<br /><a href="index.html">Back to My commands</a> · <a href="add.html">Add a new command</a></div>
+<div id="detail" class="od-stack" style="--od-gap:12px" hidden>
+<h1 id="dname"></h1>
+<p class="lede" id="ddesc"></p>
+<div class="badges" id="dbadges"></div>
+<div class="box"><div class="box-h">Command</div><div class="box-b">
+<div class="rawline" id="draw" aria-label="Command template"></div>
+<div class="cmdline" id="dprev" aria-label="Rendered preview"></div>
+<dl class="kv" id="dfields"></dl>
+</div></div>
+<div class="box"><div class="box-h">Command Metadata <span class="count" id="mcount"></span></div><div class="box-b"><div id="mrows" class="od-stack" style="--od-gap:8px"></div></div></div>
+<div class="actions">
+<a class="btn btn-g" id="editBtn" href="add.html">Edit</a>
+<a class="btn btn-p" id="pubBtn" href="publish.html">Publish</a>
+<button class="btn btn-g" id="dlBtn" type="button">Metadata .json ↓</button>
+<span class="status" id="pubStatus" role="status"></span>
+</div>
+</div>
+</div>
+</div>
+<script>
+var CC_TYPES={"input.file":"file","input.text":"text","input.number":"number","input.date":"date","input.color":"color","input.password":"password","input.uuid":"text","input.email":"text","input.url":"text","input.search":"text","input.regex":"text","input.message":"text","input.title":"text","input.description":"text","input.username":"text","input.hostname":"text","input.domain":"text","input.ip":"text","input.port":"number","input.count":"number","input.quantity":"number","input.percent":"range","input.month":"range","input.day":"range","input.hour":"range","input.minute":"range","input.second":"range","input.bitrate":"number","input.extension":"select","input.container":"select","input.vcodec":"select","input.acodec":"select","input.preset":"select","input.crf":"range","input.resolution":"select","input.fps":"number","input.samplerate":"select","input.channels":"select","input.duration":"text","input.volume":"range","input.speed":"number","input.seek":"text","input.subtitle":"file","input.poster":"file","input.thumbnail":"file","input.path":"file","input.dir":"file","input.filename":"text","input.glob":"text","input.pattern":"text","input.output":"file","input.template":"file","input.config":"file","input.logfile":"file","input.env":"select","input.script":"text","input.package":"text","input.pkgmanager":"select","input.version":"text","input.semver":"text","input.branch":"text","input.tag":"text","input.remote":"select","input.commit":"text","input.author":"text","input.since":"date","input.logformat":"select","input.repos":"text","input.org":"text","input.token":"password","input.apikey":"password","input.secret":"password","input.mode":"select","input.loglevel":"select","input.image":"select","input.cimage":"text","input.containername":"text","input.mount":"text","input.network":"text","input.replicas":"number","input.memory":"text","input.cpu":"number","input.workdir":"file","input.entrypoint":"text","input.restart":"select","input.protocol":"select","input.method":"select","input.header":"text","input.query":"text","input.cidr":"text","input.sql":"text","input.mac":"text","input.database":"text","input.table":"text","input.dbuser":"text","input.engine":"select","input.language":"select","input.locale":"select","input.timezone":"select","input.currency":"select","input.country":"select","input.cron":"text","input.timeout":"number","input.retries":"number","input.delay":"number","input.format":"select","input.shell":"select","input.os":"select","input.arch":"select","input.flag":"checkbox","input.confirm":"checkbox","input.verbose":"checkbox","input.quiet":"checkbox","input.force":"checkbox","input.dryrun":"checkbox","input.colorname":"text","input.hexcolor":"color","input.bgcolor":"color","input.fgcolor":"color","input.namespace":"text","input.deployment":"text","input.service":"text","input.pod":"text","input.context":"text","input.region":"select","input.profile":"text","input.bucket":"text","input.bucketkey":"text","input.workspace":"text","input.varfile":"file","input.planfile":"file","input.select":"select","input.radio":"radio","input.checkbox":"checkbox","input.range":"range"};
+function lookupType(n){return CC_TYPES[n]?[n,CC_TYPES[n]]:null;}
+function trim(s){return String(s==null?"":s).replace(/^\s+|\s+$/g,"");}
+function splitOpts(s){return trim(s).split(",").map(function(x){return trim(x);}).filter(function(x){return x!=="";});}
+function parseToken(inner){
+inner=trim(inner);
+var m=inner.match(/^input\.([a-z0-9]+)(\.autogenerate)?(?::([\s\S]*))?$/);
+if(!m)return null;
+var name="input."+m[1];
+if(!CC_TYPES[name])return null;
+var widget=CC_TYPES[name],auto=!!m[2],raw=trim(m[3]!=null?m[3]:"");
+if(raw.toLowerCase()==="autogenerate"){auto=true;raw="";}
+var params=raw,defVal="",optsArr=null,checkedDef=null;
+if(widget==="select"||widget==="radio"){
+if(raw===""){optsArr=[];}
+else{var dm=raw.match(/^(.*)=\s*([^=,]+?)\s*$/);
+if(dm&&trim(dm[1])!==""&&trim(dm[2])!==""&&dm[2].indexOf(",")<0){
+var lo=splitOpts(dm[1]),right=trim(dm[2]);
+if(lo.length){optsArr=lo;defVal=right;params=lo.join(",")+"="+right;}
+else{optsArr=splitOpts(raw);params=optsArr.join(",");}
+}else{optsArr=splitOpts(raw);params=optsArr.join(",");}}
+}else if(widget==="range"){
+params=raw;
+var rmd=raw.match(/=\s*(-?\d+(?:\.\d+)?)\s*$/);
+if(rmd)defVal=rmd[1];
+}else if(widget==="checkbox"){
+if(raw===""){checkedDef=true;}
+else{var cm=raw.match(/^(.*)=\s*([^\s=]+?)\s*$/);
+if(cm&&trim(cm[1])!==""&&/^(1|t|true|on|checked|yes|y|0|f|false|off|unchecked|no|n)$/i.test(trim(cm[2]))){
+params=trim(cm[1])||"--flag";checkedDef=/^(1|t|true|on|checked|yes|y)$/i.test(trim(cm[2]));defVal=params;
+}else{params=raw;checkedDef=true;defVal=params;}}
+}else{params=raw;defVal=raw;}
+var key=name+(auto?".autogenerate":"")+(params!==""?":"+params:"");
+if(widget==="checkbox"&&checkedDef===false)key+="=off";
+return {key:key,type:widget,name:name,params:params,auto:auto,default:defVal,optionsArr:optsArr,checkedDef:checkedDef,token:"{{"+inner+"}}"};
+}
+function ccInstanceKey(base,occ){return occ<=1?base:base+"#"+occ;}
+function parseVarInstances(t){
+var out=[],counts={},re=/\{\{\s*([^{}]*?)\s*\}\}/g,m;
+while((m=re.exec(String(t||"")))){
+var p=null;try{p=parseToken(m[1]);}catch(e){p=null;}
+if(!p)continue;
+var occ=(counts[p.key]||0)+1;counts[p.key]=occ;
+p.occ=occ;p.iid=ccInstanceKey(p.key,occ);out.push(p);
+}
+var totals={};
+out.forEach(function(v){totals[v.key]=(totals[v.key]||0)+1;});
+out.forEach(function(v){v.total=totals[v.key]||1;});
+return out;
+}
+function humanize(n){var s=trim(String(n||"").replace(/^input\./,"").replace(/[-_]+/g," "));return s?s.charAt(0).toUpperCase()+s.slice(1):"Value";}
+function exampleFor(inst,meta){
+if(meta&&meta.example!==undefined&&meta.example!==null&&meta.example!=="")return String(meta.example);
+if(inst.default!==""){
+if((inst.type==="select"||inst.type==="radio")&&inst.optionsArr&&inst.optionsArr.length){
+if(inst.optionsArr.indexOf(inst.default)>=0)return inst.default;
+return inst.optionsArr[0];
+}
+if(inst.type==="checkbox")return inst.checkedDef===false?"":(inst.params||"--flag");
+return inst.default;
+}
+if(inst.type==="select"||inst.type==="radio")return (inst.optionsArr&&inst.optionsArr[0])||"—";
+if(inst.type==="range"){var rm=(inst.params||"").match(/(-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)/);if(rm)return String(Math.round((+rm[1]+ +rm[2])/2));return "—";}
+if(inst.type==="checkbox")return inst.checkedDef===false?"":(inst.params||"--flag");
+if(inst.type==="color")return "#1677ff";
+if(inst.type==="date"||inst.name==="input.since")return new Date().toISOString().slice(0,10);
+if(inst.type==="password")return "••••••";
+if(inst.type==="number")return "42";
+if(inst.type==="file")return "path/to/file";
+return "value";
+}
+var DEFAULTS=[
+{id:"c1",name:"Install dependencies",cmd:"npm install",desc:"Clean install from lockfile before starting work.",tag:"setup",cwd:"C:\\projects\\shop-app",lines:["$ npm install","dim|added 214 packages in 8s","dim|24 packages are looking for funding","grn|✓ up to date — node_modules ready"]},
+{id:"c2",name:"Run dev server",cmd:"npm run dev",desc:"Start Vite dev server with hot reload on :5173.",tag:"develop",cwd:"C:\\projects\\shop-app",lines:["$ npm run dev","blu|  VITE v5.4 ready in 412 ms","dim|  ➜  Local:   http://localhost:5173/","grn|✓ watching for file changes…"]},
+{id:"c3",name:"Run tests",cmd:"npm test -- --watchAll=false",desc:"Full Jest suite, CI mode, no watch.",tag:"test",cwd:"C:\\projects\\shop-app\\tests",lines:["$ npm test -- --watchAll=false","dim|PASS  src/commands.test.js (12 tests)","dim|PASS  src/runner.test.js (8 tests)","grn|✓ 20 passed, 0 failed in 3.2s"]},
+{id:"c4",name:"Build for production",cmd:"npm run build",desc:"Typecheck + bundle to dist/ for release.",tag:"ship",cwd:"C:\\projects\\shop-app",lines:["$ npm run build","dim|vite v5 building for production…","dim|✓ 48 modules transformed · dist/ 312 kB","grn|✓ built in 4.81s"]},
+{id:"c5",name:"Git status",cmd:"git status --short --branch",desc:"Quick working-tree health check.",tag:"git",cwd:"C:\\projects\\shop-app",lines:["$ git status --short --branch","blu|## main...origin/main","dim| M  src/index.js","dim|??  notes/todo.md","grn|✓ 2 changed, branch clean to push"]},
+{id:"c6",name:"Convert video (pick quality)",cmd:"ffmpeg -i {{input.file}} -c:v libx264 -crf {{input.range:18-28}} {{input.checkbox:-movflags +faststart}} output.{{input.select:mp4,mkv,mov}}",desc:"Convert any video to H.264 — choose quality, container and fast-start flag.",tag:"video",cwd:"C:\\projects\\media",askMode:"every",lines:["$ ffmpeg -i {{input.file}} -c:v libx264 -crf {{input.range:18-28}} {{input.checkbox:-movflags +faststart}} output.{{input.select:mp4,mkv,mov}}","dim|frame= 2400 fps= 85 q=24.0 size= 12.4MiB time=00:01:20","grn|✓ done · video written (simulated)"]},
+{id:"c7",name:"Run container (ports & image)",cmd:"docker run {{input.checkbox:--rm}} -p {{input.number}}:80 --name {{input.text}} {{input.select:nginx,httpd,caddy}}",desc:"Start a web server container with your port, name and image.",tag:"ship",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ docker run {{input.checkbox:--rm}} -p {{input.number}}:80 --name {{input.text}} {{input.select:nginx,httpd,caddy}}","dim|Unable to find image locally — pulling (simulated)","grn|✓ up · container running (simulated)"]},
+{id:"c8",name:"Browse history since a date",cmd:"git log --since={{input.date}} --pretty={{input.select:oneline,short,medium,full}} -{{input.number}}",desc:"Readable commit history from a date, in your format.",tag:"git",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ git log --since={{input.date}} --pretty={{input.select:oneline,short,medium,full}} -{{input.number}}","dim|5 commits shown (simulated)","grn|✓ done · exit 0 (simulated)"]},
+{id:"c9",name:"Run script with mode",cmd:"npm run {{input.select:dev,build,test,lint}} -- --mode={{input.radio:development,production}} {{input.checkbox:--watch}}",desc:"Run a package script in a mode, optionally watching.",tag:"develop",cwd:"C:\\projects\\shop-app",askMode:"every",lines:["$ npm run {{input.select:dev,build,test,lint}} -- --mode={{input.radio:development,production}} {{input.checkbox:--watch}}","dim|script started (simulated)"]}
+];
+var SHOWCASE={id:"showcase",showcase:true,name:"Convert video to streaming MP4 (showcase)",cmd:"ffmpeg -i {{input.file}} -i {{input.file}} -c:v {{input.vcodec:libx264,libx265,vp9,av1=libx264}} -preset {{input.preset:ultrafast,superfast,veryfast,medium,slow=medium}} -crf {{input.range:0-51=23}} -c:a {{input.acodec:aac,mp3,opus,flac=aac}} -b:a {{input.bitrate:192}}k -ar {{input.samplerate:44100,48000=44100}} -ac {{input.channels:1,2,6=2}} -r {{input.fps:30}} -s {{input.resolution:1920x1080,1280x720,640x480=1280x720}} -movflags {{input.checkbox:+faststart}} -fontcolor {{input.hexcolor:#ffffff}} -volume {{input.range:0-100=90}} -metadata creation_time={{input.date:2026-01-15}} -metadata run_id={{input.uuid.autogenerate}} -y {{input.output:final.mp4}} {{input.checkbox:--dry-run=off}}",desc:"Full-feature ffmpeg demo: repeated inputs, codecs, quality, defaults, autogenerate and flags.",tag:"video",cwd:"C:\\projects\\media",askMode:"every",lines:["PS C:\\projects\\media> ffmpeg -i input.mp4 …","dim|frame= 2400 fps= 85 q=23.0 size= 12.4MiB time=00:01:20","grn|✓ done · video written (simulated)"],vars:[
+{key:"input.file",iid:"input.file",occ:1,total:2,type:"file",name:"input.file",params:"",auto:false,default:"",label:"Main video",description:"Primary video input track.",example:"input.mp4"},
+{key:"input.file",iid:"input.file#2",occ:2,total:2,type:"file",name:"input.file",params:"",auto:false,default:"",label:"Extra audio",description:"Second input — e.g. an external audio track.",example:"audio.m4a"},
+{key:"input.vcodec:libx264,libx265,vp9,av1=libx264",iid:"input.vcodec:libx264,libx265,vp9,av1=libx264",occ:1,total:1,type:"select",name:"input.vcodec",params:"libx264,libx265,vp9,av1=libx264",auto:false,default:"libx264",label:"Video codec",description:"Encoder for the picture track.",options:[{value:"libx264",label:"H.264",description:"Widely compatible default."},{value:"libx265",label:"H.265",description:"Better compression, slower."},{value:"vp9",label:"VP9",description:"Royalty-free web codec."},{value:"av1",label:"AV1",description:"Next-gen, slowest encode."}],example:"libx264"},
+{key:"input.preset:ultrafast,superfast,veryfast,medium,slow=medium",iid:"input.preset:ultrafast,superfast,veryfast,medium,slow=medium",occ:1,total:1,type:"select",name:"input.preset",params:"ultrafast,superfast,veryfast,medium,slow=medium",auto:false,default:"medium",label:"Encoder preset",description:"Speed versus compression trade-off.",options:[{value:"ultrafast",label:"Ultrafast",description:"Fastest, biggest file."},{value:"superfast",label:"Superfast",description:"Quick draft encodes."},{value:"veryfast",label:"Veryfast",description:"Good preview quality."},{value:"medium",label:"Medium",description:"Balanced default."},{value:"slow",label:"Slow",description:"Smaller file, slower."}],example:"medium"},
+{key:"input.range:0-51=23",iid:"input.range:0-51=23",occ:1,total:1,type:"range",name:"input.range",params:"0-51=23",auto:false,default:"23",label:"Quality (CRF)",description:"Lower means better quality, 0 to 51.",example:"23"},
+{key:"input.acodec:aac,mp3,opus,flac=aac",iid:"input.acodec:aac,mp3,opus,flac=aac",occ:1,total:1,type:"select",name:"input.acodec",params:"aac,mp3,opus,flac=aac",auto:false,default:"aac",label:"Audio codec",description:"Encoder for the sound track.",options:[{value:"aac",label:"AAC",description:"Default for MP4."},{value:"mp3",label:"MP3",description:"Universal playback."},{value:"opus",label:"Opus",description:"Best for streaming."},{value:"flac",label:"FLAC",description:"Lossless audio."}],example:"aac"},
+{key:"input.bitrate:192",iid:"input.bitrate:192",occ:1,total:1,type:"number",name:"input.bitrate",params:"192",auto:false,default:"192",label:"Audio bitrate",description:"Kilobits per second.",example:"192"},
+{key:"input.samplerate:44100,48000=44100",iid:"input.samplerate:44100,48000=44100",occ:1,total:1,type:"select",name:"input.samplerate",params:"44100,48000=44100",auto:false,default:"44100",label:"Sample rate",description:"Audio samples per second.",options:[{value:"44100",label:"44.1 kHz",description:"CD quality."},{value:"48000",label:"48 kHz",description:"Video standard."}],example:"44100"},
+{key:"input.channels:1,2,6=2",iid:"input.channels:1,2,6=2",occ:1,total:1,type:"select",name:"input.channels",params:"1,2,6=2",auto:false,default:"2",label:"Channels",description:"Audio channel layout.",options:[{value:"1",label:"Mono",description:"Single channel."},{value:"2",label:"Stereo",description:"Default two channels."},{value:"6",label:"5.1",description:"Surround sound."}],example:"2"},
+{key:"input.fps:30",iid:"input.fps:30",occ:1,total:1,type:"number",name:"input.fps",params:"30",auto:false,default:"30",label:"Frame rate",description:"Frames per second.",example:"30"},
+{key:"input.resolution:1920x1080,1280x720,640x480=1280x720",iid:"input.resolution:1920x1080,1280x720,640x480=1280x720",occ:1,total:1,type:"select",name:"input.resolution",params:"1920x1080,1280x720,640x480=1280x720",auto:false,default:"1280x720",label:"Frame size",description:"Output picture dimensions.",options:[{value:"1920x1080",label:"Full HD",description:"1920 by 1080."},{value:"1280x720",label:"HD",description:"Default web size."},{value:"640x480",label:"Small",description:"Lightweight preview."}],example:"1280x720"},
+{key:"input.checkbox:+faststart",iid:"input.checkbox:+faststart",occ:1,total:1,type:"checkbox",name:"input.checkbox",params:"+faststart",auto:false,default:"+faststart",label:"Fast start",description:"Move metadata first for streaming.",example:"+faststart"},
+{key:"input.hexcolor:#ffffff",iid:"input.hexcolor:#ffffff",occ:1,total:1,type:"color",name:"input.hexcolor",params:"#ffffff",auto:false,default:"#ffffff",label:"Subtitle color",description:"Font color for burned-in subtitles.",example:"#ffffff"},
+{key:"input.range:0-100=90",iid:"input.range:0-100=90",occ:1,total:1,type:"range",name:"input.range",params:"0-100=90",auto:false,default:"90",label:"Volume",description:"Audio level, 0 to 100.",example:"90"},
+{key:"input.date:2026-01-15",iid:"input.date:2026-01-15",occ:1,total:1,type:"date",name:"input.date",params:"2026-01-15",auto:false,default:"2026-01-15",label:"Creation date",description:"Stamped into the file metadata.",example:"2026-01-15"},
+{key:"input.uuid.autogenerate",iid:"input.uuid.autogenerate",occ:1,total:1,type:"text",name:"input.uuid",params:"",auto:true,default:"",label:"Run ID (auto)",description:"Unique id tagged on this encode — still editable.",example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"},
+{key:"input.output:final.mp4",iid:"input.output:final.mp4",occ:1,total:1,type:"file",name:"input.output",params:"final.mp4",auto:false,default:"final.mp4",label:"Output file",description:"Finished video written here.",example:"final.mp4"},
+{key:"input.checkbox:--dry-run=off",iid:"input.checkbox:--dry-run=off",occ:1,total:1,type:"checkbox",name:"input.checkbox",params:"--dry-run",auto:false,default:"--dry-run",label:"Dry run",description:"Print the command without running it.",example:""}
+]};
+function loadCustoms(){try{var c=JSON.parse(localStorage.getItem("cc-commands")||"[]");if(Array.isArray(c))return c;}catch(e){}return [];}
+function findCommand(id){
+var customs=loadCustoms();
+for(var i=0;i<customs.length;i++){if(String(customs[i].id)===String(id))return customs[i];}
+for(var j=0;j<DEFAULTS.length;j++){if(String(DEFAULTS[j].id)===String(id))return DEFAULTS[j];}
+return null;
+}
+function getPub(){try{return JSON.parse(localStorage.getItem("cc-published")||"{}");}catch(e){return {};}}
+function setPub(o){try{localStorage.setItem("cc-published",JSON.stringify(o));}catch(e){}}
+function el(tag,cls,text){var d=document.createElement(tag);if(cls)d.className=cls;if(text!=null)d.textContent=text;return d;}
+function badge(text,cls){return el("span","badge "+cls,text);}
+function fieldRow(term,val,mono){
+var dt=el("dt",null,term);var dd=el("dd",mono?"mono":null,val===""?"—":val);return [dt,dd];
+}
+function matchSaved(saved,inst,used){
+if(!saved||!saved.length)return null;
+for(var i=0;i<saved.length;i++){
+if(used[i])continue;
+if(saved[i].iid&&saved[i].iid===inst.iid){used[i]=true;return saved[i];}
+}
+for(var j=0;j<saved.length;j++){
+if(used[j])continue;
+if(!saved[j].iid&&saved[j].key===inst.key){used[j]=true;return saved[j];}
+}
+return null;
+}
+function paintDetail(c){
+document.title=c.name+" — Command Center";
+document.getElementById("dname").textContent=c.name;
+document.getElementById("ddesc").textContent=c.desc||"";
+var badges=document.getElementById("dbadges");badges.innerHTML="";
+badges.appendChild(badge(c.tag||"command","badge-tag"));
+badges.appendChild(badge(c.custom?"local":"built-in","badge-npub"));
+if(c.showcase)badges.appendChild(badge("demo showcase","badge-inputs"));
+var pub=getPub();
+var isPub=!!pub[c.id];
+var pubB=isPub?badge("published ✓","badge-pub"):badge("not published","badge-npub");
+pubB.id="pubBadge";badges.appendChild(pubB);
+document.getElementById("draw").textContent=c.cmd||"";
+var prev=document.getElementById("dprev");prev.innerHTML="";
+var dir=c.cwd||"C:\\projects\\app";
+prev.appendChild(el("span","dim","PS "));
+prev.appendChild(el("span","pwd",dir));
+prev.appendChild(el("span","dim","> "));
+var insts=parseVarInstances(c.cmd||"");
+var used={};
+var metas=insts.map(function(v){return matchSaved(c.vars,v,used);});
+var counts={};
+var re=/\{\{\s*([^{}]*?)\s*\}\}/g,last=0,m;
+var src=String(c.cmd||"");
+while((m=re.exec(src))){
+if(m.index>last)prev.appendChild(document.createTextNode(src.slice(last,m.index)));
+var p=parseToken(m[1]);
+if(p){
+var occ=(counts[p.key]||0)+1;counts[p.key]=occ;
+var idx=insts.length?indexOfInst(insts,p.key,occ):-1;
+var label=p.token,ex=exampleFor(p,null);
+if(idx>=0){label=metaLabel(insts[idx],metas[idx]);ex=exampleFor(insts[idx],metas[idx]);}
+var chip=el("span","ex",label);chip.title=p.token+" = "+ex;
+prev.appendChild(chip);
+}else{prev.appendChild(document.createTextNode(m[0]));}
+last=m.index+m[0].length;
+}
+if(last<src.length)prev.appendChild(document.createTextNode(src.slice(last)));
+var fields=document.getElementById("dfields");fields.innerHTML="";
+fieldRow("Working directory",dir,true).forEach(function(n){fields.appendChild(n);});
+fieldRow("Ask for values",c.askMode==="once"?"Once, then remember":(c.askMode==="every"?"Every time":"—"),false).forEach(function(n){fields.appendChild(n);});
+fieldRow("Command ID",String(c.id),true).forEach(function(n){fields.appendChild(n);});
+fieldRow("Source",c.showcase?"Showcase demo (built-in)":(c.fromHub?("Community Hub ("+c.fromHub+")"):(c.custom?"My commands (local)":"Built-in")),false).forEach(function(n){fields.appendChild(n);});
+fieldRow("Published",isPub?"Yes":"No",false).forEach(function(n){fields.appendChild(n);});
+var mrows=document.getElementById("mrows");mrows.innerHTML="";
+document.getElementById("mcount").textContent=insts.length?(insts.length+(insts.length===1?" input":" inputs")):"no inputs";
+if(!insts.length){
+var none=el("p",null,"This command has no {{input.*}} variables — it runs as written.");
+none.style.color="var(--muted)";mrows.appendChild(none);
+}
+insts.forEach(function(v,i){
+var sv=metas[i];
+mrows.appendChild(metaRow(v,sv));
+});
+var editBtn=document.getElementById("editBtn");
+editBtn.href=c.showcase?"add.html":"add.html?id="+encodeURIComponent(c.id);
+var pubLink=document.getElementById("pubBtn");
+if(pubLink)pubLink.href="publish.html?id="+encodeURIComponent(c.id);
+var dlBtn=document.getElementById("dlBtn");
+if(dlBtn)dlBtn.onclick=function(){downloadMetadata(c);};
+syncPublish(c);
+}
+function indexOfInst(insts,key,occ){
+for(var i=0;i<insts.length;i++){if(insts[i].key===key&&insts[i].occ===occ)return i;}
+return -1;
+}
+function metaLabel(v,sv){
+if(sv&&sv.label&&trim(sv.label)!=="")return trim(sv.label);
+var lbl=humanize(v.name);
+if(v.total>1)lbl+=" "+v.occ;
+if(v.auto)lbl+=" (auto)";
+return lbl;
+}
+function metaRow(v,sv){
+var row=el("div","mrow");
+var top=el("div","vmeta");
+top.appendChild(el("span",null,v.token));
+top.appendChild(el("span","vpill",v.type));
+if(v.total>1)top.appendChild(el("span","ocpill",v.occ+" of "+v.total));
+if(v.auto)top.appendChild(el("span","apill","auto"));
+var ex=exampleFor(v,sv);
+top.appendChild(el("span","vex","→ "+(ex===""?"(empty)":ex)));
+row.appendChild(top);
+var lab=el("div","mlabel");
+lab.appendChild(el("strong",null,metaLabel(v,sv)));
+var d=(sv&&sv.description&&trim(sv.description)!=="")?trim(sv.description):"";
+lab.appendChild(el("span",null,d===""?"No description yet.":d));
+row.appendChild(lab);
+if(v.type==="select"||v.type==="radio"){
+var opts=(sv&&sv.options&&sv.options.length)?sv.options:((v.optionsArr||[]).map(function(o){return {value:o,label:o,description:""};}));
+if(opts.length){
+var t=document.createElement("table");t.className="optable";
+var tr=document.createElement("tr");
+["Option","Label","Description"].forEach(function(h){var th=document.createElement("th");th.textContent=h;tr.appendChild(th);});
+t.appendChild(tr);
+opts.forEach(function(o){
+var r=document.createElement("tr");
+var c1=document.createElement("td");c1.className="mono";c1.textContent=o.value;
+var c2=document.createElement("td");c2.textContent=o.label||o.value;
+var c3=document.createElement("td");c3.textContent=o.description||"—";
+r.appendChild(c1);r.appendChild(c2);r.appendChild(c3);t.appendChild(r);
+});
+row.appendChild(t);
+}
+}
+return row;
+}
+function metadataDoc(c){
+var insts=parseVarInstances(c.cmd||"");
+var used={};
+var rows=insts.map(function(v){
+var sv=matchSaved(c.vars,v,used);
+var lbl=metaLabel(v,sv);
+var des=(sv&&sv.description&&trim(sv.description)!=="")?trim(sv.description):"";
+var o={token:v.token,type:v.type,label:lbl,description:des,default:(v.default!==""?v.default:""),auto:!!v.auto};
+if(v.total>1){o.occurrence=v.occ;o.of=v.total;}
+if(v.type==="select"||v.type==="radio"){
+var opts=(sv&&sv.options&&sv.options.length)?sv.options:((v.optionsArr||[]).map(function(x){return {value:x,label:x,description:""};}));
+o.options=opts.map(function(x){return {value:x.value,label:x.label||x.value,description:x.description||""};});
+}
+if(sv&&sv.example!==undefined&&sv.example!=="")o.example=String(sv.example);
+else{var ex=exampleFor(v,sv);if(ex!=="")o.example=ex;}
+return o;
+});
+return {app:"command-center",kind:"command-metadata",version:1,exportedAt:new Date().toISOString(),id:String(c.id),name:c.name||"",description:c.desc||"",command:c.cmd||"",workingDirectory:c.cwd||"",tag:c.tag||"",askMode:c.askMode||"every",variables:rows};
+}
+function downloadMetadata(c){
+try{
+var doc=metadataDoc(c);
+var blob=new Blob([JSON.stringify(doc,null,2)],{type:"application/json"});
+var a=document.createElement("a");
+var fname="command-"+String(c.id).replace(/[^a-zA-Z0-9_-]+/g,"-")+".metadata.json";
+a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();
+setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(e){}try{a.remove();}catch(e2){}},400);
+var st=document.getElementById("pubStatus");
+if(st){st.textContent="Metadata saved as "+fname+" — load it on the publish page.";st.className="status ok";}
+}catch(err){
+var st2=document.getElementById("pubStatus");
+if(st2){st2.textContent="Could not export metadata in this browser.";st2.className="status";}
+}
+}
+function syncPublish(c){
+var pub=getPub(),isPub=!!pub[c.id];
+var st=document.getElementById("pubStatus");
+st.textContent=isPub?"Published — visible as published in this browser.":"Not published yet. Publishing opens the review form.";
+st.className="status"+(isPub?" ok":"");
+var badge=document.getElementById("pubBadge");
+if(badge){badge.textContent=isPub?"published ✓":"not published";badge.className="badge "+(isPub?"badge-pub":"badge-npub");}
+var rows=document.getElementById("dfields");
+if(rows&&rows.children.length>=10){rows.children[9].textContent=isPub?"Yes":"No";}
+}
+(function init(){
+var id=null;
+try{id=new URLSearchParams(location.search).get("id");}catch(e){id=null;}
+var box=document.getElementById("detail"),miss=document.getElementById("missing");
+var c=id?findCommand(id):null;
+if(!c){c=SHOWCASE;}
+box.hidden=false;
+miss.hidden=true;
+paintDetail(c);
+})();
+</script>
+</body>
+</html>
