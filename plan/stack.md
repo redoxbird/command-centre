@@ -20,6 +20,7 @@ Vanilla HTML rendered on server using workers and hono.
 - Mustache (https://mustache.github.io) for templating
 - linkedom (https://github.com/WebReflection/linkedom) for DOM manipulation
 - Bun (https://bun.sh) for bundling, packaging, running
+- Drizzle ORM (https://orm.drizzle.team/docs/overview) for database interactions
 
 ## API — `api/`
 
@@ -27,3 +28,4 @@ Vanilla HTML rendered on server using workers and hono.
 - Cloudflare Workers (https://workers.cloudflare.com) for serverless functions
 - Cloudflare D1 (https://developers.cloudflare.com/d1) for database
 - Bun (https://bun.sh) for bundling, packaging, running
+- Drizzle ORM (https://orm.drizzle.team/docs/overview) for database interactions
