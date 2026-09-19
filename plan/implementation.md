@@ -33,7 +33,7 @@ All six are `div class="app-window"` shells with a `nav.tabs` (My commands / Com
 | `index.html` | 274 | Command list — cards with inline shell picker, variable panel, simulated terminal | `cc-commands` (unused helper), `cc-var-values`, `cc-shells` |
 | `command.html` | 402 | Command detail — raw template, rendered preview, metadata table, metadata JSON export | `cc-published` (unused helper) |
 | `add.html` | 540 | Authoring — CodeMirror editor, live `{{token}}` parsing, variable metadata, cwd picker | `cc-commands` |
-| `learn.html` | 300 | Input-syntax reference — 129 static rows, filter by text + widget | — |
+| `learn.html` | 300 | Input-syntax reference — 30 static rows, filter by text + widget | — |
 | `hub.html` | 256 | Community Hub — 10 demo commands, package rail, search, install/add | `cc-hub-sort`, `cc-clis`, `cc-added`, `cc-hub-recents`, `cc-commands` |
 | `publish.html` | 244 | Publish to hub — command select or metadata file, reviewer info, install script | `cc-publish-queue` |
 
@@ -51,7 +51,7 @@ Three positions, and `learn.html`'s three modifier cards are exactly these three
 
 | # | Position | Syntax | Meaning |
 |---|---|---|---|
-| 1 | **type** | `input.uuid` | the token name, must exist in the 135-row registry |
+| 1 | **type** | `input.uuid` | the token name, must exist in the 30-row live registry (or the 108-row retired read-tolerance table) |
 | 2 | **dot-suffix modifier** | `input.uuid.autogenerate` | prefill a generated value, still editable after |
 | 3 | **colon default** | `input.text:hello` | the default value, in whatever form that type takes |
 
@@ -72,19 +72,19 @@ Outer delimiters are matched with `/\{\{\s*([^{}]*?)\s*\}\}/g` (non-greedy, no n
 
 > **Undocumented parser tolerance — do not document, consider dropping.** All four parsers also accept `:autogenerate` after the colon (`if (raw.toLowerCase() === "autogenerate") { auto = true; raw = ""; }`), treating it as position 2 written in position 3. It appears in **zero** documented examples and zero demo commands. It is very likely an unintended consequence of the single-regex parse, and it is mildly harmful: it makes `{{input.text:autogenerate}}` generate a random string instead of using the literal default `autogenerate`. Keep the code path for backward compatibility when reading stored commands, but do not use or document the form, and never offer it in autocomplete.
 
-**Type registry: 135 tokens**, identical key set and widget assignment in `index.html` (`CC_INPUT_TYPES`) and `command.html` (`CC_TYPES`) — verified programmatically, 0 mismatches. Widget histogram: `text` 53, `select` 30, `file` 13, `number` 12, `range` 9, `checkbox` 7, `color` 4, `password` 4, `date` 2, `radio` 1.
+**Type registry: 30 live tokens + 108 retired + 7 aliases.** `CC_INPUT_TYPES` (30 rows) and `CC_RETIRED_TYPES` (108 rows) are identical in `index.html`, `command.html` and `add.html` — verified programmatically. Zero overlap between the tables; 138 unique names. learn.html documents exactly the 30 live rows. Widget histogram (live): `select` 7, `text` 5, `file` 3, `number` 2, `date`/`color`/`password`/`radio`/`buttongroup`/`checkbox`/`switch`/`range`/`time`/`datetime`/`textarea`/`multiselect`/`keyvalue` 1 each. Retired histogram: `text` 45, `select` 24, `file` 12, `number` 10, `checkbox` 6, `range` 5, `textarea` 3, `time` 3.
 
-The authoritative shape is `index.html`'s array form, because it carries the human label and — for 45 rows — the built-in default params that `index.html` actually depends on:
+The authoritative shape is `add.html`'s array form, because it carries the human label and — for 14 live rows — the built-in default params the UI actually depends on:
 
 ```js
-["input.extension", "select", "File extension", "mp4,mkv,mov,mp3,wav,avi,flv,webm"]
-["input.crf", "range", "Quality CRF (lower is better)", "0-51"]
+["input.country", "select", "Country code", "US,GB,DE,..."]
+["input.range", "range", "Range slider", "0-100"]
 ["input.checkbox", "checkbox", "Flag", "--flag"]
 ```
 
-`command.html` has the same names as a bare `{name: widget}` map and **no** labels or defaults — keep one registry, not two.
+Retired names stay parseable (stored commands use 15 of them: `vcodec`, `extension`, `count`, `username`, `hostname`, `image`, `logformat`, `preset`, `crf`, `bitrate`, `fps`, `resolution`, `seek`, `poster`, `script`, …) but are flagged `retired:true` and never offered in autocomplete or the Learn reference. `hub.html` defines no arrays — it references the shared `lookupType`.
 
-**Aliases** (declared only in `add.html`):
+**Aliases** (the `ALIASES` map in `add.html`, also referenced by index/command lookup):
 
 ```
 input.hexcolor | input.bgcolor | input.fgcolor  → input.color
@@ -254,9 +254,9 @@ This section is a verified contract, not a readme summary. Every claim below was
 
 > **Decision: use `<e-input type="…">` exclusively.** The standalone tags emit a **different event prefix** (`input:error`, `input:validate` instead of `e:error`, `e:validate`), which is the single highest-impact open defect in the library's own audit sheet. Mixing the two surfaces breaks any listener written for the other. Do not use, document, or bundle the `input-*` tags.
 
-### 4.2 The `type` attribute is NOT the 135-token registry
+### 4.2 The `type` attribute is NOT the 30-token registry
 
-This is the single most important integration fact. The `{{input.*}}` grammar has **135 named tokens**; `<e-input type>` accepts **16 values**. They are different axes and must not be conflated.
+This is the single most important integration fact. The `{{input.*}}` grammar has **30 live named tokens** (plus 108 retired names kept parseable for stored commands); `<e-input type>` accepts **16 values**. They are different axes and must not be conflated.
 
 `render()` dispatches on `type` (`e-input.js:405-422`):
 
@@ -279,39 +279,35 @@ This is the single most important integration fact. The `{{input.*}}` grammar ha
 
 The real `<input>`'s `type` comes from a separate map, `_getInputType()` (`e-input.js:310-316`): `phone→tel`, `color|range|select|combobox|textarea|radio→text`, `toggle→checkbox`, everything else passed through. Note `textarea` and `checkbox-group` are **missing from that map** — a latent inconsistency, harmless today because both have dedicated renderers.
 
-### 4.3 Mapping the 135 grammar tokens onto the library
+### 4.3 Mapping the 30 live tokens onto the library
 
-The registry's ten widgets collapse cleanly onto the library's types. The mapping is a fixed table, not a heuristic:
+The registry's seventeen widgets collapse cleanly onto the library's types. The mapping is a fixed table, not a heuristic:
 
-| Registry widget | Count | `<e-input type>` | Extra attributes |
+| Registry widget | Tokens | `<e-input type>` | Extra attributes |
 |---|---|---|---|
-| `text` | 53 | `text` | `format` for the 18 structured subtypes (below) |
-| `select` | 30 | `select` | one `<e-select-option>` per option |
-| `file` | 13 | `text` | `action-button="browse"` + a Deno-side picker (§4.7) |
-| `number` | 12 | `number` | `min`/`max`/`step` from token defaults |
-| `range` | 9 | `range` | `min`/`max`/`step` from `rangeSpec()`; `range` when dual-thumb |
-| `checkbox` | 7 | `checkbox` (or `toggle`) | `=off` default → unchecked |
-| `color` | 4 | `color` | `swatches` for the design's palette |
-| `password` | 4 | `password` | `strength-meter`, `action-button="show"` |
-| `date` | 2 | `date` | native input always works; picker optional |
-| `radio` | 1 | `radio` | one `<e-radio-option>` per option |
+| `text` | 5 (`text`, `email`, `url`, `search`, `uuid`) | `text` | `format` for the structured ones (`email`, `url`, `uuid`) |
+| `select` | 7 (`select`, `country`, `timezone`, `currency`, `language`, `locale`, `license`) | `select` | one `<e-select-option>` per option (`combobox` above 8 options, §4.8) |
+| `file` | 3 (`file`, `dir`, `files`) | `text` | `action-button="browse"` + a Deno-side picker (§4.7) |
+| `number` | 2 (`number`, `port`) | `number` | `min`/`max`/`step` from token defaults (`port` clamps 1–65535) |
+| `date` / `time` / `datetime` | 3 | `date` | native input always works; picker optional |
+| `color` | 1 | `color` | `swatches` for the design's palette |
+| `password` | 1 | `password` | `strength-meter`, `action-button="show"` |
+| `radio` / `buttongroup` | 2 | `radio` | one `<e-radio-option>` per option |
+| `multiselect` | 1 | `checkbox-group` | one `<e-checkbox-option>` per option |
+| `checkbox` / `switch` | 2 | `checkbox` | `=off` default → unchecked |
+| `range` | 1 | `range` | `min`/`max`/`step` from `rangeSpec()`; `range` when dual-thumb |
+| `textarea` | 1 | `textarea` | rows/cols + char counter |
+| `keyvalue` | 1 | paired `text` fields | two inputs joined with `=` |
 
-**The 53 `text` tokens are not 53 types.** They map to one element with a `format` attribute, which already covers the structured ones (`e-input.js:1091-1110`):
+Retired tokens resolve through the same table via their recorded widget (`text` 45, `select` 24, `file` 12, `number` 10, `checkbox` 6, `range` 5, `textarea` 3, `time` 3).
 
-```
-email · url · uuid · cuid · cuid2 · ulid · iso-date · iso-datetime
-emoji · base64 · hex · jwt · nanoid · ipv4 · ipv6
-```
-
-Plus the independent boolean/string refinements on the same element: `email`, `url`, `regex`, `starts-with`, `ends-with`, `includes`, `lowercase`, `uppercase`, `min`, `max`.
-
-This is a **better** decomposition than the registry's: `input.email`, `input.url` and `input.search` are distinct token names but one control with different `format`/`type` values. Build a `widgetToEInput(token)` table in `registry.ts` (§8.2) so the mapping lives with the token table rather than in render code.
+This is a **better** decomposition than the registry's: `input.email`, `input.url` and `input.search` are distinct token names but one control with different `format` values. Build a `widgetToEInput(token)` table in `registry.ts` (§8.2) so the mapping lives with the token table rather than in render code.
 
 ### 4.4 Revealing a value — the parity fix
 
-`_getInputType()` maps `password→'password'`, which masks the value. But the grammar's `password` widget covers `{{input.password}}`, `{{input.token}}`, `{{input.apikey}}`, `{{input.secret}}` — API keys and deploy tokens, which the user must be able to **read back** to verify they pasted the right thing. A masked-by-default token field is a usability defect inherited from the library.
+`_getInputType()` maps `password→'password'`, which masks the value. But the `password` widget covers `{{input.password}}` **and** its aliases `{{input.token}}`, `{{input.apikey}}`, `{{input.secret}}` — API keys and deploy tokens, which the user must be able to **read back** to verify they pasted the right thing. A masked-by-default token field is a usability defect inherited from the library.
 
-Use `action-button="show"` with `strength-meter="false"` for `apikey`/`token`/`secret` (reveal on demand, no strength scoring), and the full `password` behaviour — meter on — only for the literal `{{input.password}}`. The strength meter's `weak|medium|strong` output is meaningless for a 64-char base64 key.
+Use `action-button="show"` with `strength-meter="false"` for the `token`/`apikey`/`secret` aliases (reveal on demand, no strength scoring), and the full `password` behaviour — meter on — only for the literal `{{input.password}}`. The strength meter's `weak|medium|strong` output is meaningless for a 64-char base64 key.
 
 ### 4.5 The colour picker and the design's palette
 
@@ -449,7 +445,7 @@ Verified by exhaustive read; these are assumed present but are **not** provided:
 | `unstyled` | Declared in two modules, initialised, **never read** | Dead — ignore it |
 | `theme-mode` | Declared, never read | Dead — ignore it |
 
-> **Range is the one hard external dependency.** If `<range-slider>` is not registered, every `type="range"` field (9 of the 135 tokens, including `input.crf`, `input.volume`, `input.percent`) renders an inert unknown element. The app must vendor `range-slider-element@2.1.1` and load it in every page that can render a variable panel — or accept that ranges degrade to a plain number field, which is the safer default for v1. **Decision: vendor it.** The design's `.rrange` output (a slider plus a numeric readout) is a real affordance the number field does not replace.
+> **Range is the one hard external dependency.** If `<range-slider>` is not registered, every `type="range"` field (the live `input.range` plus 5 retired range tokens) renders an inert unknown element. The app must vendor `range-slider-element@2.1.1` and load it in every page that can render a variable panel — or accept that ranges degrade to a plain number field, which is the safer default for v1. **Decision: vendor it.** The design's `.rrange` output (a slider plus a numeric readout) is a real affordance the number field does not replace.
 
 ### 4.12 Integration into the app
 
@@ -564,7 +560,7 @@ command-centre/
 │   ├── version.ts              # APP_NAME / APP_VERSION
 │   ├── types.ts                # all contracts + zod schemas
 │   ├── grammar.ts              # {{input.*}} parse / render / example  ← shared brain
-│   ├── registry.ts             # the 135-token type table + aliases + built-in defaults
+│   ├── registry.ts             # 30 live + 108 retired + 7 aliases + built-in defaults
 │   ├── seeds.ts                # built-in commands (single id space)
 │   ├── library.ts              # command CRUD, search, import/export
 │   ├── runner.ts               # shell resolution + subprocess + streaming + cancel
@@ -823,13 +819,14 @@ Keep the native frame (no `frameless`) — Compressy reached the same conclusion
 
 ```ts
 export type TypeRow = readonly [name: string, widget: Widget, label: string, defaultParams?: string];
-export const CC_INPUT_TYPES: readonly TypeRow[] = [ /* 135 rows, verbatim from index.html:182 */ ];
+export const CC_INPUT_TYPES: readonly TypeRow[] = [ /* 30 live rows, verbatim from add.html */ ];
+export const CC_RETIRED_TYPES: readonly (TypeRow & { retired: true })[] = [ /* 108 rows, read-tolerance only */ ];
 export const CC_INPUT_ALIASES: Record<string, string> = {
   "input.hexcolor": "input.color", "input.bgcolor": "input.color", "input.fgcolor": "input.color",
   "input.token": "input.password", "input.apikey": "input.password", "input.secret": "input.password",
   "input.since": "input.date",
 };
-export function lookupType(name: string): TypeRow | null;
+export function lookupType(name: string): (TypeRow & { retired?: boolean }) | null;
 ```
 
 `grammar.ts` exposes exactly five functions:
@@ -968,8 +965,7 @@ Port the design's integration as-is; it is already complete and defensive.
 
 - Importmap in `add.html:7`, verbatim versions: `@codemirror/state@6.7.4`, `@codemirror/view@6.43.11`, `@codemirror/autocomplete@6.20.3`, `@codemirror/commands@6.11.0`, `@codemirror/language@6.11.3`, `@codemirror/legacy-modes@6.5.2`, each with `deps` pins. **Vendor these locally** (`static/vendor/codemirror/*`) instead of `esm.sh` — the app must work offline.
 - Mount over `#cmd`; on any failure keep the plain `<textarea>` and `console.warn`. `cmdText()` reads `window.__cmView.state.doc` when mounted, else `cmd.value` — every reader must go through it.
-- Decoration plugin: parseable tokens → `cc-tok`, unparseable → `cc-tok-bad`.
-- Two completion sources: `typeSource` (the 135 registry rows; plus, as *separate* entries, `input.<name>.autogenerate` for the types where the dot-suffix is meaningful — text, number, date, color, password, uuid) and `optionSource` (select/radio option lists, reading the colon section to the left of the cursor). Offer **only** the dot-suffix form; never `:autogenerate` (§1.2).
+- Two completion sources: `typeSource` (the 30 live rows; plus, as *separate* entries, `input.<name>.autogenerate` for the types where the dot-suffix is meaningful — text, number, date, color, password, uuid) and `optionSource` (select/radio option lists, reading the colon section to the left of the cursor). Offer **only** live names plus the dot-suffix form; never retired names and never `:autogenerate` (§1.2).
 - Shell syntax highlighting via `StreamLanguage.define(LM.shell)` + a `HighlightStyle` matching the design's token colours.
 
 ### 8.6 `hub.ts` — community data
@@ -1037,7 +1033,7 @@ Same `readJson`/`writeJsonAtomic` primitives, same partial-merge tolerance, same
 | `add.html` form (name, cmd, desc, cwd, preview, askmode) | Same fields; plus a **tag** field (the design's `add.html` has none, but every command needs one) |
 | `#cwdbtn` Browse + `#cwdfiles` webkitdirectory + `showDirectoryPicker` | Replaced by `pickFolder()` (Windows FolderBrowserDialog via the Compressy PowerShell pattern). The webview file input cannot reveal absolute paths |
 | `add.html` `window.__ccValues` / `__ccMeta` | Persisted per command at edit time, so reopening an edit restores author metadata |
-| `learn.html` 129 rows | Generated from `registry.ts` at build time into `static/learn.html` (or rendered client-side) so it cannot drift from the 135-row table. Keep the three modifier cards (`:default`, `.autogenerate`, `=off`) and the widget filter — they are the page's teaching device and match the three grammar positions of §1.2 |
+| `learn.html` 30 rows | Generated from the `registry.ts` live table at build time into `static/learn.html` (or rendered client-side) so it cannot drift from the 30-row table. Keep the text+widget filters — they are the page's teaching device and match the grammar positions of §1.2 |
 | `hub.html` `HUB` array | `hubList()`; `counts` feed the rail |
 | `hub.html` `cliState` install sim | `hubInstall()` real probe — §8.6 |
 | `hub.html` `cc-added` | `hub-state.json` `addedIds`, idempotent |
@@ -1140,16 +1136,16 @@ Differences from Compressy and why:
 7. Smoke: `deno task dev` → window opens, page renders, assets load, no console errors
 
 ### Phase B — Grammar (the critical path; everything depends on it)
-8. `registry.ts` — 135 rows + 7 aliases + built-in defaults, transcribed from `index.html:182`
+8. `registry.ts` — 30 live + 108 retired + 7 aliases + built-in defaults, transcribed from `add.html`
 9. `grammar.ts` — `parseToken`, `parseVarInstances`, `parseVars`, `renderCmd`, `exampleFor`, `rangeSpec` (fixed), `ccAutoGenerate`
 10. `scripts/build-grammar.ts` → `static/grammar.js`; staleness test
-11. `tests/grammar_test.ts` — the three positions of §1.2 in isolation and combined; every colon-default form per type; occurrence keying; alias resolution; unknown-token passthrough; `rangeSpec("18-28=23")` → `{min:18,max:28}`; `exampleFor` parity across all 135 types. Explicitly assert that the dot-suffix and the colon-default are parsed as **different** fields (`.autogenerate` sets `auto`, never `default`), and that the legacy `:autogenerate` tolerance still parses correctly for stored commands while `{{input.text:autogenerate}}` is treated as a literal default.
+11. `tests/grammar_test.ts` — the three positions of §1.2 in isolation and combined; every colon-default form per type; occurrence keying; alias resolution (all 7); retired-name read-tolerance; unknown-token passthrough; `rangeSpec("18-28=23")` → `{min:18,max:28}`; `exampleFor` parity across all 30 live types. Explicitly assert that the dot-suffix and the colon-default are parsed as **different** fields (`.autogenerate` sets `auto`, never `default`), and that the legacy `:autogenerate` tolerance still parses correctly for stored commands while `{{input.text:autogenerate}}` is treated as a literal default.
 
 ### Phase C — Library & persistence
 12. `types.ts` + `store.ts` + `settings.ts`
 13. `seeds.ts` — merged seed set with one id space (§7.3)
 14. `library.ts` — CRUD, search, duplicate, import/export + `tests/library_test.ts`
-14b. `widgetToEInput(token)` in `registry.ts` — the fixed widget→`<e-input type>` table (§4.3), plus the `format` lookup for the 53 `text` tokens
+14b. `widgetToEInput(token)` in `registry.ts` — the fixed widget→`<e-input type>` table (§4.3)
 14c. `renderToken(token, value)` — the grammar-aware element builder (§4.13); occurrence-keyed `name` from `token.iid`, option children from `token.optionsArr` + author metadata
 15. `bindings.ts` — library + settings + values + shells bindings; wire into `main.ts`
 
@@ -1335,11 +1331,9 @@ CREATE INDEX idx_hub_adds ON hub_commands(adds DESC);
 CREATE INDEX idx_submissions_status ON submissions(status, created_at DESC);
 ```
 
-`client_id` is an anonymous per-install UUID generated by the desktop app and stored in settings — the design has no account concept and `author`/`email` are typed per submission, so an anonymous client id is the honest model. Auth is a v2 item.
-
 ### 14.3 Validation parity
 
-`POST /hub/metadata/validate` implements the *same* acceptance rule the desktop app and `publish.html` use (`kind === "command-metadata"` or a truthy `command`), and additionally checks that every `{{…}}` in `command` parses against the 135-token registry — a check the client cannot be trusted to perform. Rejections return the exact failing token so the author can fix it.
+`POST /hub/metadata/validate` implements the *same* acceptance rule the desktop app and `publish.html` use (`kind === "command-metadata"` or a truthy `command`), and additionally checks that every `{{…}}` in `command` parses against the registry (30 live + 108 retired + 7 aliases) — a check the client cannot be trusted to perform. Rejections return the exact failing token so the author can fix it.
 
 ---
 
@@ -1349,12 +1343,12 @@ CREATE INDEX idx_submissions_status ON submissions(status, created_at DESC);
 |---|---|
 | Dev server | `deno task dev` → window opens, all six pages render, no console errors |
 | Grammar parity | `tests/grammar_test.ts` green; assert `static/grammar.js` hash matches `grammar.ts` |
-| Registry completeness | Test asserts 135 names, the widget histogram, and that `learn.html`'s generated rows cover every name |
-| Widget→element mapping | Every one of the 135 tokens resolves through `widgetToEInput()` to a real `<e-input type>`; no token falls through to an accidental default. Assert the three `text`-family collapses (`email`/`url`/`search` → `text` + `format`) and the 13 `file` tokens → `text` + `action-button="browse"` |
+| Registry completeness | Test asserts 30 live + 108 retired + 7 aliases, the live widget histogram, and that `learn.html`'s generated rows cover exactly the 30 live names |
+| Widget→element mapping | Every one of the 30 live tokens resolves through `widgetToEInput()` to a real `<e-input type>`; no token falls through to an accidental default. Assert the text-family `format` mapping, the 7 select-family lists and the 3 `file` tokens → `text` + `action-button="browse"` |
 | Input rendering | Render one token per widget family in a real window; confirm the tag upgrades (no unstyled/unknown element), the theme applies, and `type="range"` is live (proves `range-slider` was registered) |
 | Occurrence identity | A template with `{{input.dir}}` twice produces two elements with `name="input.dir"` and `name="input.dir#2"`, each holding an independent value |
 | Event wiring | Set a value, blur, and confirm `e:input` + `e:change` + `e:validate` fire on the component root (delegation works) while `hook:onValidate` fires only on the element (no bubbling) |
-| Range dependency absent | Temporarily unregister `range-slider` and confirm the 9 range tokens degrade visibly rather than silently — then re-register |
+| Range dependency absent | Temporarily unregister `range-slider` and confirm the live range token (plus retired range tokens) degrade visibly rather than silently — then re-register |
 | Library round-trip | Create → export → import → deep-equal; duplicate gives a fresh id; delete clears values |
 | Metadata compatibility | Export a command and feed it to the design's `publish.html` loader in a browser — it must accept the file and fill the summary |
 | Execution | Run a real command per shell; verify stdout, stderr, exit code, `cwd`, and duration against a manual run in the same shell |
