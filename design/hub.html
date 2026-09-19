@@ -1,256 +1,1140 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Community Hub — Command Center</title>
-<style>
-@layer od-layout {
-:where(.od-stack,.od-row) > :where(*){min-width:0}
-.od-stack{display:flex;flex-direction:column;gap:var(--od-gap,8px)}
-.od-row{display:flex;align-items:center;gap:var(--od-gap,8px)}
-.od-fill{flex:1 1 0;min-width:0}.od-fixed{flex:none}
-}
-:root{
---bg:#ffffff;--surface:#f6f8fa;--fg:#1f2328;--muted:#656d76;
---border:#d0d7de;--border-soft:#d8dee4;
---accent:#0969da;--accent-hover:#0550ae;
---success:#1a7f37;--danger:#cf222e;
---font-body:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
---font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
---radius:6px;--focus-ring:0 0 0 3px rgba(9,105,218,.3);
-}
-*{box-sizing:border-box}html,body{margin:0;padding:0}
-body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;min-height:100vh;display:flex;justify-content:center;padding:0}
-.app-window{width:100%;background:var(--bg);border:none;border-radius:0;overflow:hidden;box-shadow:none}
-.tabs{display:flex;gap:4px;padding:12px 20px 0}
-.tabs a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:var(--radius)}
-.tabs a:hover{background:var(--surface);color:var(--fg)}
-.tabs a.on{color:var(--fg);font-weight:600;background:var(--surface);border:1px solid var(--border)}
-.tabs a:not(.on){border:1px solid transparent}
-.tabs a.learn{margin-left:auto;font-weight:400}
-.app-head{display:flex;align-items:center;gap:12px;padding:18px 20px 6px;flex-wrap:wrap}
-.app-head h1{font-size:24px;line-height:1.25;margin:0;letter-spacing:-.01em}
-.count{font-size:12px;font-weight:600;background:var(--surface);border:1px solid var(--border);border-radius:9999px;padding:2px 10px;color:var(--muted);white-space:nowrap}
-.palette{margin:6px 20px 0;border:1px solid var(--border);border-radius:8px;background:#fff;overflow:hidden}
-.palette-bar{display:flex;align-items:center;gap:8px;padding:10px 12px}
-.palette-bar .mag{flex:none;color:var(--muted);font-size:15px}
-.palette-bar input{flex:1 1 0;min-width:0;border:none;outline:none;font-family:inherit;font-size:15px;color:var(--fg);background:transparent}
-.palette-bar input::placeholder{color:var(--muted)}
-.kbd{flex:none;font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px solid var(--border);border-bottom-width:2px;border-radius:4px;padding:0 6px;background:var(--surface)}
-.clearbtn{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;font-size:12px;padding:4px 10px;min-height:30px;cursor:pointer;font-family:inherit}
-.clearbtn:hover{background:#f3f4f6}
-.clearbtn[hidden]{display:none}
-.pkgchip{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:12px;font-weight:700;background:#0d1117;color:#e6edf3;border-radius:6px;padding:3px 4px 3px 8px}
-.pkgchip button{border:none;background:#30363d;color:#fff;border-radius:4px;font-size:12px;cursor:pointer;line-height:1;padding:2px 6px;font-family:inherit}
-.suggest{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0 12px 10px}
-.suggest span{font-size:12px;color:var(--muted)}
-.suggest button{font-family:inherit;font-size:12px;border:1px solid var(--border-soft);background:var(--surface);color:var(--fg);border-radius:9999px;padding:3px 10px;cursor:pointer;min-height:28px}
-.suggest button:hover{border-color:var(--accent);color:var(--accent)}
-.recents{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0 12px 10px}
-.recents[hidden]{display:none}
-.recents span{font-size:12px;color:var(--muted)}
-.recents button{font-family:inherit;font-size:12px;border:1px dashed var(--border);background:#fff;color:var(--muted);border-radius:9999px;padding:3px 10px;cursor:pointer;min-height:28px}
-.recents button:hover{color:var(--accent);border-color:var(--accent)}
-.rail-wrap{padding:10px 20px 0}
-.rail-label{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px}
-.cli-rail{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.cli-rail button{font-family:inherit;font-size:12px;font-weight:600;border-radius:9999px;border:1px solid var(--border);background:#fff;color:var(--muted);padding:4px 12px;min-height:32px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.cli-rail button .n{font-weight:400;background:var(--surface);border:1px solid var(--border-soft);border-radius:9999px;padding:0 6px;font-size:11px}
-.cli-rail button.on{background:var(--fg);border-color:var(--fg);color:#fff}
-.cli-rail button.on .n{background:rgba(255,255,255,.16);border-color:transparent;color:#fff}
-.cli-rail button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
-.toolbar{display:flex;gap:12px;align-items:center;padding:10px 20px 0;flex-wrap:wrap}
-.resultline{display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0;font-size:12px;color:var(--muted)}
-.sort{display:flex;align-items:center;gap:8px;margin-left:auto}
-.sort label{font-size:12px;font-weight:600;color:var(--muted)}
-.sort select{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:5px 8px;font-size:12px;font-family:inherit;color:var(--fg);outline:none;min-height:32px;cursor:pointer}
-.sort select:focus{border-color:var(--accent);box-shadow:var(--focus-ring)}
-.list{padding:12px 20px 8px;display:flex;flex-direction:column;gap:12px}
-.cmd{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
-.cmd.active{border-color:var(--accent);box-shadow:var(--focus-ring)}
-.cmd-top{display:flex;align-items:flex-start;gap:12px;padding:12px 14px}
-.cmd-icon{width:32px;height:32px;flex:none;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;font-family:var(--font-mono);font-size:14px;color:var(--accent);font-weight:700}
-.cmd-main{flex:1 1 0;min-width:0}
-.cmd-main h2{margin:0;font-size:14px;font-weight:600}
-.cmd-main p{margin:2px 0 6px;color:var(--muted);font-size:12px}
-.cmd-main mark,.meta mark{background:#fff8c5;color:inherit;border-radius:2px;padding:0 1px}
-.cmdline{font-family:var(--font-mono);font-size:12px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:var(--radius);padding:10px 12px;white-space:pre-wrap;word-break:break-word}
-.cmdline .dim{color:#8b949e}
-.cmdline .pwd{color:#3fb950;font-weight:600}
-.cmdline .ex{color:#79c0ff;background:rgba(56,139,253,.15);border:1px solid rgba(56,139,253,.4);border-radius:4px;padding:0 4px}
-.meta{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
-.cli{font-family:var(--font-mono);font-size:12px;font-weight:700;background:#0d1117;color:#e6edf3;border-radius:var(--radius);padding:0 8px}
-.tag{font-size:12px;background:#ddf4ff;border:1px solid var(--border-soft);color:var(--accent);border-radius:9999px;padding:0 8px}
-.by{font-size:12px;color:var(--muted)}
-.vbadge{font-size:11px;font-weight:600;background:#fff8c5;border:1px solid var(--border-soft);color:#9a6700;border-radius:9999px;padding:0 8px}
-.cmd-side{flex:none;display:flex;flex-direction:column;gap:8px;align-items:stretch;min-width:150px}
-.btn{font-family:inherit;font-size:14px;border-radius:var(--radius);border:1px solid transparent;padding:5px 16px;cursor:pointer;line-height:1.5;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:32px}
-.btn-add{background:#1f883d;color:#fff;border-color:rgba(31,35,40,.15);font-weight:500}
-.btn-add:hover{background:var(--success)}
-.btn-add[disabled]{opacity:.65;cursor:default}
-.btn-ghost{background:var(--surface);color:var(--fg);border-color:var(--border)}
-.btn-ghost:hover{background:#f3f4f6}
-.btn-ghost[disabled]{opacity:.65;cursor:default}
-.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,.cli-rail button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
-.status{font-size:12px;color:var(--muted);text-align:right;min-height:18px}
-.status.ok{color:var(--success)}.status.run{color:var(--accent)}
-.more-wrap{display:flex;justify-content:center;padding:2px 20px 8px}
-.more-wrap button{font-family:inherit;font-size:14px;border-radius:var(--radius);border:1px solid var(--border);background:#fff;color:var(--fg);padding:6px 18px;min-height:36px;cursor:pointer}
-.more-wrap button:hover{border-color:var(--accent);color:var(--accent)}
-.foot{padding:0 20px 18px;color:var(--muted);font-size:12px}
-.empty{border:1px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;color:var(--muted)}
-.empty a{color:var(--accent)}
-.empty button{font-family:inherit;font-size:13px;border:1px solid var(--border);background:#fff;border-radius:6px;padding:6px 14px;min-height:32px;cursor:pointer;margin-top:8px}
-@media(max-width:640px){.cmd-top{flex-direction:column}.cmd-side{width:100%;min-width:0;flex-direction:row;flex-wrap:wrap;align-items:center}.cmd-side .btn{flex:1 1 120px}.cmd-side .status{flex-basis:100%;text-align:left}.sort{width:100%;margin-left:0}.sort select{flex:1}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Community Hub — Command Center</title>
+    <style>
+        @layer od-layout {
+            :where(.od-stack, .od-row)> :where(*) {
+                min-width: 0
+            }
+
+            .od-stack {
+                display: flex;
+                flex-direction: column;
+                gap: var(--od-gap, 8px)
+            }
+
+            .od-row {
+                display: flex;
+                align-items: center;
+                gap: var(--od-gap, 8px)
+            }
+
+            .od-fill {
+                flex: 1 1 0;
+                min-width: 0
+            }
+
+            .od-fixed {
+                flex: none
+            }
+        }
+
+        :root {
+            --bg: #ffffff;
+            --surface: #f6f8fa;
+            --fg: #1f2328;
+            --muted: #656d76;
+            --border: #d0d7de;
+            --border-soft: #d8dee4;
+            --accent: #0969da;
+            --accent-hover: #0550ae;
+            --success: #1a7f37;
+            --danger: #cf222e;
+            --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            --radius: 6px;
+            --focus-ring: 0 0 0 3px rgba(9, 105, 218, .3);
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: #e9edf1;
+            color: var(--fg);
+            font-family: var(--font-body);
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 0
+        }
+
+        ::selection {
+            background: #ddf4ff
+        }
+
+        .app-window {
+            width: 100%;
+            background: var(--bg);
+            border: none;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: none
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            padding: 12px 20px 0
+        }
+
+        .tabs a {
+            font-size: 14px;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: var(--radius);
+            text-underline-offset: 3px
+        }
+
+        .tabs a:hover {
+            background: var(--surface);
+            color: var(--fg)
+        }
+
+        .tabs a.on {
+            color: var(--fg);
+            font-weight: 600;
+            background: var(--surface);
+            border: 1px solid var(--border)
+        }
+
+        .tabs a:not(.on) {
+            border: 1px solid transparent
+        }
+
+        .tabs a.learn {
+            margin-left: auto;
+            font-weight: 400
+        }
+
+        .app-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 20px 0;
+            flex-wrap: wrap
+        }
+
+        .app-head h1 {
+            font-size: 24px;
+            line-height: 1.25;
+            margin: 0;
+            letter-spacing: -.01em;
+            text-wrap: balance
+        }
+
+        .htabs-wrap {
+            padding: 12px 20px 0
+        }
+
+        .htabs {
+            display: inline-flex;
+            gap: 2px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            padding: 3px;
+            max-width: 100%;
+            flex-wrap: wrap
+        }
+
+        .hseg {
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--muted);
+            border-radius: 9999px;
+            padding: 5px 14px;
+            min-height: 32px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .hseg svg {
+            width: 14px;
+            height: 14px;
+            flex: none
+        }
+
+        .hseg:hover {
+            color: var(--fg)
+        }
+
+        .hseg.on {
+            background: #fff;
+            color: var(--fg);
+            border-color: var(--border);
+            box-shadow: 0 1px 0 rgba(31, 35, 40, .08)
+        }
+
+        .hseg:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring)
+        }
+
+        .panel {
+            display: block
+        }
+
+        .panel[hidden] {
+            display: none !important
+        }
+
+        .palette {
+            margin: 6px 20px 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden
+        }
+
+        .palette-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px
+        }
+
+        .palette-bar .mag {
+            flex: none;
+            color: var(--muted);
+            font-size: 15px
+        }
+
+        .palette-bar input {
+            flex: 1 1 0;
+            min-width: 0;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--fg);
+            background: transparent;
+            caret-color: var(--accent)
+        }
+
+        .palette-bar input::placeholder {
+            color: var(--muted)
+        }
+
+        .palette-bar input::-webkit-search-cancel-button {
+            cursor: pointer
+        }
+
+        .suggest {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 0 12px 10px
+        }
+
+        .suggest span {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .suggest button {
+            font-family: inherit;
+            font-size: 12px;
+            border: 1px solid var(--border-soft);
+            background: var(--surface);
+            color: var(--fg);
+            border-radius: 9999px;
+            padding: 3px 10px;
+            cursor: pointer;
+            min-height: 32px
+        }
+
+        .suggest button:hover {
+            border-color: var(--accent);
+            color: var(--accent)
+        }
+
+        .rail-wrap {
+            padding: 10px 20px 0
+        }
+
+        .cli-rail {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .cli-rail button {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--muted);
+            padding: 4px 12px;
+            min-height: 32px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .cli-rail button.on {
+            background: var(--fg);
+            border-color: var(--fg);
+            color: #fff
+        }
+
+        .cli-rail button:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring)
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 20px 0;
+            flex-wrap: wrap
+        }
+
+        .resultline {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .list {
+            padding: 12px 20px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .cmd {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: #fff
+        }
+
+        .cmd-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px
+        }
+
+        .cmd-main {
+            flex: 1 1 0;
+            min-width: 0
+        }
+
+        .cmd-main h2 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            text-wrap: balance
+        }
+
+        .cmd-main p {
+            margin: 2px 0 6px;
+            color: var(--muted);
+            font-size: 12px;
+            max-width: 70ch
+        }
+
+        .cmd-main mark,
+        .meta mark {
+            background: #fff8c5;
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 1px
+        }
+
+        .cmdline {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            background: #0d1117;
+            color: #e6edf3;
+            border: 1px solid #30363d;
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-variant-numeric: tabular-nums
+        }
+
+        .cmdline .dim {
+            color: #8b949e
+        }
+
+        .cmdline .pwd {
+            color: #3fb950;
+            font-weight: 600
+        }
+
+        .cmdline .ex {
+            color: #79c0ff;
+            background: rgba(56, 139, 253, .15);
+            border: 1px solid rgba(56, 139, 253, .4);
+            border-radius: 4px;
+            padding: 0 4px
+        }
+
+        .meta {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .cli {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            background: #0d1117;
+            color: #e6edf3;
+            border-radius: var(--radius);
+            padding: 0 8px
+        }
+
+        .by {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .vbadge {
+            font-size: 11px;
+            font-weight: 600;
+            background: #fff8c5;
+            border: 1px solid var(--border-soft);
+            color: #9a6700;
+            border-radius: 9999px;
+            padding: 0 8px
+        }
+
+        .tag {
+            font-size: 11px;
+            font-weight: 600;
+            background: #ddf4ff;
+            color: #0969da;
+            border: 1px solid var(--border-soft);
+            border-radius: 9999px;
+            padding: 0 8px
+        }
+
+        .cmd-side {
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+            min-width: 150px
+        }
+
+        .btn {
+            font-family: inherit;
+            font-size: 14px;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            padding: 5px 16px;
+            cursor: pointer;
+            line-height: 1.5;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 32px
+        }
+
+        .btn-add {
+            background: #1f883d;
+            color: #fff;
+            border-color: rgba(31, 35, 40, .15);
+            font-weight: 500
+        }
+
+        .btn-add:hover {
+            background: var(--success)
+        }
+
+        .btn-add[disabled] {
+            opacity: .65;
+            cursor: default
+        }
+
+        .btn:focus-visible,
+        a:focus-visible,
+        input:focus-visible,
+        .copybtn:focus-visible,
+        .cli-rail button:focus-visible,
+        .hseg:focus-visible,
+        .mgrpick button:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring)
+        }
+
+        .status {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: right;
+            min-height: 18px
+        }
+
+        .status.ok {
+            color: var(--success)
+        }
+
+        .status.bad {
+            color: var(--danger)
+        }
+
+        .foot {
+            padding: 0 20px 18px;
+            color: var(--muted);
+            font-size: 12px;
+            max-width: 70ch
+        }
+
+        .empty {
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            color: var(--muted)
+        }
+
+        .empty button {
+            font-family: inherit;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 6px;
+            padding: 6px 14px;
+            min-height: 32px;
+            cursor: pointer;
+            margin-top: 8px
+        }
+
+        .mgrpick {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            align-items: center
+        }
+
+        .mgrpick .picklbl {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted)
+        }
+
+        .mgrpick button {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--muted);
+            padding: 4px 12px;
+            min-height: 32px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .mgrpick button svg {
+            width: 14px;
+            height: 14px;
+            flex: none
+        }
+
+        .mgrpick button.on {
+            background: var(--fg);
+            border-color: var(--fg);
+            color: #fff
+        }
+
+        .mgrpick button:disabled {
+            opacity: .55;
+            cursor: default
+        }
+
+        .ilog {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.6;
+            background: #0d1117;
+            color: #e6edf3;
+            border: 1px solid #30363d;
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            margin: 0 14px 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-variant-numeric: tabular-nums
+        }
+
+        .ilog .dim {
+            color: #8b949e
+        }
+
+        .ilog .grn {
+            color: #3fb950
+        }
+
+        .ilog .red {
+            color: #ff7b72
+        }
+
+        .ilog .blu {
+            color: #79c0ff
+        }
+
+        .subnote {
+            padding: 10px 20px 0;
+            color: var(--muted);
+            font-size: 12px;
+            max-width: 70ch
+        }
+
+        .pm-head,
+        .pkg-head {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start
+        }
+
+        .pm-icon,
+        .pkg-icon {
+            width: 32px;
+            height: 32px;
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--fg)
+        }
+
+        .pm-icon svg,
+        .pkg-icon svg,
+        .cli-rail button svg {
+            width: 18px;
+            height: 18px;
+            flex: none
+        }
+
+        .cli-rail button svg {
+            width: 14px;
+            height: 14px
+        }
+
+        .pm-title,
+        .pkg-title {
+            min-width: 0;
+            flex: 1 1 0
+        }
+
+        .install-line-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            margin: 8px 0 4px
+        }
+
+        .cmdline-row {
+            display: flex;
+            gap: 8px;
+            align-items: stretch
+        }
+
+        .cmdline-row .cmdline {
+            flex: 1 1 0;
+            min-width: 0
+        }
+
+        .copybtn {
+            flex: none;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--fg);
+            border-radius: var(--radius);
+            padding: 4px 10px;
+            min-height: 32px;
+            cursor: pointer
+        }
+
+        .copybtn:hover {
+            background: #f3f4f6
+        }
+
+        .gate-link {
+            color: var(--accent);
+            text-decoration: none;
+            text-underline-offset: 3px
+        }
+
+        .gate-link:hover {
+            text-decoration: underline
+        }
+
+        .mgr-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--border);
+            flex: none
+        }
+
+        .on .mgr-dot,
+        button.on .mgr-dot {
+            background: #fff
+        }
+
+        .mgrpick button .mgr-dot {
+            width: 7px;
+            height: 7px
+        }
+
+        @media(max-width:640px) {
+            .cmd-top {
+                flex-direction: column
+            }
+
+            .cmd-side {
+                width: 100%;
+                min-width: 0;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center
+            }
+
+            .cmd-side .btn {
+                flex: 1 1 120px
+            }
+
+            .cmd-side .status {
+                flex-basis: 100%;
+                text-align: left
+            }
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            * {
+                animation: none !important;
+                transition: none !important
+            }
+        }
+    </style>
 </head>
+
 <body>
-<div class="app-window">
-<nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a class="on" href="hub.html" aria-current="page">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
-<div class="app-head">
-<h1>Community Hub</h1><span class="count" id="count"></span>
-</div>
-<div class="palette" role="search">
-<div class="palette-bar">
-<span class="mag" aria-hidden="true">⌕</span>
-<span class="pkgchip" id="pkgchip" hidden><span id="pkgname"></span><button type="button" id="pkgx" aria-label="Clear package">×</button></span>
-<input id="q" type="search" placeholder="Search thousands of commands — try &quot;git log&quot;, &quot;ffmpeg convert&quot;, &quot;package:git&quot;…" aria-label="Search shared commands" autocomplete="off" />
-<span class="kbd" id="kbd">/</span>
-<button class="clearbtn" id="clearq" type="button" hidden>Clear</button>
-</div>
-<div class="suggest" id="suggest"><span>Try:</span><button type="button" data-s="git log">git log</button><button type="button" data-s="ffmpeg convert">ffmpeg convert</button><button type="button" data-s="package:docker ship">package:docker ship</button><button type="button" data-s="package:npm audit">package:npm audit</button></div>
-<div class="recents" id="recents" hidden><span>Recent:</span><span id="recentbtns" style="display:contents"></span></div>
-</div>
-<div class="rail-wrap"><p class="rail-label" id="raillabel">Packages</p><div class="cli-rail" id="rail" role="group" aria-label="Browse by package"></div></div>
-<div class="toolbar"><div class="resultline" id="resultline" role="status" aria-live="polite"></div><div class="sort"><label for="sort">Sort</label><select id="sort"><option value="adds" selected>Most added</option><option value="name">Name A–Z</option><option value="cli">Package A–Z</option></select></div></div>
-<div class="list" id="list"></div>
-<div class="more-wrap" id="morewrap" hidden><button type="button" id="morebtn">Show more</button></div>
-<p class="foot">Shared commands are community demos. CLI installs and runs are simulated locally — nothing is installed on your system. “Add to mine” saves a copy into My commands (localStorage).</p>
-</div>
-<script>
-const HUB=[
-{id:"h1",cli:"ffmpeg",name:"Convert video to MP4 (H.264)",desc:"Picked codec and quality with fast-start for streaming.",cmd:"ffmpeg -i {{input.file}} -c:v {{input.vcodec:libx264,libx265,vp9,av1=libx264}} -crf {{input.range:18-28=23}} {{input.checkbox:-movflags +faststart}} output.{{input.extension:mp4,mkv,mov=mp4}}",tag:"video",cwd:"C:\\projects\\media",by:"@media-tools · 2.1k adds",adds:2100,installed:false},
-{id:"h2",cli:"docker",name:"Ship a production preview",desc:"Build and run the app container on your port.",cmd:"docker build -t {{input.text:app}}:preview . && docker run {{input.checkbox:--rm}} -p {{input.port:8080}}:80 {{input.text:app}}",tag:"ship",cwd:"C:\\projects\\shop-app",by:"@ship-it · 740 adds",adds:740,installed:false},
-{id:"h3",cli:"npm",name:"Audit and fix vulnerabilities",desc:"Audit with a picked command and omitted scope.",cmd:"npm audit {{input.select:fix,signatures=fix}} --omit={{input.select:dev,optional,peer=dev}}",tag:"security",cwd:"C:\\projects\\shop-app",by:"@node-garden · 3.8k adds",adds:3800,installed:true},
-{id:"h4",cli:"git",name:"Squash-merge helper log",desc:"Readable graph of recent commits from a date.",cmd:"git log --graph --since={{input.date:2026-01-15}} --pretty={{input.logformat:oneline,short,full=oneline}} -{{input.count:12}}",tag:"git",cwd:"C:\\projects\\shop-app",by:"@git-wizards · 5.2k adds",adds:5200,installed:true},
-{id:"h5",cli:"bun",name:"Run with live reload",desc:"Start the script on your port, optionally watching.",cmd:"bun run {{input.script:dev}} -- --port={{input.port:3000}} {{input.checkbox:--watch}}",tag:"setup",cwd:"C:\\projects\\shop-app",by:"@bun-fans · 986 adds",adds:986,installed:true},
-{id:"h6",cli:"npm",name:"Run script with mode",desc:"Run a package script in a picked mode.",cmd:"npm run {{input.select:dev,build,test,lint}} -- --mode={{input.radio:development,production=production}} {{input.checkbox:--dry-run=off}}",tag:"develop",cwd:"C:\\projects\\shop-app",by:"@node-garden · 1.1k adds",adds:1100,installed:true},
-{id:"h7",cli:"curl",name:"Fetch a JSON API fast",desc:"GET with headers and retry for quick checks.",cmd:"curl -sS --retry {{input.count:3}} -H {{input.header:Authorization: Bearer TOKEN}} {{input.url:https://example.com}}",tag:"network",cwd:"C:\\projects\\shop-app",by:"@http-fans · 1.9k adds",adds:1900,installed:true},
-{id:"h8",cli:"git",name:"Clean up merged branches",desc:"Delete branches already merged into main.",cmd:"git branch --merged {{input.branch:main}} | grep -v {{input.branch:main}} | xargs git branch -d",tag:"git",cwd:"C:\\projects\\shop-app",by:"@git-wizards · 2.4k adds",adds:2400,installed:true},
-{id:"h9",cli:"ffmpeg",name:"Pull a poster frame",desc:"Grab one still for thumbnails and previews.",cmd:"ffmpeg -ss {{input.seek:00:00:10}} -i {{input.file}} -vframes 1 {{input.poster:poster.jpg}}",tag:"video",cwd:"C:\\projects\\media",by:"@media-tools · 980 adds",adds:980,installed:false},
-{id:"h10",cli:"curl",name:"Post a deploy hook",desc:"Trigger a rebuild with a token header.",cmd:"curl -X POST -H {{input.header:Authorization: Bearer TOKEN}} {{input.url:https://example.com}}",tag:"ship",cwd:"C:\\projects\\shop-app",by:"@ship-it · 640 adds",adds:640,installed:true}
-];
-const KNOWN_PKGS=["git","ffmpeg","curl","docker","npm","bun"];
-function pkgCounts(){const m={};HUB.forEach(h=>{m[h.cli]=(m[h.cli]||0)+1;});return m;}
-const CC_KNOWN={"input.file":"file","input.text":"text","input.number":"number","input.date":"date","input.color":"color","input.password":"password","input.port":"number","input.count":"number","input.select":"select","input.radio":"radio","input.checkbox":"checkbox","input.range":"range","input.vcodec":"select","input.extension":"select","input.logformat":"select","input.script":"text","input.header":"text","input.url":"text","input.branch":"text","input.poster":"file","input.seek":"text"};
-function lookupType(name){if(CC_KNOWN[name])return [name,CC_KNOWN[name]];if(/^input\./.test(name))return [name,"text"];return null;}
-function parseToken(inner){inner=String(inner||"").trim();var m=inner.match(/^input\.([a-z0-9]+)(\.autogenerate)?(?::([\s\S]*))?$/);if(!m)return null;var name="input."+m[1];var def=lookupType(name);if(!def)return null;var widget=def[1];var auto=!!m[2];var raw=(m[3]!=null?m[3]:"").trim();if(raw.toLowerCase()==="autogenerate"){auto=true;raw="";}var params=raw,defVal="",optsArr=null,checkedDef=null;if(widget==="select"||widget==="radio"){if(raw===""){params="";optsArr=[];}else{var dm=raw.match(/^(.*)=\s*([^=,]+?)\s*$/);if(dm&&dm[1].trim()!==""&&dm[2].trim()!==""&&dm[2].indexOf(",")<0){var lo=dm[1].split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});if(lo.length){optsArr=lo;defVal=dm[2].trim();params=lo.join(",")+"="+defVal;}else{optsArr=raw.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});params=optsArr.join(",");}}else{optsArr=raw.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});params=optsArr.join(",");}}}else if(widget==="range"){params=raw;var rmd=params.match(/=\s*(-?\d+(?:\.\d+)?)\s*$/);if(rmd)defVal=rmd[1];}else if(widget==="checkbox"){if(raw===""){params="--flag";checkedDef=true;defVal=params;}else{var cm=raw.match(/^(.*)=\s*([^\s=]+?)\s*$/);if(cm&&cm[1].trim()!==""&&/^(1|t|true|on|checked|yes|y|0|f|false|off|unchecked|no|n)$/i.test(cm[2].trim())){params=cm[1].trim()||"--flag";checkedDef=/^(1|t|true|on|checked|yes|y)$/i.test(cm[2].trim());defVal=params;}else{params=raw;checkedDef=true;defVal=params;}}}else{if(params==="")params="";defVal=params;}var key=name+(auto?".autogenerate":"")+(params!==""?":"+params:"");if(widget==="checkbox"&&checkedDef===false)key+="=off";return {key:key,type:widget,name:name,params:params,auto:auto,default:defVal,optionsArr:optsArr,checkedDef:checkedDef,token:"{{"+inner+"}}"};}
-function parseVars(t){const out=[],seen=new Set();const re=/\{\{\s*([^{}]*?)\s*\}\}/g;let m;while((m=re.exec(String(t||"")))){const p=parseToken(m[1]);if(p&&!seen.has(p.key)){seen.add(p.key);out.push(p);}}return out;}
-function ccExampleFor(v){var n=v.name,w=v.type,p=v.params||"";if(w==="select"||w==="radio"){var o=(v.optionsArr&&v.optionsArr.length?v.optionsArr:p.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";}));if(!o.length)return "opt";if(v.default&&o.indexOf(v.default)>=0)return v.default;return o[0];}if(w==="range"){if(v.default!==""&&isFinite(+v.default))return String(+v.default);var rm=p.match(/(-?\d+)\s*-\s*(-?\d+)/);if(rm)return String(Math.round((+rm[1]+ +rm[2])/2));return "50";}if(w==="checkbox"){if(v.checkedDef===false)return "";return p||"--flag";}if(v.default!=="")return v.default;if(w==="color")return "#1677ff";if(w==="date")return "2026-09-12";if(w==="password")return "s3cr3t";if(w==="file"){var FM={"input.file":"input.mp4","input.poster":"poster.jpg"};return FM[n]||"input.mp4";}if(w==="number"){var NM={"input.port":"8080","input.count":"3"};return NM[n]||"42";}var TM={"input.header":"Authorization: Bearer TOKEN","input.url":"https://example.com","input.branch":"main","input.text":"hello","input.script":"dev"};if(TM[n])return TM[n];return "hello";}
-function paintCmdline(box,pwdEl,template,cwd){pwdEl.textContent=cwd||"C:\\projects\\app";box.innerHTML="";var re=/\{\{\s*([^{}]*?)\s*\}\}/g,last=0,m;var src=String(template||"");while((m=re.exec(src))){if(m.index>last)box.appendChild(document.createTextNode(src.slice(last,m.index)));var p=parseToken(m[1]);if(p){var ex=document.createElement("span");ex.className="ex";ex.textContent=ccExampleFor(p);ex.title=p.token;box.appendChild(ex);}else{box.appendChild(document.createTextNode(m[0]));}last=m.index+m[0].length;}if(last<src.length)box.appendChild(document.createTextNode(src.slice(last)));}
-const list=document.getElementById("list"),q=document.getElementById("q"),rail=document.getElementById("rail"),count=document.getElementById("count"),sort=document.getElementById("sort"),resultline=document.getElementById("resultline"),morewrap=document.getElementById("morewrap"),morebtn=document.getElementById("morebtn"),clearq=document.getElementById("clearq"),pkgchip=document.getElementById("pkgchip"),pkgname=document.getElementById("pkgname"),pkgx=document.getElementById("pkgx"),suggest=document.getElementById("suggest"),recents=document.getElementById("recents"),recentbtns=document.getElementById("recentbtns");
-let sortBy="adds",activePkg="All",shown=60,activeIdx=-1;
-const PAGE=60;
-try{sortBy=localStorage.getItem("cc-hub-sort")||"adds";}catch(e){}
-sort.value=["adds","name","cli"].includes(sortBy)?sortBy:"adds";sortBy=sort.value;
-function installedCLIs(){try{return JSON.parse(localStorage.getItem("cc-clis")||"{}");}catch(e){return{};}}
-function saveCLI(s){try{localStorage.setItem("cc-clis",JSON.stringify(s));}catch(e){}}
-let cliState=Object.assign({ffmpeg:false,npm:true,bun:true,git:true,docker:false,curl:true},installedCLIs());
-function addedIds(){try{return JSON.parse(localStorage.getItem("cc-added")||"[]");}catch(e){return[];}}
-function saveAdded(a){try{localStorage.setItem("cc-added",JSON.stringify(a));}catch(e){}}
-function getRecents(){try{const r=JSON.parse(localStorage.getItem("cc-hub-recents")||"[]");return Array.isArray(r)?r.slice(0,5):[];}catch(e){return[];}}
-function pushRecent(s){s=String(s||"").trim();if(!s)return;try{let r=getRecents().filter(x=>x!==s);r.unshift(s);localStorage.setItem("cc-hub-recents",JSON.stringify(r.slice(0,5)));paintRecents();}catch(e){}}
-function paintRecents(){const r=getRecents();recents.hidden=!r.length||q.value.trim()!=="";recentbtns.innerHTML="";r.forEach(s=>{const b=document.createElement("button");b.type="button";b.textContent=s;b.addEventListener("click",()=>{q.value=s;shown=PAGE;paint();q.focus();});recentbtns.appendChild(b);});}
-function parseQuery(raw){raw=String(raw||"");let pkg=null;const m=raw.match(/package:\s*([a-z0-9-]+)/i);if(m){pkg=m[1].toLowerCase();raw=raw.replace(m[0]," ");}const terms=raw.toLowerCase().split(/\s+/).map(s=>s.trim()).filter(Boolean);return {pkg:pkg,terms:terms};}
-function scoreRow(h,p){const effPkg=(p.pkg||(activePkg!=="All"?activePkg.toLowerCase():null));if(effPkg&&String(h.cli||"").toLowerCase()!==effPkg)return -1;if(!p.terms.length)return 1;const hay=(h.cli+" "+h.name+" "+h.desc+" "+h.tag+" "+h.cmd).toLowerCase();let s=0;for(const t of p.terms){const ci=h.cli.toLowerCase();if(ci===t){s+=5;continue;}if(ci.startsWith(t)){s+=4;continue;}if(h.name.toLowerCase().includes(t)){s+=3;continue;}if(hay.includes(t)){s+=1;continue;}return -1;}if(h.name.toLowerCase().includes(p.terms.join(" ")))s+=2;return s;}
-function hi(elm,text,terms){elm.innerHTML="";const src=String(text||"");if(!terms.length){elm.textContent=src;return;}const low=src.toLowerCase();let idx=[],i=0;const t0=terms.slice().sort((a,b)=>b.length-a.length)[0]||"";if(!t0){elm.textContent=src;return;}let pos=0;while(true){const at=low.indexOf(t0,pos);if(at<0)break;idx.push([at,at+t0.length]);pos=at+t0.length;if(idx.length>6)break;}let last=0;idx.forEach(pair=>{if(pair[0]>last)elm.appendChild(document.createTextNode(src.slice(last,pair[0])));const mk=document.createElement("mark");mk.textContent=src.slice(pair[0],pair[1]);elm.appendChild(mk);last=pair[1];});if(last<src.length)elm.appendChild(document.createTextNode(src.slice(last)));}
-function paintRail(counts){rail.innerHTML="";const pkgs=["All"].concat(Object.keys(counts).sort());pkgs.forEach(c=>{const b=document.createElement("button");b.type="button";const lbl=c==="All"?"All packages":c;b.innerHTML="";const t=document.createElement("span");t.textContent=lbl;b.appendChild(t);if(c!=="All"){const n=document.createElement("span");n.className="n";n.textContent=counts[c];b.appendChild(n);}b.className=c===activePkg?"on":"";b.setAttribute("aria-pressed",c===activePkg?"true":"false");b.addEventListener("click",()=>{activePkg=c;shown=PAGE;syncPkgChip();paintRail(counts);paint();});rail.appendChild(b);});}
-function syncPkgChip(){if(activePkg==="All"){pkgchip.hidden=true;}else{pkgchip.hidden=false;pkgname.textContent=activePkg;}}
-let lastRows=[];
-function paint(){
-const parsed=parseQuery(q.value);
-if(parsed.pkg){activePkg=parsed.pkg[0].toUpperCase()+parsed.pkg.slice(1);const low=parsed.pkg;const found=Object.keys(pkgCounts()).some(k=>k.toLowerCase()===low);if(!found&&KNOWN_PKGS.indexOf(low)<0){activePkg="All";}else{const keys=Object.keys(pkgCounts());for(const k of keys){if(k.toLowerCase()===low)activePkg=k;}}
-syncPkgChip();paintRail(pkgCounts());}
-clearq.hidden=q.value.trim()==="";suggest.style.display=q.value.trim()===""?"":"none";paintRecents();
-let rows=HUB.map(h=>({h:h,s:scoreRow(h,parsed)})).filter(r=>r.s>=0);
-if(sortBy==="name")rows.sort((a,b)=>a.h.name.localeCompare(b.h.name)||b.s-a.s);
-else if(sortBy==="cli")rows.sort((a,b)=>a.h.cli.localeCompare(b.h.cli)||a.h.name.localeCompare(b.h.name));
-else rows.sort((a,b)=>(b.s-a.s)||((b.h.adds||0)-(a.h.adds||0)));
-lastRows=rows.map(r=>r.h);
-count.textContent=HUB.length+" shared";
-const pkgLbl=activePkg!=="All"?(" in "+activePkg):"";
-resultline.textContent=rows.length?rows.length+" result"+(rows.length===1?"":"s")+pkgLbl+(parsed.terms.length?(' for “'+parsed.terms.join(" ")+'”'):""):"";
-list.innerHTML="";
-if(!rows.length){list.innerHTML='<div class="empty">No matches'+pkgLbl+'. Try “git log”, “ffmpeg”, or clear the package.<br /><button type="button" id="emptyclear">Clear search</button></div>';const ec=document.getElementById("emptyclear");if(ec)ec.addEventListener("click",()=>{q.value="";activePkg="All";shown=PAGE;syncPkgChip();paintRail(pkgCounts());paint();});morewrap.hidden=true;return;}
-const slice=rows.slice(0,shown);
-activeIdx=slice.length?0:-1;
-slice.forEach((r,idx)=>{
-const h=r.h;
-const el=document.createElement("section");el.className="cmd"+(idx===activeIdx?" active":"");el.tabIndex=-1;
-el.innerHTML='<div class="cmd-top"><div class="cmd-icon" aria-hidden="true">&gt;_</div>'
-+'<div class="cmd-main"><h2></h2><p></p><div class="cmdline"><span class="dim">PS </span><span class="pwd"></span><span class="dim">&gt; </span><span class="c"></span></div>'
-+'<div class="meta"><span class="cli"></span><span class="tag"></span><span class="by"></span></div></div>'
-+'<div class="cmd-side"><button type="button" class="btn btn-add">+ Add to mine</button>'
-+'<button type="button" class="btn btn-ghost btn-cli"></button>'
-+'<div class="status" role="status"></div></div></div>';
-hi(el.querySelector("h2"),h.name,parsed.terms);
-hi(el.querySelector("p"),h.desc,parsed.terms);
-paintCmdline(el.querySelector(".c"),el.querySelector(".cmdline .pwd"),h.cmd,h.cwd);
-el.querySelector(".cli").textContent=h.cli;
-el.querySelector(".tag").textContent=h.tag;
-el.querySelector(".by").textContent=h.by;
-const hv=parseVars(h.cmd);
-if(hv.length){const b=document.createElement("span");b.className="vbadge";b.textContent=hv.length+(hv.length===1?" input":" inputs");el.querySelector(".meta").appendChild(b);}
-const add=el.querySelector(".btn-add"),cli=el.querySelector(".btn-cli"),st=el.querySelector(".status");
-function sync(){
-if(cliState[h.cli]){cli.textContent=h.cli+" ✓ installed";cli.disabled=true;}
-else{cli.textContent="Install "+h.cli;cli.disabled=false;}
-if(addedIds().includes(h.id)){add.textContent="Added ✓ — see My commands";add.disabled=true;}
-else{add.textContent="+ Add to mine";add.disabled=false;}
-if(!st.dataset.touched)st.textContent=cliState[h.cli]?"Ready":"Requires "+h.cli;
-}
-sync();
-cli.addEventListener("click",()=>{
-if(cliState[h.cli])return;
-cli.disabled=true;st.textContent="Installing "+h.cli+"… (simulated)";st.className="status run";
-let p=0;
-const t=setInterval(()=>{
-p+=25;
-if(p<100){st.textContent="Installing "+h.cli+"… "+p+"% (simulated)";return;}
-clearInterval(t);
-cliState[h.cli]=true;saveCLI(cliState);st.dataset.touched="1";st.textContent=h.cli+" installed ✓ (simulated)";st.className="status ok";sync();
-},p===0?200:260);
-});
-add.addEventListener("click",()=>{
-try{
-const cur=JSON.parse(localStorage.getItem("cc-commands")||"[]");
-cur.push({id:"hub-"+h.id+"-"+Date.now(),custom:true,fromHub:h.id,name:h.name,cmd:h.cmd,vars:parseVars(h.cmd),askMode:"every",desc:h.desc+" (from Community Hub by "+h.by+")",tag:h.tag,cwd:h.cwd,lines:["PS "+h.cwd+"> "+h.cmd,"dim|ran via Community Hub demo runner…","grn|✓ done · exit 0 (simulated)"]});
-localStorage.setItem("cc-commands",JSON.stringify(cur));
-const a=addedIds();a.push(h.id);saveAdded(a);
-}catch(e){}
-st.dataset.touched="1";st.textContent="Saved to My commands ✓";st.className="status ok";sync();
-});
-list.appendChild(el);
-});
-morewrap.hidden=rows.length<=shown;
-morebtn.textContent="Show more ("+(rows.length-shown)+" left)";
-}
-let deb=null;
-q.addEventListener("input",()=>{clearTimeout(deb);deb=setTimeout(()=>{shown=PAGE;paint();},120);});
-q.addEventListener("keydown",e=>{
-if(e.key==="Escape"){q.value="";activePkg="All";shown=PAGE;syncPkgChip();paintRail(pkgCounts());paint();}
-if(e.key==="Enter"){const top=lastRows[0];if(top){pushRecent(q.value);}if(activeIdx>=0){const cards=list.querySelectorAll(".cmd");const c=cards[activeIdx];if(c){const b=c.querySelector(".btn-add");if(b&&!b.disabled)b.click();}}}
-if(e.key==="ArrowDown"||e.key==="ArrowUp"){const cards=list.querySelectorAll(".cmd");if(!cards.length)return;e.preventDefault();activeIdx=e.key==="ArrowDown"?Math.min(cards.length-1,activeIdx+1):Math.max(0,activeIdx-1);cards.forEach((c,i)=>c.classList.toggle("active",i===activeIdx));cards[activeIdx].scrollIntoView({block:"nearest"});}
-});
-document.addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement!==q&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||"")){e.preventDefault();q.focus();}});
-clearq.addEventListener("click",()=>{q.value="";activePkg="All";shown=PAGE;syncPkgChip();paintRail(pkgCounts());paint();q.focus();});
-pkgx.addEventListener("click",()=>{activePkg="All";q.value=q.value.replace(/package:\s*[a-z0-9-]+/i," ").trim();shown=PAGE;syncPkgChip();paintRail(pkgCounts());paint();});
-suggest.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;q.value=b.getAttribute("data-s")||"";shown=PAGE;paint();q.focus();});
-morebtn.addEventListener("click",()=>{shown+=PAGE;paint();});
-sort.addEventListener("change",()=>{sortBy=sort.value;try{localStorage.setItem("cc-hub-sort",sortBy);}catch(e){}paint();});
-syncPkgChip();paintRail(pkgCounts());paintRecents();paint();
-</script>
+    <div class="app-window">
+        <nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a class="on" href="hub.html"
+                aria-current="page">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
+        <div class="app-head">
+            <h1>Community Hub</h1>
+        </div>
+        <div class="htabs-wrap">
+            <div class="htabs" role="tablist" aria-label="Community Hub sections">
+                <button type="button" class="hseg on" role="tab" id="tab-commands" aria-controls="panel-commands"
+                    aria-selected="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5 6 8l-3.5 3"/><path d="M7 11.5h6.5"/></svg><span>Commands</span></button>
+                <button type="button" class="hseg" role="tab" id="tab-managers" aria-controls="panel-managers"
+                    aria-selected="false" tabindex="-1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/></svg><span>Package managers</span></button>
+                <button type="button" class="hseg" role="tab" id="tab-packages" aria-controls="panel-packages"
+                    aria-selected="false" tabindex="-1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5.5" width="12" height="6.5" rx="1"/><path d="M2 8.5h12M5 5.5V3.8h6v1.7"/></svg><span>Packages</span></button>
+            </div>
+        </div>
+        <section class="panel" id="panel-commands" role="tabpanel" aria-labelledby="tab-commands">
+            <div class="palette" role="search">
+                <div class="palette-bar">
+                    <span class="mag" aria-hidden="true">⌕</span>
+                    <input id="q" type="search" placeholder="Search demo commands — try &quot;git log&quot;…"
+                        aria-label="Search demo commands" autocomplete="off" />
+                </div>
+                <div class="suggest" id="suggest"><span>Try:</span><button type="button" data-s="git log">git
+                        log</button><button type="button" data-s="ffmpeg convert">ffmpeg convert</button><button
+                        type="button" data-s="docker ship">docker ship</button></div>
+            </div>
+            <div class="rail-wrap">
+                <div class="cli-rail" id="rail" role="group" aria-label="Filter commands by tool"></div>
+            </div>
+            <div class="toolbar">
+                <div class="resultline" id="resultline" role="status" aria-live="polite"></div>
+            </div>
+            <div class="list" id="list"></div>
+        </section>
+        <section class="panel" id="panel-managers" role="tabpanel" aria-labelledby="tab-managers" hidden>
+            <div class="palette" role="search">
+                <div class="palette-bar">
+                    <span class="mag" aria-hidden="true">⌕</span>
+                    <input id="pmq" type="search" placeholder="Search demo managers — try &quot;scoop&quot;…"
+                        aria-label="Search demo package managers" autocomplete="off" />
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="resultline" id="pmresult" role="status" aria-live="polite"></div>
+            </div>
+            <div class="list" id="pmlist"></div>
+            <p class="subnote">Demo catalog. Installing is simulated and stays in this browser. Copy any install line to run it in your own terminal.</p>
+        </section>
+        <section class="panel" id="panel-packages" role="tabpanel" aria-labelledby="tab-packages" hidden>
+            <div class="palette" role="search">
+                <div class="palette-bar">
+                    <span class="mag" aria-hidden="true">⌕</span>
+                    <input id="pkgq" type="search"
+                        placeholder="Search demo packages — try &quot;ffmpeg&quot; or &quot;imaging&quot;…"
+                        aria-label="Search demo packages" autocomplete="off" />
+                </div>
+                <div class="suggest" id="pkgsuggest"><span>Try:</span><button type="button"
+                        data-s="ffmpeg">ffmpeg</button><button type="button" data-s="libvips">libvips</button><button
+                        type="button" data-s="imaging">imaging</button></div>
+            </div>
+            <div class="rail-wrap">
+                <div class="cli-rail" id="pkgrail" role="group" aria-label="Filter packages by package manager"></div>
+            </div>
+            <div class="toolbar">
+                <div class="resultline" id="pkgresult" role="status" aria-live="polite"></div>
+            </div>
+            <div class="list" id="pkglist"></div>
+            <p class="subnote">Demo catalog. Choose a manager per package — solid dot means installed (simulated). Installing is simulated and stays in this
+                browser.</p>
+        </section>
+        <p class="foot">Community demos. Installs and runs are simulated — “Add to My commands” saves a copy to My commands.
+        </p>
+    </div>
+    <script>
+        const HUB = [
+            {id: "h1", cli: "ffmpeg", name: "Convert video to MP4 (H.264)", desc: "Picked codec and quality with fast-start for streaming.", cmd: "ffmpeg -i {{input.file}} -c:v {{input.vcodec:libx264,libx265,vp9,av1=libx264}} -crf {{input.range:18-28=23}} {{input.checkbox:-movflags +faststart}} output.{{input.extension:mp4,mkv,mov=mp4}}", tag: "video", cwd: "C:\\projects\\media", by: "@media-tools · 2.1k adds", adds: 2100, installed: false},
+            {id: "h2", cli: "docker", name: "Ship a production preview", desc: "Build and run the app container on your port.", cmd: "docker build -t {{input.text:app}}:preview . && docker run {{input.checkbox:--rm}} -p {{input.port:8080}}:80 {{input.text:app}}", tag: "ship", cwd: "C:\\projects\\shop-app", by: "@ship-it · 740 adds", adds: 740, installed: false},
+            {id: "h3", cli: "npm", name: "Audit and fix vulnerabilities", desc: "Audit with a picked command and omitted scope.", cmd: "npm audit {{input.select:fix,signatures=fix}} --omit={{input.select:dev,optional,peer=dev}}", tag: "security", cwd: "C:\\projects\\shop-app", by: "@node-garden · 3.8k adds", adds: 3800, installed: true},
+            {id: "h4", cli: "git", name: "Squash-merge helper log", desc: "Readable graph of recent commits from a date.", cmd: "git log --graph --since={{input.date:2026-01-15}} --pretty={{input.logformat:oneline,short,full=oneline}} -{{input.count:12}}", tag: "git", cwd: "C:\\projects\\shop-app", by: "@git-wizards · 5.2k adds", adds: 5200, installed: true},
+            {id: "h5", cli: "bun", name: "Run with live reload", desc: "Start the script on your port, optionally watching.", cmd: "bun run {{input.script:dev}} -- --port={{input.port:3000}} {{input.checkbox:--watch}}", tag: "setup", cwd: "C:\\projects\\shop-app", by: "@bun-fans · 986 adds", adds: 986, installed: true},
+            {id: "h6", cli: "npm", name: "Run script with mode", desc: "Run a package script in a picked mode.", cmd: "npm run {{input.select:dev,build,test,lint}} -- --mode={{input.radio:development,production=production}} {{input.checkbox:--dry-run=off}}", tag: "develop", cwd: "C:\\projects\\shop-app", by: "@node-garden · 1.1k adds", adds: 1100, installed: true},
+            {id: "h7", cli: "curl", name: "Fetch a JSON API fast", desc: "GET with headers and retry for quick checks.", cmd: "curl -sS --retry {{input.count:3}} -H {{input.header:Authorization: Bearer TOKEN}} {{input.url:https://example.com}}", tag: "network", cwd: "C:\\projects\\shop-app", by: "@http-fans · 1.9k adds", adds: 1900, installed: true},
+            {id: "h8", cli: "git", name: "Clean up merged branches", desc: "Delete branches already merged into main.", cmd: "git branch --merged {{input.branch:main}} | grep -v {{input.branch:main}} | xargs git branch -d", tag: "git", cwd: "C:\\projects\\shop-app", by: "@git-wizards · 2.4k adds", adds: 2400, installed: true},
+            {id: "h9", cli: "ffmpeg", name: "Pull a poster frame", desc: "Grab one still for thumbnails and previews.", cmd: "ffmpeg -ss {{input.seek:00:00:10}} -i {{input.file}} -vframes 1 {{input.poster:poster.jpg}}", tag: "video", cwd: "C:\\projects\\media", by: "@media-tools · 980 adds", adds: 980, installed: false},
+            {id: "h10", cli: "curl", name: "Post a deploy hook", desc: "Trigger a rebuild with a token header.", cmd: "curl -X POST -H {{input.header:Authorization: Bearer TOKEN}} {{input.url:https://example.com}}", tag: "ship", cwd: "C:\\projects\\shop-app", by: "@ship-it · 640 adds", adds: 640, installed: true}
+        ];
+        const KNOWN_PKGS = ["git", "ffmpeg", "curl", "docker", "npm", "bun"];
+        function pkgList() {const s = new Set(); HUB.forEach(h => s.add(h.cli)); return Array.from(s).sort();}
+        const CC_INPUT_TYPES =[["input.file","file","File path"],["input.dir","file","Directory path"],["input.files","file","Multiple files (space-separated)"],["input.text","text","Free text"],["input.email","text","Email address"],["input.url","text","URL"],["input.search","text","Search string"],["input.uuid","text","UUID v4"],["input.number","number","Numeric value"],["input.port","number","Port number"],["input.date","date","Calendar date"],["input.color","color","Color swatch (hex)"],["input.password","password","Masked secret"],["input.select","select","Choice list","mp4,mkv,mov"],["input.radio","radio","Single choice","yes,no"],["input.buttongroup","buttongroup","Button group (single choice)","fast,medium,slow"],["input.country","select","Country code","US,GB,DE,FR,ES,IN,JP,BR,CA,AU,AF,AX,AL,DZ,AS,AD,AO,AI,AQ,AG,AR,AM,AW,AT,AZ,BS,BH,BD,BB,BY,BE,BZ,BJ,BM,BT,BO,BQ,BA,BW,BV,IO,BN,BG,BF,BI,KH,CM,CV,KY,CF,TD,CL,CN,CX,CC,CO,KM,CG,CD,CK,CR,CI,HR,CU,CW,CY,CZ,DK,DJ,DM,DO,EC,EG,SV,GQ,ER,EE,SZ,ET,FK,FO,FJ,FI,GF,PF,TF,GA,GM,GE,GH,GI,GR,GL,GD,GP,GU,GT,GG,GN,GW,GY,HT,HM,VA,HN,HK,HU,IS,ID,IR,IQ,IE,IM,IL,IT,JM,JE,JO,KZ,KE,KI,KP,KR,KW,KG,LA,LV,LB,LS,LR,LY,LI,LT,LU,MO,MG,MW,MY,MV,ML,MT,MH,MQ,MR,MU,YT,MX,FM,MD,MC,MN,ME,MS,MA,MZ,MM,NA,NR,NP,NL,NC,NZ,NI,NE,NG,NU,NF,MK,MP,NO,OM,PK,PW,PS,PA,PG,PY,PE,PH,PN,PL,PT,PR,QA,RE,RO,RU,RW,BL,SH,KN,LC,MF,PM,VC,WS,SM,ST,SA,SN,RS,SC,SL,SG,SX,SK,SI,SB,SO,ZA,GS,SS,LK,SD,SR,SJ,SE,CH,SY,TW,TJ,TZ,TH,TL,TG,TK,TO,TT,TN,TR,TM,TC,TV,UG,UA,AE,UM,UY,UZ,VU,VE,VN,VG,VI,WF,EH,YE,ZM,ZW"],["input.timezone","select","Timezone","UTC,America/New_York,America/Chicago,America/Denver,America/Los_Angeles,America/Anchorage,Pacific/Honolulu,America/Toronto,America/Vancouver,America/Mexico_City,America/Sao_Paulo,America/Buenos_Aires,Atlantic/Azores,Europe/London,Europe/Paris,Europe/Berlin,Europe/Rome,Europe/Madrid,Europe/Amsterdam,Europe/Zurich,Europe/Stockholm,Europe/Athens,Europe/Istanbul,Europe/Moscow,Africa/Cairo,Africa/Lagos,Africa/Johannesburg,Africa/Nairobi,Asia/Dubai,Asia/Karachi,Asia/Kolkata,Asia/Dhaka,Asia/Bangkok,Asia/Singapore,Asia/Hong_Kong,Asia/Shanghai,Asia/Tokyo,Asia/Seoul,Australia/Perth,Australia/Sydney,Pacific/Auckland"],["input.currency","select","Currency","USD,EUR,GBP,JPY,CHF,CAD,AUD,CNY,SEK,NZD,MXN,SGD,HKD,NOK,KRW,INR,DKK,ZAR,BRL,TWD,THB,MYR,IDR,PHP,ILS,PLN,CZK,HUF,AED,SAR,TRY,RUB,UAH,RON,NGN,KES,EGP,ARS,CLP,COP,PEN"],["input.language","select","Language","en,es,fr,de,zh,ja,pt,ru,ar,hi,bn,it,nl,ko,tr,pl,uk,vi,th,id,ms,he,sv,da,no,fi,el,cs,ro,hu"],["input.locale","select","Locale","en-US,en-GB,es-ES,fr-FR,de-DE,pt-BR,zh-CN,zh-TW,ja-JP,ko-KR,ar-SA,hi-IN,it-IT,nl-NL,ru-RU,tr-TR,pl-PL,sv-SE,da-DK,uk-UA"],["input.checkbox","checkbox","Flag","--flag"],["input.switch","switch","Toggle switch","--flag"],["input.range","range","Range slider","0-100"],["input.time","time","Clock time"],["input.datetime","datetime","Date and time"],["input.textarea","textarea","Multiline text"],["input.multiselect","multiselect","Multiple choice","dev,build,test"],["input.license","select","License (SPDX)","MIT,Apache-2.0,GPL-3.0-only,GPL-3.0-or-later,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0,EPL-2.0,Unlicense,CC0-1.0,CC-BY-4.0,CC-BY-SA-4.0,0BSD,Zlib,Artistic-2.0,AGPL-3.0-only,LGPL-3.0-only"],["input.keyvalue","keyvalue","Key=value pair","KEY=value"]];; const CC_RETIRED_TYPES =[["input.regex","text","Regular expression"],["input.message","textarea","Short message"],["input.title","text","Title"],["input.description","textarea","Longer description"],["input.username","text","User name"],["input.hostname","text","Host name"],["input.domain","text","Domain name"],["input.ip","text","IP address"],["input.count","number","Count"],["input.quantity","number","Quantity"],["input.percent","range","Percent slider","0-100"],["input.month","range","Month slider","1-12"],["input.day","range","Day-of-month slider","1-31"],["input.hour","time","Hour (clock time)"],["input.minute","time","Minute (clock time)"],["input.second","time","Second (clock time)"],["input.bitrate","number","Bitrate value (k)"],["input.extension","select","File extension","mp4,mkv,mov,mp3,wav,avi,flv,webm"],["input.container","select","Container format","mp4,mkv,mov,avi,webm"],["input.vcodec","select","Video codec","libx264,libx265,vp9,av1,mpeg4"],["input.acodec","select","Audio codec","aac,mp3,opus,flac,vorbis"],["input.preset","select","Encoder preset","ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow"],["input.crf","range","Quality CRF (lower is better)","0-51"],["input.resolution","select","Resolution","1920x1080,1280x720,3840x2160,640x480"],["input.fps","number","Frames per second"],["input.samplerate","select","Audio sample rate","44100,48000,22050,96000"],["input.channels","select","Audio channels","1,2,6"],["input.duration","text","Duration (e.g. 00:01:20)"],["input.volume","range","Volume level","0-100"],["input.speed","number","Speed multiplier"],["input.seek","text","Seek position (e.g. 00:00:10)"],["input.subtitle","file","Subtitle file"],["input.poster","file","Poster image"],["input.thumbnail","file","Thumbnail image"],["input.path","file","File or directory path"],["input.folder","file","Folder path"],["input.filename","text","File name"],["input.glob","text","Glob pattern (e.g. *.js)"],["input.pattern","text","Match pattern"],["input.output","file","Output path"],["input.template","file","Template file"],["input.config","file","Config file"],["input.logfile","file","Log file"],["input.env","select","Environment","development,staging,production"],["input.script","text","Script name"],["input.package","text","Package name"],["input.pkgmanager","select","Package manager","npm,bun,yarn,pnpm"],["input.version","text","Version string"],["input.semver","text","Semver (e.g. 1.2.3)"],["input.branch","text","Git branch"],["input.tag","text","Git tag"],["input.remote","select","Git remote","origin,upstream"],["input.commit","text","Commit ref or message"],["input.author","text","Author name"],["input.logformat","select","Git log format","oneline,short,medium,full"],["input.repos","text","Repository"],["input.org","text","Organization"],["input.mode","select","Mode","development,production"],["input.loglevel","select","Log level","error,warn,info,debug"],["input.image","select","Container image","nginx,httpd,caddy,node,postgres"],["input.cimage","text","Container image (any)"],["input.containername","text","Container name"],["input.mount","text","Volume mapping"],["input.network","text","Network name"],["input.replicas","number","Replica count"],["input.memory","text","Memory limit (e.g. 512m)"],["input.cpu","number","CPU limit"],["input.workdir","file","Working directory"],["input.entrypoint","text","Entrypoint command"],["input.restart","select","Restart policy","no,always,on-failure,unless-stopped"],["input.protocol","select","Protocol","http,https,ssh,ftp"],["input.method","select","HTTP method","GET,POST,PUT,PATCH,DELETE"],["input.header","text","HTTP header (Key: value)"],["input.query","text","Query string"],["input.cidr","text","CIDR range"],["input.sql","textarea","SQL query"],["input.mac","text","MAC address"],["input.database","text","Database name"],["input.table","text","Table name"],["input.dbuser","text","DB user"],["input.engine","select","DB engine","postgres,mysql,sqlite,mongo"],["input.cron","text","Cron expression"],["input.timeout","number","Timeout seconds"],["input.retries","number","Retry count"],["input.delay","number","Delay seconds"],["input.format","select","Output format","json,yaml,text,table"],["input.shell","select","Shell","bash,sh,zsh,fish"],["input.os","select","OS","linux,macos,windows"],["input.arch","select","CPU arch","x64,arm64"],["input.flag","checkbox","Flag (custom value via :flag)"],["input.confirm","checkbox","Confirm toggle"],["input.verbose","checkbox","Verbose flag","--verbose"],["input.quiet","checkbox","Quiet flag","--quiet"],["input.force","checkbox","Force flag","--force"],["input.dryrun","checkbox","Dry-run flag","--dry-run"],["input.colorname","text","Color name"],["input.namespace","text","Namespace"],["input.deployment","text","Deployment name"],["input.service","text","Service name"],["input.pod","text","Pod name"],["input.context","text","Context name"],["input.region","select","Cloud region","us-east-1,us-west-2,eu-west-1,eu-central-1,ap-south-1"],["input.profile","text","Cloud profile"],["input.bucket","text","Bucket name"],["input.bucketkey","text","Bucket key"],["input.workspace","text","Workspace name"],["input.varfile","file","Var file"],["input.planfile","file","Plan file"]];; const CC_INPUT_ALIASES={"input.hexcolor":"input.color","input.bgcolor":"input.color","input.fgcolor":"input.color","input.token":"input.password","input.apikey":"input.password","input.secret":"input.password","input.since":"input.date"};
+        function lookupType(name){for(var i=0;i<CC_INPUT_TYPES.length;i++){if(CC_INPUT_TYPES[i][0]===name)return CC_INPUT_TYPES[i];}for(var r=0;r<CC_RETIRED_TYPES.length;r++){if(CC_RETIRED_TYPES[r][0]===name)return CC_RETIRED_TYPES[r];}if(CC_INPUT_ALIASES[name]){var t=CC_INPUT_ALIASES[name];for(var j=0;j<CC_INPUT_TYPES.length;j++){if(CC_INPUT_TYPES[j][0]===t)return CC_INPUT_TYPES[j];}}return null;}
+        function parseToken(inner){inner=String(inner||"").trim();var m=inner.match(/^input\.([a-z0-9]+)(\.autogenerate)?(?::([\s\S]*))?$/);if(!m)return null;var name="input."+m[1];var def=lookupType(name);if(!def)return null;var widget=def[1];var auto=!!m[2];var raw=(m[3]!=null?m[3]:"").trim();if(raw.toLowerCase()==="autogenerate"){auto=true;raw="";}var params=raw,defVal="",optsArr=null,rangeDef=null,checkedDef=null;if(widget==="multiselect"){if(raw===""){params=def[3]||"";optsArr=params?params.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";}):[];defVal="";}else{var eq=raw.indexOf("=");if(eq>=0){var ml=raw.slice(0,eq).trim(),mr=raw.slice(eq+1).trim();var mlo=ml?ml.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";}):[];var mrd=mr?mr.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";}):[];if(mlo.length){optsArr=mlo;defVal=mrd.join(",");params=mlo.join(",")+(mrd.length?"="+mrd.join(","):"");}else{optsArr=raw.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});params=optsArr.join(",");}}else{optsArr=raw.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});params=optsArr.join(",");}}}else if(widget==="select"||widget==="radio"||widget==="buttongroup"||widget==="license"){if(raw===""){params=def[3]||"";optsArr=params?params.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";}):[];}else{var dm=raw.match(/^(.*)=\s*([^=,]+?)\s*$/);if(dm&&dm[1].trim()!==""&&dm[2].trim()!==""){var left=dm[1].trim(),right=dm[2].trim();var lopts=left.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});if(lopts.length&&right.indexOf(",")<0){optsArr=lopts;defVal=right;params=lopts.join(",")+"="+right;}else{optsArr=raw.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});params=optsArr.join(",");}}else{optsArr=raw.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});params=optsArr.join(",");}}}else if(widget==="range"){if(raw===""){params=def[3]||"";}else{params=raw;}var rm=params.match(/(-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)(?:\s*=\s*(-?\d+(?:\.\d+)?))?/);if(rm){rangeDef={min:+rm[1],max:+rm[2],def:(rm[3]!=null&&rm[3]!==""?rm[3]:"")};if(rangeDef.def!=="")defVal=rangeDef.def;}}else if(widget==="checkbox"||widget==="switch"){if(raw===""){params=def[3]||"";checkedDef=true;if(params!=="")defVal=params;}else{var cm=raw.match(/^(.*)=\s*([^\s=]+?)\s*$/);if(cm&&cm[1].trim()!==""&&/^(1|t|true|on|checked|yes|y|0|f|false|off|unchecked|no|n)$/i.test(cm[2].trim())){params=cm[1].trim()||"--flag";checkedDef=/^(1|t|true|on|checked|yes|y)$/i.test(cm[2].trim());defVal=params;}else{params=raw;checkedDef=true;defVal=params;}}}else{if(params===""){params=def[3]||"";}defVal=params;}var key=name+(auto?".autogenerate":"")+(params!==""?":"+params:"");if((widget==="checkbox"||widget==="switch")&&checkedDef===false)key+="=off";return {key:key,type:widget,name:name,params:params,auto:auto,default:defVal,optionsArr:optsArr,rangeDef:rangeDef,checkedDef:checkedDef,token:"{{"+inner+"}}"};} function parseVars(t) {const out = [], seen = new Set(); const re = /\{\{\s*([^{}]*?)\s*\}\}/g; let m; while ((m = re.exec(String(t || "")))) {const p = parseToken(m[1]); if (p && !seen.has(p.key)) {seen.add(p.key); out.push(p);} } return out;}
+        function ccExampleFor(v) {var n = v.name, w = v.type, p = v.params || ""; if (w === "multiselect") {var mo = (v.optionsArr && v.optionsArr.length ? v.optionsArr : p.split(",").map(function (s) {return s.trim();}).filter(function (s) {return s !== "";})); if (!mo.length) return "opt"; var md = String(v.default || "").split(",").map(function (s) {return s.trim();}).filter(function (s) {return mo.indexOf(s) >= 0;}); if (md.length) return md.join(","); return mo[0];} if (w === "select" || w === "radio" || w === "buttongroup" || w === "license") {var o = (v.optionsArr && v.optionsArr.length ? v.optionsArr : p.split(",").map(function (s) {return s.trim();}).filter(function (s) {return s !== "";})); if (!o.length) return "opt"; if (v.default && o.indexOf(v.default) >= 0) return v.default; return o[0];} if (w === "range") {if (v.default !== "" && isFinite(+v.default)) return String(+v.default); var rm = p.match(/(-?\d+)\s*-\s*(-?\d+)/); if (rm) return String(Math.round((+rm[1] + +rm[2]) / 2)); return "50";} if (w === "checkbox" || w === "switch") {if (v.checkedDef === false) return ""; return p || "--flag";} if (v.default !== "") return v.default; if (w === "color") return "#1677ff"; if (w === "date") return "2026-09-12"; if (w === "password") return "s3cr3t"; if (w === "time") return "12:30"; if (w === "datetime") return "2026-09-12T12:30"; if (w === "textarea") return "hello world"; if (w === "keyvalue") {var kv = String(p || ""); if (kv.indexOf("=") >= 0) return kv; return "KEY=value";} if (w === "file") {var FM = {"input.file": "input.mp4", "input.poster": "poster.jpg"}; return FM[n] || "input.mp4";} if (w === "number") {var NM = {"input.port": "8080", "input.count": "3"}; return NM[n] || "42";} var TM = {"input.header": "Authorization: Bearer TOKEN", "input.url": "https://example.com", "input.branch": "main", "input.text": "hello", "input.script": "dev"}; if (TM[n]) return TM[n]; return "hello";}
+        function paintCmdline(box, pwdEl, template, cwd) {pwdEl.textContent = cwd || "C:\\projects\\app"; box.innerHTML = ""; var re = /\{\{\s*([^{}]*?)\s*\}\}/g, last = 0, m; var src = String(template || ""); while ((m = re.exec(src))) {if (m.index > last) box.appendChild(document.createTextNode(src.slice(last, m.index))); var p = parseToken(m[1]); if (p) {var ex = document.createElement("span"); ex.className = "ex"; ex.textContent = ccExampleFor(p); ex.title = p.token; box.appendChild(ex);} else {box.appendChild(document.createTextNode(m[0]));} last = m.index + m[0].length;} if (last < src.length) box.appendChild(document.createTextNode(src.slice(last)));}
+        function paintPlainCmdline(box, pwdEl, cmd, cwd) {pwdEl.textContent = cwd || "C:\\projects\\app"; box.innerHTML = ""; box.appendChild(document.createTextNode(String(cmd || "")));}
+        const list = document.getElementById("list"), q = document.getElementById("q"), rail = document.getElementById("rail"), resultline = document.getElementById("resultline"), suggest = document.getElementById("suggest");
+        let activePkg = "All";
+        function installedCLIs() {try {return JSON.parse(localStorage.getItem("cc-clis") || "{}");} catch (e) {return {};} }
+        function saveCLIs(o) {try {localStorage.setItem("cc-clis", JSON.stringify(o));} catch (e) { } }
+        function isInstalled(cli) {const s = Object.assign({ffmpeg: false, npm: true, bun: true, git: true, docker: false, curl: true}, installedCLIs()); return !!s[cli];}
+        function addedIds() {try {return JSON.parse(localStorage.getItem("cc-added") || "[]");} catch (e) {return [];} }
+        function saveAdded(a) {try {localStorage.setItem("cc-added", JSON.stringify(a));} catch (e) { } }
+        function parseQuery(raw) {raw = String(raw || ""); let pkg = null; const m = raw.match(/package:\s*([a-z0-9-]+)/i); if (m) {pkg = m[1].toLowerCase(); raw = raw.replace(m[0], " ");} const terms = raw.toLowerCase().split(/\s+/).map(s => s.trim()).filter(Boolean); return {pkg: pkg, terms: terms};}
+        function scoreRow(h, p) {const effPkg = (p.pkg || (activePkg !== "All" ? activePkg.toLowerCase() : null)); if (effPkg && String(h.cli || "").toLowerCase() !== effPkg) return -1; if (!p.terms.length) return 1; const hay = (h.cli + " " + h.name + " " + h.desc + " " + h.tag + " " + h.cmd).toLowerCase(); let s = 0; for (const t of p.terms) {const ci = h.cli.toLowerCase(); if (ci === t) {s += 5; continue;} if (ci.startsWith(t)) {s += 4; continue;} if (h.name.toLowerCase().includes(t)) {s += 3; continue;} if (hay.includes(t)) {s += 1; continue;} return -1;} if (h.name.toLowerCase().includes(p.terms.join(" "))) s += 2; return s;}
+        function hi(elm, text, terms) {elm.innerHTML = ""; const src = String(text || ""); if (!terms.length) {elm.textContent = src; return;} const low = src.toLowerCase(); const t0 = terms.slice().sort((a, b) => b.length - a.length)[0] || ""; if (!t0) {elm.textContent = src; return;} let pos = 0, last = 0, count = 0; while (true) {const at = low.indexOf(t0, pos); if (at < 0) break; if (at > last) elm.appendChild(document.createTextNode(src.slice(last, at))); const mk = document.createElement("mark"); mk.textContent = src.slice(at, at + t0.length); elm.appendChild(mk); last = at + t0.length; pos = last; count++; if (count > 6) break;} if (last < src.length) elm.appendChild(document.createTextNode(src.slice(last)));}
+        function paintRail() {rail.innerHTML = "";["All"].concat(pkgList()).forEach(c => {const b = document.createElement("button"); b.type = "button"; b.textContent = c === "All" ? "All tools" : c; b.className = c === activePkg ? "on" : ""; b.setAttribute("aria-pressed", c === activePkg ? "true" : "false"); b.addEventListener("click", () => {activePkg = c; paintRail(); paint();}); rail.appendChild(b);});}
+        function paint() {
+            const parsed = parseQuery(q.value);
+            if (parsed.pkg) {const low = parsed.pkg; const all = ["All"].concat(pkgList()); const hit = all.find(k => k.toLowerCase() === low); activePkg = hit || "All"; if (!KNOWN_PKGS.includes(low) && !hit) activePkg = "All"; paintRail();}
+            suggest.style.display = q.value.trim() === "" ? "" : "none";
+            let rows = HUB.map(h => ({h: h, s: scoreRow(h, parsed)})).filter(r => r.s >= 0);
+            rows.sort((a, b) => (b.s - a.s) || ((b.h.adds || 0) - (a.h.adds || 0)));
+            const pkgLbl = activePkg !== "All" ? (" in " + activePkg) : "";
+            resultline.textContent = rows.length ? rows.length + " result" + (rows.length === 1 ? "" : "s") + pkgLbl + (parsed.terms.length ? (' for “' + parsed.terms.join(" ") + '”') : "") + " · demo catalog" : "";
+            list.innerHTML = "";
+            if (!rows.length) {list.innerHTML = '<div class="empty">No demo commands match' + pkgLbl + '. Try “git log” or “ffmpeg”.<br /><button type="button" id="emptyclear">Clear search</button></div>'; const ec = document.getElementById("emptyclear"); if (ec) ec.addEventListener("click", () => {q.value = ""; activePkg = "All"; paintRail(); paint(); q.focus();}); return;}
+            rows.forEach(r => {
+                const h = r.h;
+                const el = document.createElement("section"); el.className = "cmd";
+                el.innerHTML = '<div class="cmd-top">'
+                    + '<div class="cmd-main"><h2></h2><p></p><div class="cmdline"><span class="dim">PS </span><span class="pwd"></span><span class="dim">&gt; </span><span class="c"></span></div>'
+                    + '<div class="meta"><span class="cli"></span><span class="by"></span></div></div>'
+                    + '<div class="cmd-side"><button type="button" class="btn btn-add">Add to My commands</button>'
+                    + '<div class="status" role="status"></div></div></div>';
+                hi(el.querySelector("h2"), h.name, parsed.terms);
+                hi(el.querySelector("p"), h.desc, parsed.terms);
+                paintCmdline(el.querySelector(".c"), el.querySelector(".cmdline .pwd"), h.cmd, h.cwd);
+                el.querySelector(".cli").textContent = h.cli;
+                el.querySelector(".by").textContent = h.by;
+                const hv = parseVars(h.cmd);
+                if (hv.length) {const b = document.createElement("span"); b.className = "vbadge"; b.textContent = hv.length + (hv.length === 1 ? " input" : " inputs"); el.querySelector(".meta").appendChild(b);}
+                const add = el.querySelector(".btn-add"), st = el.querySelector(".status");
+                function sync() {
+                    if (addedIds().includes(h.id)) {add.textContent = "Added ✓"; add.disabled = true;}
+                    else {add.textContent = "Add to My commands"; add.disabled = false;}
+                    if (!st.dataset.touched) st.textContent = isInstalled(h.cli) ? "Ready to run" : "Needs " + h.cli + " to run";
+                }
+                sync();
+                add.addEventListener("click", () => {
+                    try {
+                        const cur = JSON.parse(localStorage.getItem("cc-commands") || "[]");
+                        cur.push({id: "hub-" + h.id + "-" + Date.now(), custom: true, fromHub: h.id, name: h.name, cmd: h.cmd, vars: parseVars(h.cmd), askMode: "every", desc: h.desc + " (from Community Hub by " + h.by + ")", tag: h.tag, cwd: h.cwd, lines: ["PS " + h.cwd + "> " + h.cmd, "dim|ran via Community Hub demo runner…", "grn|✓ done · exit 0 (simulated)"]});
+                        localStorage.setItem("cc-commands", JSON.stringify(cur));
+                        const a = addedIds(); a.push(h.id); saveAdded(a);
+                    } catch (e) { }
+                    st.dataset.touched = "1"; st.textContent = "Added to My commands ✓"; st.className = "status ok"; sync();
+                });
+                list.appendChild(el);
+            });
+        }
+        /* ---- Tabs (Commands / Package Managers / Packages) ---- */
+        const TAB_IDS = ["commands", "managers", "packages"];
+        let activeTab = "commands";
+        try {
+            const u = new URLSearchParams(location.search).get("tab");
+            const s = localStorage.getItem("cc-hub-tab");
+            activeTab = TAB_IDS.includes(u) ? u : (TAB_IDS.includes(s) ? s : "commands");
+        } catch (e) { }
+        function setTab(name, focus) {
+            if (!TAB_IDS.includes(name)) name = "commands";
+            activeTab = name;
+            TAB_IDS.forEach(t => {
+                const b = document.getElementById("tab-" + t), p = document.getElementById("panel-" + t);
+                const on = t === name;
+                b.classList.toggle("on", on);
+                b.setAttribute("aria-selected", on ? "true" : "false");
+                if (on) {b.removeAttribute("tabindex");} else {b.setAttribute("tabindex", "-1");}
+                if (p) {if (on) {p.removeAttribute("hidden");} else {p.setAttribute("hidden", "");} }
+            });
+            try {localStorage.setItem("cc-hub-tab", name);} catch (e) { }
+            if (focus) document.getElementById("tab-" + name).focus();
+        }
+        TAB_IDS.forEach(t => {document.getElementById("tab-" + t).addEventListener("click", () => setTab(t));});
+        document.querySelector(".htabs").addEventListener("keydown", e => {
+            const i = TAB_IDS.indexOf(activeTab);
+            let n = null;
+            if (e.key === "ArrowRight") n = TAB_IDS[(i + 1) % TAB_IDS.length];
+            else if (e.key === "ArrowLeft") n = TAB_IDS[(i + TAB_IDS.length - 1) % TAB_IDS.length];
+            else if (e.key === "Home") n = TAB_IDS[0];
+            else if (e.key === "End") n = TAB_IDS[TAB_IDS.length - 1];
+            if (n) {e.preventDefault(); setTab(n, true);}
+        });
+        /* ---- Package Managers (demo, simulated) ---- */
+        const PMS = [
+            {id: "winget", name: "WinGet", kind: "bundled", by: "Microsoft · bundled with Windows 11", desc: "Windows Package Manager. Ships with Windows 11 — check it before installing anything else.", cmd: "winget --version", provides: "winget"},
+            {id: "scoop", name: "Scoop", kind: "script", by: "@scoop-installer · demo", desc: "Command-line installer for portable dev tools. Keeps shims outside Program Files.", cmd: "Set-ExecutionPolicy Bypass -Scope Process -Force; irm get.scoop.sh | iex", provides: "scoop"},
+            {id: "choco", name: "Chocolatey", kind: "script", by: "@chocolatey · demo", desc: "Machine-wide Windows packages with version pinning. Needs an elevated shell.", cmd: "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))", provides: "choco"},
+            {id: "bun", name: "Bun", kind: "runtime", by: "@oven-sh · demo", desc: "Fast JS runtime and package manager. Installs npm-compatible packages with one binary.", cmd: "powershell -c \"irm bun.sh/install.ps1 | iex\"", provides: "bun"},
+            {id: "npm", name: "npm", kind: "bundled", by: "@node-garden · demo", desc: "Ships with Node.js LTS. The default for JavaScript packages in this Hub.", cmd: "npm --version", provides: "npm"}
+        ];
+        const PM_DEFAULTS = {winget: true, scoop: false, choco: false, bun: true, npm: true};
+        const PM_DISPLAY = {winget: "WinGet", scoop: "Scoop", choco: "Chocolatey", bun: "Bun", npm: "npm"};
+        const PM_KIND_LABEL = {bundled: "Bundled", script: "Install script", runtime: "Runtime + packages"};
+        const ICONS = {
+            winget: '<rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>',
+            scoop: '<path d="M3 11a4.5 4.5 0 0 0 9 0Z"/><path d="M11.5 8.5 14.5 3"/><circle cx="6" cy="10" r=".7" fill="currentColor" stroke="none"/>',
+            choco: '<path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/>',
+            bun: '<path d="M2.5 10.5a5.5 4.6 0 0 1 11 0Z"/><path d="M2.5 10.5h11"/><circle cx="6.2" cy="8.2" r=".7" fill="currentColor" stroke="none"/><circle cx="8.6" cy="7.2" r=".7" fill="currentColor" stroke="none"/><circle cx="10.8" cy="8.2" r=".7" fill="currentColor" stroke="none"/>',
+            npm: '<rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5.5 6.5v4M5.5 6.5l2.5 2.6 2.5-2.6v4"/>',
+            video: '<rect x="2" y="4" width="12" height="8" rx="1.5"/><path d="M5 4v8M11 4v8M2 7h3M2 9.7h3M11 7h3M11 9.7h3"/>',
+            image: '<rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="5.6" cy="6.4" r="1"/><path d="M2.5 11.5 7 7.6l2.4 2.4 1.9-1.9 2.2 2.4"/>',
+            branch: '<circle cx="5" cy="4" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="11" cy="8" r="1.6"/><path d="M5 5.6v4.8M5 8c0-1.2 1.2-1.6 3-1.6h1.4"/>',
+            globe: '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-3.4 3.6-3.4 8.4 0 12M8 2c3.4 3.6 3.4 8.4 0 12"/>',
+            download: '<path d="M8 2v7.5M4.6 6.8 8 10.2l3.4-3.4"/><path d="M2.5 12.5h11V14h-11Z"/>',
+            json: '<path d="M5.5 3C4 3 3 4 3 5.5v2c0 1-.5 1.5-1 2 .5.5 1 1 1 2v2c0 1.5 1 2.5 2.5 2.5"/><path d="M10.5 3c1.5 0 2.5 1 2.5 2.5v2c0 1 .5 1.5 1 2-.5.5-1 1-1 2v2c0 1.5-1 2.5-2.5 2.5"/>',
+            js: '<path d="M8 1.8 13.8 5v6L8 14.2 2.2 11V5Z"/><circle cx="8" cy="8" r="1.4"/>',
+            container: '<rect x="2" y="5.5" width="12" height="6.5" rx="1"/><path d="M2 8.5h12M5 5.5V3.8h6v1.7"/>',
+            layers: '<path d="M8 2 14 5.5 8 9 2 5.5Z"/><path d="M2.5 8.7 8 11.7l5.5-3M2.5 11.2 8 14.2l5.5-3"/>',
+            box: '<path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/>',
+            copy: '<rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/>',
+            check: '<path d="M3 8.5 6.5 12 13 4.5"/>'
+        };
+        function icon(name) {return '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + (ICONS[name] || ICONS.box) + '</svg>';}
+        function pmName(id) {return PM_DISPLAY[id] || id;}
+        function pmIcon(id) {return icon(id);}
+        const PKG_ICON = {ffmpeg: "video", libvips: "image", git: "branch", curl: "globe", imagemagick: "image", ytdlp: "download", jq: "json", nodejs: "js", sharp: "layers", docker: "container"};
+        function pmStore() {try {return JSON.parse(localStorage.getItem("cc-pm") || "{}");} catch (e) {return {};} }
+        function savePM(o) {try {localStorage.setItem("cc-pm", JSON.stringify(o));} catch (e) { } }
+        function pmInstalled(id) {const s = Object.assign({}, PM_DEFAULTS, pmStore()); return !!s[id];}
+        const pmlist = document.getElementById("pmlist"), pmq = document.getElementById("pmq"), pmresult = document.getElementById("pmresult");
+        function paintManagers() {
+            const term = String(pmq.value || "").toLowerCase().trim();
+            const rows = PMS.filter(p => !term || (p.name + " " + p.desc + " " + p.id + " " + p.by).toLowerCase().includes(term));
+            pmresult.textContent = rows.length ? rows.length + " manager" + (rows.length === 1 ? "" : "s") + (term ? (' for “' + term + '”') : "") + " · demo catalog" : "";
+            pmlist.innerHTML = "";
+            if (!rows.length) {pmlist.innerHTML = '<div class="empty">No demo managers match. Try “winget” or “npm”.<br /><button type="button" id="pmclear">Clear search</button></div>'; const c = document.getElementById("pmclear"); if (c) c.addEventListener("click", () => {pmq.value = ""; paintManagers(); pmq.focus();}); return;}
+            rows.forEach(p => {
+                const el = document.createElement("section"); el.className = "cmd";
+                el.innerHTML = '<div class="cmd-top"><div class="cmd-main"><div class="pm-head"><span class="pm-icon" aria-hidden="true"></span><div class="pm-title"><h2></h2><p></p></div></div>'
+                    + '<div class="install-line-label">Install line — simulated</div><div class="cmdline-row"><div class="cmdline"><span class="dim">PS </span><span class="pwd">C:\\projects\\app</span><span class="dim">&gt; </span><span class="c"></span></div><button type="button" class="copybtn">Copy</button></div>'
+                    + '<div class="meta"><span class="cli"></span><span class="tag"></span><span class="by"></span></div></div>'
+                    + '<div class="cmd-side"><button type="button" class="btn btn-add">Install</button><div class="status" role="status" aria-live="polite"></div></div></div>'
+                    + '<div class="ilog" hidden></div>';
+                el.querySelector(".pm-icon").innerHTML = pmIcon(p.id);
+                el.querySelector("h2").textContent = pmName(p.id);
+                el.querySelector("p").textContent = p.desc;
+                el.querySelector(".c").textContent = p.cmd;
+                el.querySelector(".cli").textContent = p.provides || p.id;
+                el.querySelector(".tag").textContent = PM_KIND_LABEL[p.kind] || p.kind;
+                el.querySelector(".by").textContent = p.by + (p.provides ? " · provides " + p.provides : "");
+                const copyBtn = el.querySelector(".copybtn");
+                copyBtn.setAttribute("aria-label", "Copy install line for " + pmName(p.id));
+                copyBtn.addEventListener("click", () => {const t = p.cmd; if (navigator.clipboard && navigator.clipboard.writeText) {navigator.clipboard.writeText(t).then(() => {copyBtn.textContent = "Copied ✓"; setTimeout(() => {copyBtn.textContent = "Copy";}, 1400);});} else {const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try {document.execCommand("copy"); copyBtn.textContent = "Copied ✓"; setTimeout(() => {copyBtn.textContent = "Copy";}, 1400);} catch (e) { } ta.remove();}});
+                const btn = el.querySelector(".btn-add"), st = el.querySelector(".status"), log = el.querySelector(".ilog");
+                function sync() {
+                    if (pmInstalled(p.id)) {btn.textContent = "Installed ✓"; btn.disabled = true; btn.setAttribute("aria-label", pmName(p.id) + " installed (simulated)"); if (!st.dataset.touched) st.textContent = "Ready to use (simulated)"; st.className = "status ok";}
+                    else {btn.textContent = "Install " + pmName(p.id); btn.disabled = false; btn.setAttribute("aria-label", "Install " + pmName(p.id) + " (simulated)"); if (!st.dataset.touched) st.textContent = "Not installed"; st.className = "status";}
+                }
+                sync();
+                btn.addEventListener("click", () => {
+                    log.hidden = false; log.innerHTML = "";
+                    const l1 = document.createElement("div"); l1.innerHTML = '<span class="dim">PS C:\\projects\\app&gt; </span>'; l1.appendChild(document.createTextNode(p.cmd)); log.appendChild(l1);
+                    const l2 = document.createElement("div"); l2.className = "dim"; l2.textContent = "Fetching demo installer… (simulated)"; log.appendChild(l2);
+                    const l3 = document.createElement("div"); l3.className = "grn"; l3.textContent = "✓ " + p.name + " installed · exit 0 (simulated)"; log.appendChild(l3);
+                    const s = Object.assign({}, PM_DEFAULTS, pmStore()); s[p.id] = true; savePM(s);
+                    const clis = installedCLIs(); if (p.provides) {clis[p.provides] = true; saveCLIs(clis);}
+                    st.dataset.touched = "1"; st.textContent = "Installed ✓ (simulated)"; st.className = "status ok"; sync(); paint(); paintPkgs();
+                });
+                pmlist.appendChild(el);
+            });
+        }
+        /* ---- Packages (demo, simulated) ---- */
+        const PKGS = [
+            {id: "ffmpeg", name: "ffmpeg", desc: "Video converter used by the Hub demos. Provides the ffmpeg CLI.", ver: "7.1 · demo", provides: "ffmpeg", tags: "video convert", managers: {winget: "winget install --id Gyan.FFmpeg -e", scoop: "scoop install ffmpeg", choco: "choco install ffmpeg -y"}},
+            {id: "libvips", name: "libvips", desc: "Fast image pipeline (resize, thumbnails). Pairs with sharp on Node.", ver: "8.16 · demo", provides: "vips", tags: "imaging resize thumbnails", managers: {winget: "winget install --id libvips.libvips -e", scoop: "scoop install vips", choco: "choco install vips -y"}},
+            {id: "git", name: "Git", desc: "Version control behind every command card here.", ver: "2.45 · demo", provides: "git", tags: "vcs", managers: {winget: "winget install --id Git.Git -e", scoop: "scoop install git", choco: "choco install git -y"}},
+            {id: "curl", name: "cURL", desc: "HTTP checks for the API demo commands.", ver: "8.9 · demo", provides: "curl", tags: "network http", managers: {winget: "winget install --id cURL.cURL -e", scoop: "scoop install curl", choco: "choco install curl -y"}},
+            {id: "imagemagick", name: "ImageMagick", desc: "Convert and identify stills from the media folder.", ver: "7.1 · demo", provides: "magick", tags: "imaging convert", managers: {winget: "winget install --id ImageMagick.ImageMagick -e", scoop: "scoop install imagemagick", choco: "choco install imagemagick -y"}},
+            {id: "ytdlp", name: "yt-dlp", desc: "Download test clips before converting with ffmpeg.", ver: "2026.01 · demo", provides: "yt-dlp", tags: "video download", managers: {winget: "winget install --id yt-dlp.yt-dlp -e", scoop: "scoop install yt-dlp", choco: "choco install yt-dlp -y"}},
+            {id: "jq", name: "jq", desc: "Slice JSON from the curl demo commands.", ver: "1.7 · demo", provides: "jq", tags: "json cli", managers: {winget: "winget install --id jqlang.jq -e", scoop: "scoop install jq", choco: "choco install jq -y"}},
+            {id: "nodejs", name: "Node.js LTS", desc: "Ships npm. Runs the bun and npm demo commands.", ver: "22 LTS · demo", provides: "npm", tags: "js runtime", managers: {winget: "winget install --id OpenJS.NodeJS.LTS -e", scoop: "scoop install nodejs-lts", choco: "choco install nodejs-lts -y"}},
+            {id: "sharp", name: "sharp (bun)", desc: "Node image helper backed by libvips. Installed via Bun.", ver: "0.34 · demo", provides: "", tags: "imaging js libvips", managers: {bun: "bun add sharp", npm: "npm i sharp"}},
+            {id: "docker", name: "Docker Desktop", desc: "Ships containers for the preview demo command.", ver: "4.33 · demo", provides: "docker", tags: "ship containers", managers: {winget: "winget install --id Docker.DockerDesktop -e", scoop: "scoop install docker", choco: "choco install docker-desktop -y"}}
+        ];
+        function pkgStore() {try {return JSON.parse(localStorage.getItem("cc-pkgs") || "[]");} catch (e) {return [];} }
+        function savePkgs(a) {try {localStorage.setItem("cc-pkgs", JSON.stringify(a));} catch (e) { } }
+        const pkglist = document.getElementById("pkglist"), pkgq = document.getElementById("pkgq"), pkgrail = document.getElementById("pkgrail"), pkgresult = document.getElementById("pkgresult"), pkgsuggest = document.getElementById("pkgsuggest");
+        let activeMgr = "All";
+        function mgrList() {const s = new Set(); PKGS.forEach(p => Object.keys(p.managers).forEach(m => s.add(m))); return Array.from(s).sort();}
+        function paintPkgRail() {pkgrail.innerHTML = "";["All"].concat(mgrList()).forEach(m => {const b = document.createElement("button"); b.type = "button"; b.className = m === activeMgr ? "on" : ""; b.setAttribute("aria-pressed", m === activeMgr ? "true" : "false"); if (m === "All") {b.textContent = "All package managers";} else {b.innerHTML = ""; const dot = document.createElement("span"); dot.className = "mgr-dot"; dot.style.background = pmInstalled(m) ? "#1f883d" : ""; dot.setAttribute("aria-hidden", "true"); const ic = document.createElement("span"); ic.innerHTML = pmIcon(m); ic.style.display = "inline-flex"; ic.setAttribute("aria-hidden", "true"); const tx = document.createElement("span"); tx.textContent = pmName(m); b.appendChild(dot); b.appendChild(ic); b.appendChild(tx); b.setAttribute("aria-label", "Filter by " + pmName(m) + (pmInstalled(m) ? " (installed)" : " (not installed)"));} b.addEventListener("click", () => {activeMgr = m; paintPkgRail(); paintPkgs();}); pkgrail.appendChild(b);});}
+        function paintPkgs() {
+            const terms = String(pkgq.value || "").toLowerCase().split(/\s+/).map(s => s.trim()).filter(Boolean);
+            pkgsuggest.style.display = pkgq.value.trim() === "" ? "" : "none";
+            let rows = PKGS.filter(p => {
+                if (activeMgr !== "All" && !p.managers[activeMgr]) return false;
+                if (!terms.length) return true;
+                const hay = (p.name + " " + p.desc + " " + p.tags + " " + Object.keys(p.managers).join(" ")).toLowerCase();
+                return terms.every(t => hay.includes(t));
+            });
+            pkgresult.textContent = rows.length ? rows.length + " package" + (rows.length === 1 ? "" : "s") + (activeMgr !== "All" ? (" via " + activeMgr) : "") + (terms.length ? (' for “' + terms.join(" ") + '”') : "") + " · demo catalog" : "";
+            pkglist.innerHTML = "";
+            if (!rows.length) {pkglist.innerHTML = '<div class="empty">No demo packages match. Try “ffmpeg”.<br /><button type="button" id="pkgclear">Clear search</button></div>'; const c = document.getElementById("pkgclear"); if (c) c.addEventListener("click", () => {pkgq.value = ""; activeMgr = "All"; paintPkgRail(); paintPkgs(); pkgq.focus();}); return;}
+            const installed = pkgStore();
+            rows.forEach(p => {
+                const mgrKeys = Object.keys(p.managers);
+                let chosen = mgrKeys.includes(activeMgr) ? activeMgr : mgrKeys[0];
+                const el = document.createElement("section"); el.className = "cmd";
+                el.innerHTML = '<div class="cmd-top"><div class="cmd-main"><div class="pkg-head"><span class="pkg-icon" aria-hidden="true"></span><div class="pkg-title"><h2></h2><p></p></div></div>'
+                    + '<div class="install-line-label">Install line — simulated</div><div class="cmdline-row"><div class="cmdline"><span class="dim">PS </span><span class="pwd">C:\\projects\\app</span><span class="dim">&gt; </span><span class="c"></span></div><button type="button" class="copybtn">Copy</button></div>'
+                    + '<div class="mgrpick" role="group" aria-label="Choose a package manager for ' + p.name + '"></div>'
+                    + '<div class="meta"><span class="cli"></span><span class="tag"></span><span class="by"></span></div></div>'
+                    + '<div class="cmd-side"><button type="button" class="btn btn-add">Install</button><div class="status" role="status" aria-live="polite"></div></div></div>'
+                    + '<div class="ilog" hidden></div>';
+                el.querySelector(".pkg-icon").innerHTML = icon(PKG_ICON[p.id] || "box");
+                el.querySelector("h2").textContent = p.name;
+                el.querySelector("p").textContent = p.desc;
+                const cmdEl = el.querySelector(".c"), cliEl = el.querySelector(".cli"), pick = el.querySelector(".mgrpick");
+                cliEl.textContent = chosen;
+                el.querySelector(".tag").textContent = p.ver;
+                el.querySelector(".by").textContent = p.provides ? "provides " + p.provides : "demo package";
+                const copyBtn = el.querySelector(".copybtn");
+                copyBtn.setAttribute("aria-label", "Copy install line for " + p.name);
+                copyBtn.addEventListener("click", () => {const t = p.managers[chosen] || ""; if (navigator.clipboard && navigator.clipboard.writeText) {navigator.clipboard.writeText(t).then(() => {copyBtn.textContent = "Copied ✓"; setTimeout(() => {copyBtn.textContent = "Copy";}, 1400);});} else {const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try {document.execCommand("copy"); copyBtn.textContent = "Copied ✓"; setTimeout(() => {copyBtn.textContent = "Copy";}, 1400);} catch (e) { } ta.remove();}});
+                const lbl = document.createElement("span"); lbl.className = "picklbl"; lbl.textContent = "Install with:"; pick.appendChild(lbl);
+                const pickBtns = {};
+                mgrKeys.forEach(m => {
+                    const b = document.createElement("button"); b.type = "button"; b.className = m === chosen ? "on" : ""; b.setAttribute("aria-pressed", m === chosen ? "true" : "false"); b.setAttribute("aria-label", "Install " + p.name + " with " + pmName(m) + (pmInstalled(m) ? " (installed)" : " (not installed)"));
+                    const dot = document.createElement("span"); dot.className = "mgr-dot"; dot.style.background = pmInstalled(m) ? "#1f883d" : ""; dot.setAttribute("aria-hidden", "true");
+                    const ic = document.createElement("span"); ic.innerHTML = pmIcon(m); ic.style.display = "inline-flex"; ic.setAttribute("aria-hidden", "true");
+                    const tx = document.createElement("span"); tx.textContent = pmName(m);
+                    b.appendChild(dot); b.appendChild(ic); b.appendChild(tx);
+                    b.addEventListener("click", () => {chosen = m; Object.keys(pickBtns).forEach(k => {pickBtns[k].classList.toggle("on", k === chosen); pickBtns[k].setAttribute("aria-pressed", k === chosen ? "true" : "false");}); sync(false);});
+                    pick.appendChild(b); pickBtns[m] = b;
+                });
+                const btn = el.querySelector(".btn-add"), st = el.querySelector(".status"), log = el.querySelector(".ilog");
+                function sync(touch) {
+                    cmdEl.textContent = p.managers[chosen];
+                    cliEl.textContent = pmName(chosen);
+                    cliEl.title = chosen;
+                    const done = installed.includes(p.id);
+                    if (done) {btn.textContent = "Installed ✓"; btn.disabled = true; btn.setAttribute("aria-label", p.name + " installed (simulated)"); if (!st.dataset.touched) st.textContent = "Installed · simulated"; st.className = "status ok"; return;}
+                    btn.textContent = "Install via " + pmName(chosen); btn.disabled = false;
+                    btn.setAttribute("aria-label", "Install " + p.name + " via " + pmName(chosen) + " (simulated)");
+                    if (touch) return;
+                    st.innerHTML = "";
+                    if (!pmInstalled(chosen)) {const s1 = document.createElement("span"); s1.textContent = "Needs " + pmName(chosen) + " — "; const a = document.createElement("a"); a.href = "#"; a.className = "gate-link"; a.textContent = "Open Package Managers"; a.addEventListener("click", (ev) => {ev.preventDefault(); setTab("managers"); document.getElementById("tab-managers").focus();}); st.appendChild(s1); st.appendChild(a); st.className = "status";}
+                    else {st.textContent = isInstalled(p.provides) || !p.provides ? "Ready to install via " + pmName(chosen) : "Ready via " + pmName(chosen) + " · provides " + p.provides; st.className = "status";}
+                }
+                sync(false);
+                btn.addEventListener("click", () => {
+                    log.hidden = false; log.innerHTML = "";
+                    const l1 = document.createElement("div"); l1.innerHTML = '<span class="dim">PS C:\\projects\\app&gt; </span>'; l1.appendChild(document.createTextNode(p.managers[chosen])); log.appendChild(l1);
+                    if (!pmInstalled(chosen)) {
+                        const le = document.createElement("div"); le.className = "red"; le.textContent = "✕ " + pmName(chosen) + " is not installed · exit 1 (simulated)"; log.appendChild(le);
+                        const lh = document.createElement("div"); lh.className = "blu"; lh.textContent = "Install " + pmName(chosen) + " in Package Managers, then retry."; log.appendChild(lh);
+                        st.dataset.touched = "1"; st.textContent = "Needs " + pmName(chosen) + " — install it first, then retry"; st.className = "status bad"; return;
+                    }
+                    const l2 = document.createElement("div"); l2.className = "dim"; l2.textContent = "Resolving demo package… (simulated)"; log.appendChild(l2);
+                    const l3 = document.createElement("div"); l3.className = "grn"; l3.textContent = "✓ " + p.name + " installed via " + pmName(chosen) + " · exit 0 (simulated)"; log.appendChild(l3);
+                    const cur = pkgStore(); if (!cur.includes(p.id)) {cur.push(p.id); savePkgs(cur); installed.push(p.id);}
+                    if (p.provides) {const clis = installedCLIs(); clis[p.provides] = true; saveCLIs(clis);}
+                    st.dataset.touched = "1"; st.textContent = "Installed ✓ (simulated)"; st.className = "status ok"; sync(true); paint();
+                });
+                pkglist.appendChild(el);
+            });
+        }
+        let deb = null;
+        q.addEventListener("input", () => {clearTimeout(deb); deb = setTimeout(() => {paint();}, 120);});
+        q.addEventListener("keydown", e => {
+            if (e.key === "Escape") {q.value = ""; activePkg = "All"; paintRail(); paint();}
+            if (e.key === "Enter") {e.preventDefault();}
+        });
+        suggest.addEventListener("click", e => {const b = e.target.closest("button"); if (!b) return; q.value = b.getAttribute("data-s") || ""; paint(); q.focus();});
+        let pmdeb = null;
+        pmq.addEventListener("input", () => {clearTimeout(pmdeb); pmdeb = setTimeout(paintManagers, 120);});
+        pmq.addEventListener("keydown", e => {if (e.key === "Escape") {pmq.value = ""; paintManagers();} });
+        let pkgdeb = null;
+        pkgq.addEventListener("input", () => {clearTimeout(pkgdeb); pkgdeb = setTimeout(paintPkgs, 120);});
+        pkgq.addEventListener("keydown", e => {
+            if (e.key === "Escape") {pkgq.value = ""; activeMgr = "All"; paintPkgRail(); paintPkgs();}
+            if (e.key === "Enter") {e.preventDefault();}
+        });
+        pkgsuggest.addEventListener("click", e => {const b = e.target.closest("button"); if (!b) return; pkgq.value = b.getAttribute("data-s") || ""; paintPkgs(); pkgq.focus();});
+        setTab(activeTab);
+        paintRail(); paint(); paintManagers(); paintPkgRail(); paintPkgs();
+    </script>
 </body>
+
 </html>
