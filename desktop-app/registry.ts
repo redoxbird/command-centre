@@ -181,3 +181,86 @@ export function lookupType(name: string): ResolvedType | null {
   }
   return null;
 }
+
+// ── widget → <e-input> mapping (task C4) ─────────────────────────────────────
+// The registry's 17 widgets and the element's ~16 types are different axes;
+// this fixed table bridges them. Retired tokens resolve through the same
+// table via their recorded widget. Returns null only for unknown widgets
+// (never for a known token — no accidental default fallthrough).
+
+export interface EInputMapping {
+  /** <e-input type> value. "keyvalue" is not a real element type — the host
+   *  renders paired text fields (see `paired`). */
+  type: string;
+  /** format attribute for the text family (email/url/uuid). */
+  format?: string;
+  /** action-button attribute (file family → "browse"). */
+  actionButton?: string;
+  /** keyvalue renders as two text inputs joined with "=". */
+  paired?: boolean;
+}
+
+const TEXT_FORMATS: Record<string, string> = {
+  "input.email": "email",
+  "input.url": "url",
+  "input.search": "search",
+  "input.uuid": "uuid",
+};
+
+const FILE_TOKENS = new Set(["input.file", "input.dir", "input.files"]);
+
+const SELECT_FAMILY = new Set([
+  "input.select",
+  "input.country",
+  "input.timezone",
+  "input.currency",
+  "input.language",
+  "input.locale",
+  "input.license",
+]);
+
+const WIDGET_TO_EINPUT: Record<string, string> = {
+  text: "text",
+  number: "number",
+  date: "date",
+  time: "date",
+  datetime: "date",
+  color: "color",
+  password: "password",
+  select: "select",
+  radio: "radio",
+  buttongroup: "radio",
+  multiselect: "checkbox-group",
+  checkbox: "checkbox",
+  switch: "checkbox",
+  range: "range",
+  textarea: "textarea",
+};
+
+export function widgetToEInput(token: { name: string; type: string }): EInputMapping | null {
+  const { name, type: widget } = token;
+  // File family (3 tokens) → text + browse button (host picker, §4.7).
+  if (FILE_TOKENS.has(name) || widget === "file") {
+    return { type: "text", actionButton: "browse" };
+  }
+  // Text family formats.
+  if (widget === "text") {
+    const format = TEXT_FORMATS[name];
+    return format ? { type: "text", format } : { type: "text" };
+  }
+  // keyvalue → paired text fields.
+  if (widget === "keyvalue") {
+    return { type: "text", paired: true };
+  }
+  // Date family (native input; no picker).
+  if (widget === "date" || widget === "time" || widget === "datetime") {
+    return { type: "date" };
+  }
+  // Select family (7 live lists + retired selects via widget).
+  if (widget === "select" || SELECT_FAMILY.has(name)) {
+    return { type: "select" };
+  }
+  const mapped = WIDGET_TO_EINPUT[widget];
+  if (!mapped) return null;
+  return { type: mapped };
+}
