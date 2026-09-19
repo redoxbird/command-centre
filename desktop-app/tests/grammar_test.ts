@@ -166,6 +166,15 @@ Deno.test("renderCmd occurrence → base → raw", () => {
   assertEquals(renderCmd("x {{input.dir}}", { "input.dir": "A" }), "x A");
   assertEquals(renderCmd("x {{input.nope}}", {}), "x {{input.nope}}");
   assertEquals(renderCmd("x {{input.dir}}", null), "x {{input.dir}}");
+  // meta.example fallback (§8.2): occurrence-key → base-key → meta → raw
+  assertEquals(
+    renderCmd("x {{input.dir}}", {}, { "input.dir": { example: "M" } as never }),
+    "x M",
+  );
+  assertEquals(
+    renderCmd("x {{input.dir}}", {}, { "input.dir": "N" }),
+    "x N",
+  );
 });
 
 Deno.test("rangeSpec strips =default before bounds (the §1.5 fix)", () => {
@@ -173,6 +182,9 @@ Deno.test("rangeSpec strips =default before bounds (the §1.5 fix)", () => {
   assertEquals(rangeSpec("0-100=75"), { min: 0, max: 100, step: 1 });
   assertEquals(rangeSpec("0-100"), { min: 0, max: 100, step: 1 });
   assertEquals(rangeSpec(""), { min: 0, max: 100, step: 1 });
+  assertEquals(rangeSpec("18-28:0.5"), { min: 18, max: 28, step: 0.5 });
+});
+
 Deno.test("exampleFor across all 30 live types", () => {
   for (const row of CC_INPUT_TYPES) {
     const t = parseToken(row[0]);

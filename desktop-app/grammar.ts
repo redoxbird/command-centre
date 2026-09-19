@@ -230,22 +230,39 @@ export function parseVars(t: string): Token[] {
   return out;
 }
 
-/** Substitute occurrence-key → base-key → leave raw. */
+/** Substitute occurrence-key → base-key → meta.example → leave raw. */
 export function renderCmd(
   t: string,
   vals: Record<string, string> | null | undefined,
+  meta?: Record<string, VarMeta | string | undefined | null> | null,
 ): string {
   const counts: Record<string, number> = {};
   return String(t ?? "").replace(
     new RegExp(OUTER_RE.source, "g"),
     (m: string, inner: string) => {
       const p = parseToken(inner);
-      if (!p || !vals) return m;
+      if (!p) return m;
       const occ = (counts[p.key] || 0) + 1;
       counts[p.key] = occ;
       const k = ccInstanceKey(p.key, occ);
-      if (k in vals) return vals[k];
-      if (p.key in vals) return vals[p.key];
+      if (vals) {
+        if (k in vals) return vals[k];
+        if (p.key in vals) return vals[p.key];
+      }
+      if (meta) {
+        const mk = (meta as Record<string, unknown>)[k];
+        const mb = (meta as Record<string, unknown>)[p.key];
+        for (const cand of [mk, mb]) {
+          if (typeof cand === "string" && cand !== "") return cand;
+          if (
+            cand && typeof cand === "object" &&
+            typeof (cand as { example?: unknown }).example === "string" &&
+            (cand as { example: string }).example !== ""
+          ) {
+            return (cand as { example: string }).example;
+          }
+        }
+      }
       return m;
     },
   );
@@ -264,9 +281,9 @@ export interface RangeSpec {
  * range token. Strip the =default first, then match bounds.
  */
 export function rangeSpec(params: string): RangeSpec {
-  const noDefault = String(params ?? "").split("=")[0];
-  const parts = String(params ?? "").split(":");
-  const mm = (noDefault || "").trim().match(
+  const [boundsPart, stepPart] = String(params ?? "").split(":");
+  const bounds = (boundsPart || "").replace(/=\s*-?\d+(?:\.\d+)?\s*$/, "");
+  const mm = bounds.trim().match(
     /^(-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)$/,
   );
   let min = mm ? parseFloat(mm[1]) : 0;
@@ -274,7 +291,7 @@ export function rangeSpec(params: string): RangeSpec {
   if (!isFinite(min)) min = 0;
   if (!isFinite(max)) max = 100;
   if (max <= min) max = min + 100;
-  let step = parts.length > 1 ? parseFloat(parts[1]) : 1;
+  let step = stepPart !== undefined ? parseFloat(stepPart) : 1;
   if (!isFinite(step) || step <= 0) step = 1;
   return { min, max, step };
 }
