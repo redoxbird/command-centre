@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Command — Command Center</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="vendor/enhanced-inputs.css" />
+<link rel="stylesheet" href="vendor/inputs-remap.css" />
+</head>
+<body data-page="detail">
+
+<div class="app-window" x-data="ccDetail">
+<nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a href="hub.html">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
+<div class="main">
+<a class="backlink" href="index.html">← My commands</a>
+<div id="missing" class="empty" hidden>No command found for this link. It may have been removed from this browser.<br /><a href="index.html">Back to My commands</a> · <a href="add.html">Add a new command</a></div>
+<div id="detail" class="od-stack" style="--od-gap:12px" hidden>
+<h1 id="dname"></h1>
+<p class="lede" id="ddesc"></p>
+<div class="badges" id="dbadges"></div>
+<div class="box"><div class="box-h">Command</div><div class="box-b">
+<div class="rawline" id="draw" aria-label="Command template"></div>
+<div class="cmdline" id="dprev" aria-label="Rendered preview"></div>
+<dl class="kv" id="dfields"></dl>
+</div></div>
+<div class="box"><div class="box-h">Run this command <span class="count" id="rcount"></span></div><div class="box-b"><div id="runEmpty" style="color:var(--muted);font-size:13px">This command has no inputs — it runs as written.</div><div class="vrows" id="rrows"></div><div class="verr" id="rerr" hidden></div><div class="actions"><button class="btn btn-run" id="runBtn" type="button">▶ Run</button><span class="status" id="runStatus" role="status" aria-live="polite">Ready</span></div><div class="term" id="rterm" aria-live="polite"><div class="term-bar"><span class="dot" id="rdot"></span><span>terminal — <span id="rtname"></span></span><span class="sp"></span><button type="button" data-a="copy">Copy</button><button type="button" data-a="clear">Clear</button><button type="button" data-a="hide">Hide</button></div><div class="term-body" id="rbody"><span style="color:#8b949e">Not run yet — press Run to execute.</span></div></div></div></div>
+<div class="box"><div class="box-h">Command Metadata <span class="count" id="mcount"></span></div><div class="box-b"><div id="mrows" class="od-stack" style="--od-gap:8px"></div></div></div>
+<div class="actions">
+<a class="btn btn-g" id="editBtn" href="add.html">Edit</a>
+<a class="btn btn-p" id="pubBtn" href="publish.html">Publish</a>
+<button class="btn btn-g" id="dlBtn" type="button">Metadata .json ↓</button>
+<span class="status" id="pubStatus" role="status"></span>
+</div>
+</div>
+</div>
+</div>
+<script defer src="vendor/mustache.min.js"></script>
+<script defer src="vendor/e-input.js"></script>
+<script type="module">import "./vendor/range-slider.js";</script>
+<script defer src="templates.js"></script>
+<script defer src="grammar.js"></script>
+<script defer src="app.js"></script>
+<script defer src="vendor/alpine.min.js"></script>
+</body>
+</html>

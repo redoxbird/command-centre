@@ -1,0 +1,39 @@
+{
+  "name": "@command-centre/app",
+  "version": "1.0.0",
+  "exports": "./main.ts",
+  "imports": {
+    "zod": "npm:zod@^3.25",
+    "std/path": "jsr:@std/path@^1",
+    "drizzle-orm": "npm:drizzle-orm@^0.44",
+    "@libsql/client": "npm:@libsql/client@^0.15"
+  },
+  "tasks": {
+    "dev": "deno desktop --hmr --backend cef --allow-read --allow-write --allow-run --allow-env --allow-sys --allow-ffi --allow-net main.ts",
+    "build": "deno task clean && deno task build:dir && deno task build:msi",
+    "clean": "deno run --allow-write clean.ts",
+    "make-icon": "deno run --allow-read --allow-write --allow-env --allow-ffi --allow-run scripts/make-icon.ts",
+    "build:grammar": "deno run --allow-read --allow-write scripts/build-grammar.ts",
+    "build:learn": "deno run --allow-read --allow-write scripts/build-learn.ts",
+    "build:inputs": "deno run --allow-read --allow-write --allow-run --allow-env scripts/vendor-inputs.ts",
+    "build:dir": "deno task build:grammar && deno task build:learn && deno task build:inputs && deno desktop --backend cef --allow-read --allow-write --allow-run --allow-env --allow-sys --allow-ffi --allow-net --compress xz --icon ../design/app.ico --include ./static main.ts",
+    "build:msi": "deno task build:grammar && deno task build:learn && deno task build:inputs && deno desktop --backend cef --allow-read --allow-write --allow-run --allow-env --allow-sys --allow-ffi --allow-net --compress xz --icon ../design/app.ico --include ./static --output ../dist/CommandCentre-msi/CommandCentre.msi main.ts",
+    "build:installer": "deno task build:dir && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-installer.ps1",
+    "test": "deno test --allow-read --allow-write --allow-env --allow-run --allow-ffi --no-check",
+    "release": "deno run --allow-read --allow-write --allow-env --allow-net --allow-sys scripts/release.ts",
+    "db:migrate": "deno run --allow-read --allow-write --allow-env --allow-ffi db/migrate.ts"
+  },
+  "desktop": {
+    "app": {
+      "name": "Command Centre",
+      "identifier": "com.commandcentre.app",
+      "icons": {
+        "windows": "../design/app.ico"
+      }
+    },
+    "backend": "cef",
+    "output": {
+      "windows": "../dist/CommandCentre"
+    }
+  }
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Commands - Command Center</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="vendor/enhanced-inputs.css" />
+<link rel="stylesheet" href="vendor/inputs-remap.css" />
+</head>
+<body data-page="commands">
+
+<div class="app-window" x-data="ccCommands">
+<nav class="tabs" aria-label="Primary"><a class="on" href="index.html" aria-current="page">My commands</a><a href="hub.html">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
+<div class="app-head">
+<h1>Commands</h1><span class="count" id="count">7 saved</span>
+<div class="view-switch" role="group" aria-label="View switcher"><button type="button" id="viewCommand" class="on" aria-pressed="true">Command View</button><button type="button" id="viewControl" aria-pressed="false">Control View</button><button type="button" id="viewTool" aria-pressed="false">Tool View</button></div>
+<div class="search"><input id="q" type="search" placeholder="Filter commands…" aria-label="Filter commands" /></div>
+<a class="btn btn-run" href="add.html">+ Add command</a>
+</div>
+<div class="list" id="list"></div>
+<div class="tool-grid" id="toolGrid" hidden></div>
+<div class="add-wrap">
+<div class="add-card">
+<div class="cmd-icon">+</div>
+<div class="od-fill"><strong>Add a reusable command</strong><p>Save a script, deploy step or git shortcut once, run it anytime with one click.</p></div>
+<a class="btn btn-ghost" href="add.html">+ Add command</a>
+</div>
+</div>
+<p class="foot">Commands run for real in your shell. Values you save stay on this machine.</p>
+</div>
+<script defer src="vendor/mustache.min.js"></script>
+<script defer src="vendor/e-input.js"></script>
+<script type="module">import "./vendor/range-slider.js";</script>
+<script defer src="templates.js"></script>
+<script defer src="grammar.js"></script>
+<script defer src="app.js"></script>
+<script defer src="vendor/alpine.min.js"></script>
+</body>
+</html>

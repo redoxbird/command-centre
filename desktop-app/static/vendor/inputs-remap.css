@@ -1,0 +1,34 @@
+/* Command Centre token remap for enhanced-inputs (default theme).
+   Loaded AFTER vendor/enhanced-inputs.css on every page.
+   Maps the library's --input-* / --primary tokens onto the design's :root
+   tokens so e-input controls read as native Command Centre controls.
+   RULES.md: style .i-* / --input-*, never .e-*; never set `shadow`. */
+:root {
+  --primary: var(--accent);
+  --input-border: var(--border);
+  --input-bg: var(--bg);
+  --input-text: var(--fg);
+  --input-placeholder: var(--muted);
+  --input-error-text: var(--danger);
+  --input-border-error: var(--danger);
+  --input-desc-text: var(--muted);
+  --input-label-color: var(--fg);
+  --input-label-secondary-color: var(--muted);
+  --input-description-margin-top: 4px;
+  --input-error-margin-top: 4px;
+  --input-label-margin-bottom: 4px;
+  --input-gap: 8px;
+  --input-radius: var(--radius);
+  --input-padding-x: 12px;
+  --input-padding-y: 6px;
+  --input-font-size: 14px;
+  --input-line-height: 1.5;
+  --input-font-family: var(--font-body);
+  --input-label-font-size: 12px;
+  --input-label-line-height: 1.5;
+  --input-description-font-size: 12px;
+  --input-description-line-height: 1.5;
+  --input-action-hover-bg: var(--surface);
+  --input-disabled-bg: var(--surface);
+  --input-disabled-text: var(--muted);
+}

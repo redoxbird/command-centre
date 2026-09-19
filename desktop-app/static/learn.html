@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Learn inputs — Command Center</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="vendor/enhanced-inputs.css" />
+<link rel="stylesheet" href="vendor/inputs-remap.css" />
+</head>
+<body data-page="learn">
+
+<div class="app-window" x-data="ccLearn">
+<nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a href="hub.html">Community Hub</a><a class="learn on" href="learn.html" aria-current="page">Learn</a></nav>
+<div class="main">
+<h1>Learn inputs</h1>
+<p class="lede">Every <code>{{…}}</code> token from Add. Try the control, copy the token.</p>
+<div class="toolbar">
+<input id="q" type="search" placeholder="Filter options… e.g. port, color, select" aria-label="Filter options" />
+<select id="w" aria-label="Filter by widget"><option value="">All widgets</option><option value="file">File</option><option value="text">Text</option><option value="number">Number</option><option value="date">Date · Color · Secret</option><option value="choice">Choice</option><option value="flag">Flag</option><option value="range">Range</option></select>
+<span class="count" id="count" role="status"></span>
+</div>
+<div class="box">
+<table aria-label="All input options">
+<thead><tr><th scope="col">Option</th><th scope="col">See it</th><th scope="col">Use</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+<div class="empty" id="empty" hidden>No options match. Try another search.</div>
+</div>
+<p class="foot">Same parser as Add — <code>{{input.color:#1677ff}}</code>, <code>{{input.uuid.autogenerate}}</code>, <code>{{input.checkbox:--dry-run=off}}</code>. Unknown <code>{{braces}}</code> stay literal. <a href="add.html">Try it in Add →</a></p>
+</div>
+</div>
+<script defer src="vendor/mustache.min.js"></script>
+<script defer src="vendor/e-input.js"></script>
+<script type="module">import "./vendor/range-slider.js";</script>
+<script defer src="templates.js"></script>
+<script defer src="grammar.js"></script>
+<script defer src="app.js"></script>
+<script defer src="vendor/alpine.min.js"></script>
+</body>
+</html>

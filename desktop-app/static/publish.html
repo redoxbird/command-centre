@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Publish — Command Center</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="vendor/enhanced-inputs.css" />
+<link rel="stylesheet" href="vendor/inputs-remap.css" />
+</head>
+<body data-page="publish">
+
+<div class="app-window" x-data="ccPublish">
+<nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a href="hub.html">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
+<div class="main">
+<a class="backlink" id="backLink" href="index.html">← My commands</a>
+<h1>Publish to Community Hub</h1>
+<p class="lede">Send your command for review. Provide your name and email so reviewers can reach you, plus an install script if reviewers need one to try it.</p>
+<div class="box">
+<div class="box-h">Review submission</div>
+<form id="pubform" novalidate>
+<div class="ok" id="okBox" role="status"></div>
+<div class="field" id="fw-cmd"><label for="cmdSel">Command *</label><select id="cmdSel" aria-describedby="cmdErr"></select><span class="err" id="cmdErr">Pick one of your local commands, or load its metadata file below.</span><div class="cmdsum" id="cmdSummary" hidden></div></div>
+<div class="field" id="fw-file"><label for="metaFile">Metadata file <span class="hint">— .json exported from the command page; fills the command above and locks it</span></label><input id="metaFile" type="file" accept=".json,application/json" /><span class="hint" id="fileStatus">No file loaded — using the selected command.</span><span class="err" id="fileErr">That file is not a command-metadata JSON export.</span></div>
+<div class="field" id="fw-name"><label for="author">Your name *</label><input id="author" maxlength="60" placeholder="e.g. Ada Lovelace" autocomplete="name" /><span class="err">Tell reviewers your name.</span></div>
+<div class="field" id="fw-email"><label for="email">Email address *</label><input id="email" type="email" maxlength="120" placeholder="you@example.com" autocomplete="email" /><span class="err">Enter a valid email so reviewers can reach you.</span></div>
+<div class="field"><label for="install">Install script <span class="hint">— optional, only if reviewers need setup steps</span></label><textarea id="install" class="mono" spellcheck="false" placeholder="e.g.&#10;#!/bin/sh&#10;npm install -g deno"></textarea></div>
+<div class="field"><label for="notes">Notes for reviewers <span class="hint">— optional, one short paragraph</span></label><textarea id="notes" maxlength="500" placeholder="What should reviewers try first?"></textarea></div>
+<div class="actions">
+<button class="btn btn-p" type="submit">Submit for review</button>
+<a class="btn btn-g" id="cancelBtn" href="index.html">Cancel</a>
+</div>
+</form>
+</div>
+</div>
+</div>
+<script defer src="vendor/mustache.min.js"></script>
+<script defer src="vendor/e-input.js"></script>
+<script type="module">import "./vendor/range-slider.js";</script>
+<script defer src="templates.js"></script>
+<script defer src="grammar.js"></script>
+<script defer src="app.js"></script>
+<script defer src="vendor/alpine.min.js"></script>
+</body>
+</html>
