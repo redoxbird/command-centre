@@ -8,9 +8,9 @@ import { commands } from "./db/schema.ts";
 import { readMetadata, removeMetadata, sidecarPath, writeMetadata } from "./metadata.ts";
 import { DEFAULT_COMMANDS } from "./seeds.ts";
 import {
+  CommandFieldInputSchema,
   CommandRowSchema,
   defaultMetadata,
-  LegacyCommandInputSchema,
   MetadataDocSchema,
   WireMetadataSchema,
   type CommandRow,
@@ -56,7 +56,7 @@ export function mapToRowFields(input: Record<string, unknown>): {
   source_folder: string;
   tags: string[];
 } {
-  const p = LegacyCommandInputSchema.parse(input);
+  const p = CommandFieldInputSchema.parse(input);
   const command = (p.command ?? p.cmd ?? "") as string;
   const title = (p.title ?? p.name ?? "") as string;
   const description = String(p.description ?? p.desc ?? "");
@@ -130,7 +130,9 @@ export interface SaveInput extends Record<string, unknown> {
   id?: string;
 }
 
-/** Insert or update by id. Missing/invalid id → fresh CVCV. Sidecar first, then DB. */
+/** Insert or update by id. Missing id → fresh CVCV. Present but invalid → throw
+ *  (no legacy ids: the app is unreleased, so every id must be CVCV).
+ *  Crash order: sidecar first, then DB. */
 export async function saveCommand(
   input: SaveInput,
   metadataInput?: Partial<MetadataDoc>,
@@ -143,15 +145,17 @@ export async function saveCommand(
   const ids = await existingIds(d);
   let id: string;
   let created_at: number;
-  if (rawId && isValidCommandId(rawId)) {
+  if (!rawId) {
+    id = ensureUniqueCommandId((c) => ids.has(c));
+    created_at = Date.now();
+  } else if (!isValidCommandId(rawId)) {
+    throw new Error(`invalid command id (must be CVCV-CVCV-CVCV): ${rawId}`);
+  } else {
     id = rawId;
     const prev = await d.select().from(commands).where(eq(commands.id, id));
     created_at = prev.length > 0 ? toRow(prev[0]).created_at : Date.now();
     ids.delete(id); // own id must not block ensureUniqueCommandId
     void ids;
-  } else {
-    id = ensureUniqueCommandId((c) => ids.has(c));
-    created_at = Date.now();
   }
   const updated_at = Date.now();
   const prevMeta = (await readMetadata(id, baseDir)) ?? defaultMetadata(id);
@@ -339,9 +343,18 @@ export async function importJson(
     tags: wire.tags ?? wire.tag ?? obj["tags"] ?? obj["tag"],
   });
   const ids = await existingIds(d);
-  const LOTTERY = typeof wire.id === "string" && isValidCommandId(wire.id) && !ids.has(wire.id)
-    ? wire.id
-    : ensureUniqueCommandId((c) => ids.has(c));
+  // No legacy ids (app unreleased): a present id must be valid CVCV.
+  // A colliding valid id means "import as copy" → mint fresh.
+  let LOTTERY: string;
+  if (wire.id == null || wire.id === "") {
+    LOTTERY = ensureUniqueCommandId((c) => ids.has(c));
+  } else if (!isValidCommandId(wire.id)) {
+    throw new Error(`invalid command id (must be CVCV-CVCV-CVCV): ${wire.id}`);
+  } else if (ids.has(wire.id)) {
+    LOTTERY = ensureUniqueCommandId((c) => ids.has(c));
+  } else {
+    LOTTERY = wire.id;
+  }
   const variables = Array.isArray(wire.variables) ? wire.variables : [];
   const askMode = wire.askMode === "once" ? "once" : "every";
   return await saveCommand(

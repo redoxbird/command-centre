@@ -28,7 +28,8 @@ export const CommandRowSchema = z.object({
 export type CommandRow = z.infer<typeof CommandRowSchema>;
 
 // Back-compat input: old field names (name/cmd/desc/cwd/tag) map to the row.
-export const LegacyCommandInputSchema = z.object({
+// (Field names only — ids are always strict CVCV, no legacy id support.)
+export const CommandFieldInputSchema = z.object({
   id: z.string().optional(),
   command: z.string().optional(),
   cmd: z.string().optional(),
@@ -42,7 +43,7 @@ export const LegacyCommandInputSchema = z.object({
   tags: z.union([z.array(z.string()), z.string()]).optional(),
   tag: z.string().optional(),
 }).passthrough();
-export type LegacyCommandInput = z.infer<typeof LegacyCommandInputSchema>;
+export type CommandFieldInput = z.infer<typeof CommandFieldInputSchema>;
 
 // ── Sidecar metadata (§1.4 export doc, version 2 + runtime fields) ──────────
 export const MetaOptionSchema = z.object({

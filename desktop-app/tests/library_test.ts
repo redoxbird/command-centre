@@ -1,5 +1,5 @@
 // Task C3: library over lean DB + sidecars (ephemeral DB + temp sidecar dir).
-import { assert, assertEquals } from "jsr:@std/assert@^1";
+import { assert, assertEquals, assertRejects } from "jsr:@std/assert@^1";
 import { join } from "std/path";
 import { closeDatabase, openEphemeralDatabase } from "../db/db.ts";
 import { isValidCommandId } from "../ids.ts";
@@ -126,7 +126,7 @@ Deno.test("search matches substring over the 4 DB fields only", async () => {
   }
 });
 
-Deno.test("missing/corrupt sidecar degrades gracefully; legacy import mints CVCV", async () => {
+Deno.test("missing/corrupt sidecar degrades gracefully; non-CVCV ids throw", async () => {
   const { db, dir, base } = await setup();
   try {
     const all = await listCommands(db, base);
@@ -137,14 +137,30 @@ Deno.test("missing/corrupt sidecar degrades gracefully; legacy import mints CVCV
     const reread = await getCommand(victim.row.id, db, base);
     assert(reread, "row still readable");
     assertEquals(reread!.metadata.askMode, "every");
-    // Legacy-shaped import gets a fresh CVCV id.
+    // Non-CVCV ids are rejected (no legacy support — app unreleased).
+    await assertRejects(
+      () => saveCommand({ id: "u1757740800000", command: "echo hi", title: "Old" }, undefined, db, base),
+      Error,
+      "invalid command id",
+    );
+    await assertRejects(
+      () =>
+        importJson(
+          { id: "u1757740800000", name: "Old", cmd: "echo {{input.text:hi}}", tag: "custom", cwd: "C:\\x" },
+          db,
+          base,
+        ),
+      Error,
+      "invalid command id",
+    );
+    // Missing id still mints fresh CVCV.
     const imported = await importJson(
-      { id: "u1757740800000", name: "Old", cmd: "echo {{input.text:hi}}", tag: "custom", cwd: "C:\\x" },
+      { name: "New", cmd: "echo {{input.text:hi}}", tag: "custom", cwd: "C:\\x" },
       db,
       base,
     );
     assert(isValidCommandId(imported.row.id));
-    assertEquals(imported.row.title, "Old");
+    assertEquals(imported.row.title, "New");
     assertEquals(imported.row.tags, ["custom"]);
     // Corrupt-then-save heals the sidecar.
     await writeMetadata(victim.row.id, { ...(await readMetadata(victim.row.id, base))!, id: victim.row.id }, base);

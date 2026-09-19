@@ -4,7 +4,7 @@
 import { eq } from "drizzle-orm";
 import { dirname, join } from "std/path";
 import { getDb, openDatabase, type Db } from "./db/db.ts";
-import { appBaseDir, appDataRoot } from "./db/db.ts";
+import { appBaseDir } from "./db/db.ts";
 import { settings } from "./db/schema.ts";
 import {
   AppSettingsSchema,
@@ -26,18 +26,12 @@ function geomPath(): string {
   return join(appBaseDir(), "window.json");
 }
 
-function legacyGeomPath(): string {
-  return join(appDataRoot(), "command-centre", "window.json");
-}
-
 export async function loadWindowGeometry(): Promise<WindowGeometry> {
-  for (const p of [geomPath(), legacyGeomPath()]) {
-    try {
-      const parsed = JSON.parse(await Deno.readTextFile(p));
-      if (parsed && typeof parsed === "object") return parsed as WindowGeometry;
-    } catch {
-      // try next
-    }
+  try {
+    const parsed = JSON.parse(await Deno.readTextFile(geomPath()));
+    if (parsed && typeof parsed === "object") return parsed as WindowGeometry;
+  } catch {
+    // no saved geometry yet
   }
   return {};
 }
