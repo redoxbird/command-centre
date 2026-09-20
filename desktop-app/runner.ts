@@ -2,7 +2,7 @@
 // One run at a time. Spawns via node:child_process with windowsHide
 // (console-flash suppression — Deno.Command has no such option in 2.9.x).
 // Not a PTY: interactive prompts block; stderr is surfaced so the user sees why.
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { RunRequestSchema, type RunRequest } from "./types.ts";
 import { SHELLS, shellArgv } from "./shell.ts";
 
@@ -99,14 +99,14 @@ function finish(run: ActiveRun, partial: Omit<RunResult, "output" | "pid">): voi
 }
 
 async function killTree(pid: number): Promise<void> {
-  // Windows: taskkill the whole tree (/T) by force (/F).
+  // Windows: taskkill the whole tree (/T) by force (/F), hidden
+  // (Deno.Command would flash a console on every cancel).
   try {
-    const cmd = new Deno.Command("taskkill", {
-      args: ["/PID", String(pid), "/T", "/F"],
-      stdout: "piped",
-      stderr: "piped",
+    spawnSync("taskkill", ["/PID", String(pid), "/T", "/F"], {
+      windowsHide: true,
+      timeout: 15000,
+      stdio: "ignore",
     });
-    await cmd.output();
   } catch {
     // best effort — the close handler still settles the run
   }

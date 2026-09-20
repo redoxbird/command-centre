@@ -1,6 +1,7 @@
 // Shell registry — task D1.
 // The resolved line is passed to the shell's own -Command/-lc flag so the
 // shell parses it exactly once. Never build an argv array from a split string.
+import { spawnSync } from "node:child_process";
 import type { ShellId } from "./types.ts";
 
 export interface ShellInfo {
@@ -33,14 +34,15 @@ export function shellArgv(shell: ShellId, line: string): string[] {
 
 async function probeWindows(bin: string): Promise<string | null> {
   try {
-    const cmd = new Deno.Command("where.exe", {
-      args: [bin],
-      stdout: "piped",
-      stderr: "piped",
+    // spawnSync + windowsHide (CREATE_NO_WINDOW): Deno.Command flashes a
+    // console window on every probe — this runs on each page load.
+    const r = spawnSync("where.exe", [bin], {
+      windowsHide: true,
+      encoding: "utf8",
+      timeout: 10000,
     });
-    const r = await cmd.output();
-    if (!r.success) return null;
-    const first = new TextDecoder().decode(r.stdout).split(/\r?\n/).map((s) => s.trim()).find(Boolean);
+    if (r.status !== 0) return null;
+    const first = String(r.stdout || "").split(/\r?\n/).map((s) => s.trim()).find(Boolean);
     return first ?? null;
   } catch {
     return null;

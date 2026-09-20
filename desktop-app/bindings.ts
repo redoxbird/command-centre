@@ -5,6 +5,7 @@
 // Execution (run/getRunProgress/cancelRun) delegates to runner.ts;
 // hub/publish bodies land in Phase F (stubs here validate + report pending).
 import { z } from "zod";
+import { spawn } from "node:child_process";
 import type { DesktopWindow } from "./main.ts";
 import { APP_VERSION } from "./version.ts";
 import { CommandIdSchema, HubQuerySchema, SubmitRequestSchema } from "./types.ts";
@@ -46,17 +47,12 @@ async function platformShells(): Promise<{ id: string; label: string; icon: stri
 }
 
 async function pickFolderNative(): Promise<string | null> {
-  // Compressy pattern: FolderBrowserDialog via PowerShell (the CEF webview
-  // cannot reveal absolute paths through <input type=file>).
+  // Compressy pattern: FolderBrowserDialog via a hidden PowerShell
+  // subprocess (node honors windowsHide; Deno.Command would flash a console).
+  // The CEF webview cannot reveal absolute paths through <input type=file>.
   try {
     const ps = `Add-Type -AssemblyName System.Windows.Forms; $d = New-Object System.Windows.Forms.FolderBrowserDialog; $d.ShowDialog() | Out-Null; $d.SelectedPath`;
-    const cmd = new Deno.Command("powershell.exe", {
-      args: ["-NoLogo", "-NoProfile", "-Command", ps],
-      stdout: "piped",
-      stderr: "piped",
-    });
-    const r = await cmd.output();
-    const out = new TextDecoder().decode(r.stdout).trim();
+    const out = await runHidden(ps);
     return out || null;
   } catch {
     return null;
@@ -66,17 +62,28 @@ async function pickFolderNative(): Promise<string | null> {
 async function pickFileNative(filter: string): Promise<string | null> {
   try {
     const ps = `Add-Type -AssemblyName System.Windows.Forms; $d = New-Object System.Windows.Forms.OpenFileDialog; $d.Filter = "${String(filter || "All files (*.*)|*.*").replace(/"/g, "")}"; $d.ShowDialog() | Out-Null; $d.FileName`;
-    const cmd = new Deno.Command("powershell.exe", {
-      args: ["-NoLogo", "-NoProfile", "-Command", ps],
-      stdout: "piped",
-      stderr: "piped",
-    });
-    const r = await cmd.output();
-    const out = new TextDecoder().decode(r.stdout).trim();
+    const out = await runHidden(ps);
     return out || null;
   } catch {
     return null;
   }
+}
+
+/** Run a PowerShell snippet with no console window; resolve trimmed stdout. */
+function runHidden(ps: string): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const proc = spawn(
+      "powershell.exe",
+      ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", ps],
+      { windowsHide: true, windowsVerbatimArguments: false },
+    );
+    let out = "";
+    proc.stdout.on("data", (d: unknown) => {
+      out += String(d);
+    });
+    proc.on("error", (e: Error) => reject(e));
+    proc.on("close", () => resolve(out.trim()));
+  });
 }
 
 export function registerBindings(win: DesktopWindow): void {
@@ -228,8 +235,9 @@ export function registerBindings(win: DesktopWindow): void {
   });
   bind("openFolder", async (path: unknown) => {
     const p = z.string().min(1).parse(path);
-    const cmd = new Deno.Command("explorer.exe", { args: [p] });
-    await cmd.output();
+    // NOTE: no windowsHide here — CREATE_NO_WINDOW would suppress explorer's
+    // own window entirely (probe-verified in Compressy). Fire and forget.
+    spawn("explorer.exe", [p]);
   });
 
   // ── hub / publish (Phase F bodies; validated stubs now) ────────────────
