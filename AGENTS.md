@@ -17,6 +17,7 @@
 - Variable names should be descriptive and follow camelCase convention, no abbreviations or snake_case.
 - Functions should be named for their purpose, not their implementation.
 - Comments should explain why code does what it does, not what it does.
+- Names should be descriptive and follow camelCase convention, no abbreviations or snake_case.
 
 ## Notes
 - Take inspiration from "C:\projects\compressy" for structure of the project.

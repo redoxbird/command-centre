@@ -5,8 +5,7 @@
   "imports": {
     "zod": "npm:zod@^3.25",
     "std/path": "jsr:@std/path@^1",
-    "drizzle-orm": "npm:drizzle-orm@^0.44",
-    "@libsql/client": "npm:@libsql/client@^0.15"
+    "drizzle-orm": "npm:drizzle-orm@^0.44"
   },
   "tasks": {
     "dev": "deno desktop --hmr --backend cef --allow-read --allow-write --allow-run --allow-env --allow-sys --allow-ffi --allow-net main.ts",

@@ -1,14 +1,18 @@
-// SQLite via drizzle + @libsql/client — task C1.
+// SQLite via drizzle (sqlite-proxy) over node:sqlite — task C1.
+// NOTE: do NOT switch this to @libsql/client — its N-API native binding
+// crashes the `deno desktop` backend at startup (neon "Failed to find N-API
+// version" → laufey exit 0xc0000409). node:sqlite is runtime built-in.
+//
 // App-data root: LOCALAPPDATA → USERPROFILE → HOME → '.' , under
 // "command-center/" (decision 4). DB file: command-center.db.
 // migrate-on-open applies db/migrations/*.sql in lexicographic order.
-import { createClient, type Client } from "@libsql/client";
-import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
+import { DatabaseSync } from "node:sqlite";
+import { drizzle, type SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import { dirname, fromFileUrl, join } from "std/path";
 
-export type Db = LibSQLDatabase;
+export type Db = SqliteRemoteDatabase;
 
-let _client: Client | null = null;
+let _native: DatabaseSync | null = null;
 let _db: Db | null = null;
 let _path = "";
 
@@ -60,28 +64,52 @@ function splitStatements(sql: string): string[] {
   return sql.split(/;\s*\n/).map((s) => s.trim()).filter((s) => s.length > 0);
 }
 
-async function applyMigrations(client: Client): Promise<void> {
-  // Ensure the tracker exists even when there are no migration files.
-  await client.execute(
+function applyMigrations(native: DatabaseSync, files: { name: string; sql: string }[]): void {
+  native.exec(
     "CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY, applied_at INTEGER NOT NULL)",
   );
   const applied = new Set<string>();
   try {
-    const rs = await client.execute("SELECT name FROM _migrations");
-    for (const row of rs.rows) applied.add(String(row["name"]));
+    for (const row of native.prepare("SELECT name FROM _migrations").all() as { name: string }[]) {
+      applied.add(row.name);
+    }
   } catch {
     // fresh db — nothing applied
   }
-  for (const m of await listMigrations()) {
+  for (const m of files) {
     if (applied.has(m.name)) continue;
     for (const stmt of splitStatements(m.sql)) {
-      await client.execute(stmt);
+      native.exec(stmt);
     }
-    await client.execute({
-      sql: "INSERT OR IGNORE INTO _migrations (name, applied_at) VALUES (?, ?)",
-      args: [m.name, Date.now()],
-    });
+    native.prepare("INSERT OR IGNORE INTO _migrations (name, applied_at) VALUES (?, ?)").run(
+      m.name,
+      Date.now(),
+    );
   }
+}
+
+/** Drizzle callback adapter over the synchronous node:sqlite handle. */
+function callbackFor(native: DatabaseSync) {
+  // NOTE: sqlite-proxy maps rows positionally (mapResultRow reads
+  // row[columnIndex]), so every row must be a values ARRAY in SELECT order —
+  // never an object. node:sqlite preserves SELECT column order in object key
+  // order, hence Object.values().
+  const toArray = (r: Record<string, unknown>) => Object.values(r);
+  return async (sql: string, params: unknown[], method: "run" | "all" | "values" | "get") => {
+    if (method === "run") {
+      if (params.length === 0) native.exec(sql);
+      else native.prepare(sql).run(...(params as never[]));
+      return { rows: [] };
+    }
+    const stmt = native.prepare(sql);
+    if (method === "get") {
+      // sqlite-proxy unwraps a single row for 'get' (see mapGetResult).
+      const row = stmt.get(...(params as never[])) as Record<string, unknown> | undefined;
+      return { rows: (row ? toArray(row) : undefined) as unknown as unknown[] };
+    }
+    const rows = stmt.all(...(params as never[])) as Record<string, unknown>[];
+    return { rows: rows.map(toArray) };
+  };
 }
 
 /** Open (or reuse) the app database. Pass an explicit path in tests. */
@@ -90,11 +118,11 @@ export async function openDatabase(dbPath?: string): Promise<Db> {
   if (_db && _path === target) return _db;
   if (_db) await closeDatabase();
   await Deno.mkdir(dirname(target), { recursive: true });
-  const client = createClient({ url: "file:" + target });
-  await applyMigrations(client);
-  _client = client;
+  const native = new DatabaseSync(target);
+  applyMigrations(native, await listMigrations());
+  _native = native;
   _path = target;
-  _db = drizzle(client);
+  _db = drizzle(callbackFor(native));
   return _db;
 }
 
@@ -104,14 +132,14 @@ export function getDb(): Db {
 }
 
 export async function closeDatabase(): Promise<void> {
-  if (_client) {
+  if (_native) {
     try {
-      _client.close();
+      _native.close();
     } catch {
       // ignore
     }
   }
-  _client = null;
+  _native = null;
   _db = null;
   _path = "";
 }

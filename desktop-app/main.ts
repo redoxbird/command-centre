@@ -109,6 +109,11 @@ async function serveStatic(pathname: string): Promise<Response> {
   rel = rel.replace(/^\/+/, "");
   // Clean URL: /command -> command.html (only for the six known pages).
   if (!rel.includes(".") && PAGES.has(`${rel}.html`)) rel = `${rel}.html`;
+  // Re-check after normalization: some clients send %2e%2e in a form the
+  // URL parser normalizes before we see it, others do not.
+  if (rel.split("/").some((s) => s === "..")) {
+    return respond("Forbidden", "text/plain; charset=utf-8", 403);
+  }
 
   const url = new URL(rel, WEB);
   let info: Deno.FileInfo;
