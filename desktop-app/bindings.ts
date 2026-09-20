@@ -1,8 +1,8 @@
-// Binding surface — task C6 (Phase C slice).
+// Binding surface — task C6 (Phase C slice) + D2 execution bindings.
 // Bindings are the API (no HTTP routes for data). Every handler zod-parses
 // its arguments; throws surface to the webview as {name, message, stack}.
 // Values/shells are sidecar-backed (no command_values/shell_prefs tables).
-// Execution (run/getRunProgress/cancelRun) registers in D2 with runner.ts;
+// Execution (run/getRunProgress/cancelRun) delegates to runner.ts;
 // hub/publish bodies land in Phase F (stubs here validate + report pending).
 import { z } from "zod";
 import type { DesktopWindow } from "./main.ts";
@@ -27,6 +27,8 @@ import {
 } from "./library.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
 import { AppSettingsSchema } from "./types.ts";
+import { probeInstalledShells } from "./shell.ts";
+import { cancelRun, getRunProgress, runCommand } from "./runner.ts";
 import { join } from "std/path";
 
 const IdArg = z.object({ id: z.string().min(1) });
@@ -38,30 +40,9 @@ function err(name: string, message: string): Error {
   return e;
 }
 
-async function probeShell(bin: string): Promise<boolean> {
-  try {
-    const cmd = new Deno.Command("where.exe", { args: [bin], stdout: "piped", stderr: "piped" });
-    const r = await cmd.output();
-    return r.success;
-  } catch {
-    return false;
-  }
-}
-
 async function platformShells(): Promise<{ id: string; label: string; icon: string }[]> {
-  const shells: { id: string; label: string; icon: string }[] = [];
-  if (Deno.build.os === "windows") {
-    shells.push({ id: "powershell", label: "PowerShell", icon: "icons/powershell.svg" });
-    if (await probeShell("bash.exe")) {
-      shells.push({ id: "bash", label: "Bash", icon: "icons/bash.svg" });
-    }
-    if (await probeShell("wsl.exe")) {
-      shells.push({ id: "ubuntu", label: "Ubuntu", icon: "icons/ubuntu.svg" });
-    }
-  } else {
-    shells.push({ id: "bash", label: "Bash", icon: "icons/bash.svg" });
-  }
-  return shells;
+  const found = await probeInstalledShells();
+  return found.map(({ id, label, icon }) => ({ id, label, icon }));
 }
 
 async function pickFolderNative(): Promise<string | null> {
@@ -208,6 +189,20 @@ export function registerBindings(win: DesktopWindow): void {
     const { commandId: cid } = CommandIdArg.parse({ commandId });
     const s = z.enum(["powershell", "bash", "ubuntu"]).parse(shell);
     await libSetShell(cid, s);
+  });
+
+  // ── execution (runner.ts; §8.4 — polled progress, tree kill) ────────────
+  bind("run", async (req: unknown) => {
+    return await runCommand(req as Parameters<typeof runCommand>[0]);
+  });
+  bind("getRunProgress", async (cursor: unknown) => {
+    const c = cursor === undefined || cursor === null
+      ? undefined
+      : z.number().int().min(0).parse(cursor);
+    return getRunProgress(c);
+  });
+  bind("cancelRun", async () => {
+    await cancelRun();
   });
 
   // ── filesystem ─────────────────────────────────────────────────────────
