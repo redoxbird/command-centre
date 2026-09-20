@@ -19,7 +19,14 @@ export interface RenderedOption {
 export interface AuthorMeta {
   label?: string;
   description?: string;
-  options?: Array<{ value: string; label?: string; description?: string }>;
+  /**
+   * Per-option author labels. Array form (sidecar variables) or map form
+   * (authoring scratch state, design __ccMeta shape) — both accepted.
+   */
+  options?: Array<{ value: string; label?: string; description?: string }> | Record<
+    string,
+    { label?: string; description?: string }
+  >;
   example?: string;
 }
 
@@ -62,7 +69,12 @@ function metaForOption(
   meta: AuthorMeta | undefined,
   value: string,
 ): { label: string; description?: string } {
-  const found = meta?.options?.find((o) => o.value === value);
+  const opts = meta?.options;
+  const found = Array.isArray(opts)
+    ? opts.find((o) => o.value === value)
+    : opts && typeof opts === "object"
+    ? (opts as Record<string, { label?: string; description?: string }>)[value]
+    : undefined;
   const label = found?.label?.trim() || value;
   const description = found?.description?.trim() || undefined;
   return description ? { label, description } : { label };

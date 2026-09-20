@@ -1,8 +1,9 @@
-// Emits static/grammar.js from grammar.ts + registry.ts so the webview
-// shares the exact parser. Run: deno task build:grammar
+// Emits static/grammar.js from browser.ts (grammar + registry + render) so
+// the webview shares the exact parser, widget mapping and input descriptors.
+// Run: deno task build:grammar
 // Transpiled with esbuild (pinned) — no hand-rolled type stripping.
 // A sha256 staleness hash is embedded; tests/grammar_test.ts fails when
-// grammar.ts or registry.ts change without regenerating.
+// grammar.ts, registry.ts or render.ts change without regenerating.
 import { dirname, join } from "std/path";
 
 const ESBUILD_VERSION = "0.25.0";
@@ -32,7 +33,7 @@ async function ensureEsbuild(tmp: string): Promise<string> {
 const tmp = await Deno.makeTempDir();
 try {
   const esbuild = await ensureEsbuild(tmp);
-  const entry = join(appRoot, "grammar.ts");
+  const entry = join(appRoot, "browser.ts");
   const bundle = join(tmp, "grammar.bundle.js");
   const proc = new Deno.Command(esbuild, {
     args: [entry, "--bundle", "--format=iife", "--global-name=CCGrammarSrc", "--target=es2017", `--outfile=${bundle}`],

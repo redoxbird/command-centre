@@ -1,0 +1,17 @@
+{
+  "imports": {
+    "@codemirror/language": "/vendor/codemirror/@codemirror/language/dist/index.js",
+    "@codemirror/state": "/vendor/codemirror/@codemirror/state/dist/index.js",
+    "@codemirror/view": "/vendor/codemirror/@codemirror/view/dist/index.js",
+    "@lezer/common": "/vendor/codemirror/@lezer/common/dist/index.js",
+    "@lezer/highlight": "/vendor/codemirror/@lezer/highlight/dist/index.js",
+    "@marijn/find-cluster-break": "/vendor/codemirror/@marijn/find-cluster-break/src/index.js",
+    "crelt": "/vendor/codemirror/crelt/index.js",
+    "style-mod": "/vendor/codemirror/style-mod/src/style-mod.js",
+    "w3c-keyname": "/vendor/codemirror/w3c-keyname/index.js",
+    "@codemirror/autocomplete": "/vendor/codemirror/@codemirror/autocomplete/dist/index.js",
+    "@codemirror/commands": "/vendor/codemirror/@codemirror/commands/dist/index.js",
+    "@codemirror/legacy-modes": "/vendor/codemirror/@codemirror/legacy-modes/mode/shell.js",
+    "@codemirror/legacy-modes/mode/shell": "/vendor/codemirror/@codemirror/legacy-modes/mode/shell.js"
+  }
+}

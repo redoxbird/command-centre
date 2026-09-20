@@ -111,6 +111,16 @@ Deno.test("unknown widget → null (explicit, never silent default)", () => {
   assertEquals(widgetToEInput({ name: "input.nope", type: "nope" }), null);
 });
 
+Deno.test("renderToken accepts map-form per-option labels (author scratch state)", () => {
+  const t = parseToken("input.select:zip,tar.gz=tar.gz")!;
+  const r = renderToken(t, "", {
+    options: { "tar.gz": { label: "Tarball", description: "Compressed tar" } },
+  } as never)!;
+  assertEquals(r.options.length, 2);
+  assertEquals(r.options[1].label, "Tarball");
+  assertEquals(r.options[1].description, "Compressed tar");
+});
+
 // ── renderToken (task C5) ────────────────────────────────────────────────────
 import { parseToken } from "../grammar.ts";
 import { renderToken } from "../render.ts";

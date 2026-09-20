@@ -114,6 +114,7 @@ export function registerBindings(win: DesktopWindow): void {
       askMode: c.metadata.askMode,
       custom: c.metadata.custom,
       fromHub: c.metadata.fromHub ?? undefined,
+      variables: c.metadata.variables,
     }));
   });
   bind("getCommand", async (id: unknown) => {
@@ -130,11 +131,25 @@ export function registerBindings(win: DesktopWindow): void {
       tags: found.row.tags,
       cwd: found.row.source_folder,
       askMode: found.metadata.askMode,
+      custom: found.metadata.custom,
+      fromHub: found.metadata.fromHub ?? undefined,
+      variables: found.metadata.variables,
     };
   });
   bind("saveCommand", async (cmd: unknown) => {
     await openDatabase();
-    const rec = await saveCommand(cmd as Record<string, unknown>);
+    // Split sidecar-owned keys out of the row payload (additive: plain row
+    // objects without them keep working).
+    const obj = { ...(cmd as Record<string, unknown>) };
+    const metaKeys = ["variables", "askMode", "shell", "values", "custom", "fromHub"];
+    const meta: Record<string, unknown> = {};
+    for (const k of metaKeys) {
+      if (k in obj) {
+        meta[k] = obj[k];
+        delete obj[k];
+      }
+    }
+    const rec = await saveCommand(obj, meta);
     return { id: rec.row.id };
   });
   bind("deleteCommand", async (id: unknown) => {

@@ -1,46 +1,2090 @@
-// Command Centre frontend — Phase A scaffold.
-// Real components land in Phase E (tasks E2-E7). This stub exists so every
-// page's `x-data="cc*"` root resolves and Alpine initializes cleanly instead
-// of throwing ReferenceError on load (which killed the whole app root).
-//
+// Command Centre frontend — tasks E2 (commands), E6 (status bar), E7 (events).
+// E3 (detail), E4 (author) and E5 (learn) components are appended below.
 // Shape follows implementation.md §10 (Compressy pattern): one IIFE,
-// `alpine:init` listener, `Alpine.data(...)` components. Component names
-// match the x-data attributes in static/*.html exactly — Phase E keeps them.
-
+// `alpine:init` listener, `Alpine.data(...)` components; explicit render
+// functions own list DOM. Backend is reached only through `bindings.*`.
+// Grammar comes from window.CCGrammar (static/grammar.js, generated).
 (function () {
   "use strict";
 
-  function base(name) {
-    return function () {
+  /* ── tiny DOM helpers ─────────────────────────────────────────────────── */
+  function $(id) {
+    return document.getElementById(id);
+  }
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;
+    return e;
+  }
+  function on(elm, ev, fn) {
+    if (elm) elm.addEventListener(ev, fn);
+  }
+  function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  /* ── backend + grammar access ─────────────────────────────────────────── */
+  function B() {
+    const b = window.bindings;
+    if (!b) throw new Error("backend bindings unavailable (run inside the desktop app)");
+    return b;
+  }
+  function G() {
+    const g = window.CCGrammar;
+    if (!g) throw new Error("grammar.js failed to load");
+    return g;
+  }
+
+  /* ── shells (prompt paint + availability) ─────────────────────────────── */
+  const SHELL_PROMPTS = {
+    powershell: { label: "PowerShell", icon: "icons/powershell.svg", pre: "PS ", post: "> " },
+    bash: { label: "Bash", icon: "icons/bash.svg", pre: "", post: " $ " },
+    ubuntu: { label: "Ubuntu", icon: "icons/ubuntu.svg", pre: "", post: " $ " },
+  };
+  const SHELL_ORDER = ["powershell", "bash", "ubuntu"];
+  let allowedShells = new Set(SHELL_ORDER);
+  async function refreshShells() {
+    try {
+      const p = await B().getPlatform();
+      const ids = (p && p.shells || []).map((s) => s.id).filter((id) => SHELL_ORDER.includes(id));
+      if (ids.length) allowedShells = new Set(ids);
+    } catch (e) {
+      console.warn("getPlatform failed, offering all shells", e);
+    }
+  }
+  function shellLabel(id) {
+    return (SHELL_PROMPTS[id] || SHELL_PROMPTS.powershell).label;
+  }
+  function shellIcon(id) {
+    return (SHELL_PROMPTS[id] || SHELL_PROMPTS.powershell).icon;
+  }
+  function paintPrompt(scope, shellId) {
+    const sh = SHELL_PROMPTS[shellId] || SHELL_PROMPTS.powershell;
+    scope.querySelectorAll("[data-pre]").forEach((s) => { s.textContent = sh.pre; });
+    scope.querySelectorAll("[data-post]").forEach((s) => { s.textContent = sh.post; });
+    // Legacy design spans without data hooks (kept for verbatim markup).
+    scope.querySelectorAll(".cmdline > .dim:first-child").forEach((s) => {
+      if (!s.hasAttribute("data-pre")) s.textContent = sh.pre;
+    });
+    const btn = scope.querySelector("[data-shellbtn]");
+    if (btn) {
+      const img = btn.querySelector("img");
+      if (img) img.src = sh.icon;
+      btn.setAttribute("aria-label", "Shell: " + sh.label + " — activate to change shell");
+      btn.setAttribute("title", "Shell: " + sh.label + " (click to change)");
+    }
+  }
+  function cycleShell(id) {
+    const order = SHELL_ORDER.filter((s) => allowedShells.has(s));
+    const cur = order.includes(shellChoice[id]) ? shellChoice[id] : order[0];
+    const next = order[(order.indexOf(cur) + 1) % order.length];
+    shellChoice[id] = next;
+    B().setShell(id, next).catch(console.error);
+    return next;
+  }
+  const shellChoice = {};
+  async function loadShellChoices() {
+    try {
+      const m = await B().getShells();
+      for (const k of Object.keys(m || {})) {
+        if (SHELL_ORDER.includes(m[k]) && allowedShells.has(m[k])) shellChoice[k] = m[k];
+      }
+    } catch (e) {
+      console.warn("getShells failed", e);
+    }
+  }
+  function shellFor(id) {
+    if (shellChoice[id] && allowedShells.has(shellChoice[id])) return shellChoice[id];
+    const first = SHELL_ORDER.find((s) => allowedShells.has(s)) || "powershell";
+    return first;
+  }
+
+  /* ── labels / origins ─────────────────────────────────────────────────── */
+  function humanize(name) {
+    const s = String(name || "").replace(/^input\./, "").replace(/[-_]+/g, " ").trim();
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : "Value";
+  }
+  function metaLabel(inst, meta) {
+    if (meta && meta.label && String(meta.label).trim() !== "") return String(meta.label).trim();
+    let lbl = humanize(inst.name);
+    if (inst.total > 1) lbl += " " + inst.occ;
+    if (inst.auto) lbl += " (auto)";
+    return lbl;
+  }
+  function originOf(cmd) {
+    if (cmd.fromHub) return "Hub";
+    if (cmd.custom) return "Local";
+    return "Built-in";
+  }
+  function matchMeta(variables, inst, used) {
+    const vars = variables || [];
+    for (const m of vars) {
+      const k = (m && (m.iid || m.key)) || "";
+      if ((k === inst.iid || k === inst.key) && !used.has(k + "#" + (m.occ || 0))) {
+        used.add(k + "#" + (m.occ || 0));
+        return m;
+      }
+    }
+    for (const m of vars) {
+      const k = (m && (m.iid || m.key)) || "";
+      if (k === inst.key || k === inst.iid) return m;
+    }
+    return null;
+  }
+
+  /* ── command-line preview with example chips ──────────────────────────── */
+  function paintCmdline(box, pwdEl, template, cwd, variables) {
+    const g = G();
+    if (pwdEl) pwdEl.textContent = cwd || "C:\\projects\\app";
+    box.innerHTML = "";
+    const used = new Set();
+    const re = /\{\{\s*([^{}]*?)\s*\}\}/g;
+    let last = 0, m;
+    const src = String(template || "");
+    const counts = {};
+    while ((m = re.exec(src))) {
+      if (m.index > last) box.appendChild(document.createTextNode(src.slice(last, m.index)));
+      const p = g.parseToken(m[1]);
+      if (p) {
+        const occ = (counts[p.key] || 0) + 1;
+        counts[p.key] = occ;
+        const meta = matchMeta(variables, { iid: g.ccInstanceKey(p.key, occ), key: p.key }, used);
+        const chip = el("span", "ex", g.exampleFor(p, meta));
+        chip.title = p.token;
+        box.appendChild(chip);
+      } else {
+        box.appendChild(document.createTextNode(m[0]));
+      }
+      last = m.index + m[0].length;
+    }
+    if (last < src.length) box.appendChild(document.createTextNode(src.slice(last)));
+  }
+
+  /* ── terminal helpers ─────────────────────────────────────────────────── */
+  function termBodyEl(scope) {
+    return scope.querySelector(".term-body");
+  }
+  function termShow(scope) {
+    const t = scope.querySelector(".term");
+    if (t) t.hidden = false;
+  }
+  function termAppend(body, stream, text) {
+    const empty = body.querySelector(".term-empty");
+    if (empty) empty.remove();
+    const line = el("div", null, text);
+    if (stream === "stderr") line.className = "red";
+    body.appendChild(line);
+    body.scrollTop = body.scrollHeight;
+  }
+  function termNote(body, text) {
+    const line = el("div", "dim", text);
+    body.appendChild(line);
+    body.scrollTop = body.scrollHeight;
+  }
+  function termPlaceholder(body) {
+    body.innerHTML = "";
+    const s = el("span", "term-empty", "Not run yet — press Run to execute.");
+    body.appendChild(s);
+  }
+  function wireTermActions(scope) {
+    const body = termBodyEl(scope);
+    if (!body) return;
+    scope.querySelectorAll("[data-a]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const a = btn.getAttribute("data-a");
+        if (a === "copy") {
+          const txt = body.innerText;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).catch(console.error);
+          }
+        } else if (a === "clear") {
+          termPlaceholder(body);
+        } else if (a === "hide") {
+          const t = scope.querySelector(".term");
+          if (t) t.hidden = true;
+        }
+      });
+    });
+  }
+
+  /* ── input-layer validity (E7) ──────────────────────────────────────────
+   * The library owns presentation constraints; the runner stays the execution
+   * gate. e:input/e:change/e:validate bubble → one delegated listener.
+   * hook:onValidate does NOT bubble → attached per element after insertion.
+   *
+   * Two library quirks this works around (see enhanced-inputs audit):
+   *  1. e:validate fires BEFORE the library computes validity, so its
+   *     detail.valid is stale — validity is re-read from the element instead.
+   *  2. The library's invalid-branch calls internals.setValidity with a bad
+   *     anchor, throwing a TypeError. Automatic validation is therefore
+   *     disabled (validate-on="") and validation runs explicitly through
+   *     safeValidate(); a global filter swallows that one known rejection.
+   */
+  const validity = new WeakMap(); // e-input element → true (valid) | false
+  function trackValidity(elm, valid) {
+    validity.set(elm, valid !== false);
+    gateScope(elm);
+  }
+  function gateScope(elm) {
+    const scope = (elm.closest && elm.closest("[data-run-scope]")) || document;
+    const inputs = scope.querySelectorAll ? scope.querySelectorAll("e-input") : [];
+    let bad = 0;
+    inputs.forEach((i) => {
+      if (validity.get(i) === false) bad++;
+    });
+    // Gate the side Run buttons only: the panel's Run Command stays clickable
+    // so a blocked run still surfaces the exact validation message (E2).
+    scope.querySelectorAll("[data-run]").forEach((b) => {
+      if (bad > 0) b.setAttribute("disabled", "");
+      else b.removeAttribute("disabled");
+    });
+  }
+  function safeValidate(input) {
+    if (!input || typeof input.validate !== "function") return;
+    try {
+      const r = input.validate();
+      if (r && typeof r.catch === "function") r.catch(() => { /* known EI anchor defect */ });
+    } catch (e) { /* known EI anchor defect */ }
+  }
+  // App-owned synchronous check (design rules): checkbox/radio/select/range
+  // and friends are always submittable; others need a value, numbers numeric.
+  function quickCheck(elm) {
+    const kind = (elm && elm._ccKind) || "";
+    if (ALWAYS_VALID.has(kind)) return true;
+    let v = null;
+    try { v = elm.value; } catch (e) { return true; }
+    if (v == null) return false;
+    const s = Array.isArray(v) ? v.join(",") : String(v);
+    if (s === "") return false;
+    if (kind === "number" && !isFinite(Number(s))) return false;
+    return true;
+  }
+  function refreshValidity(elm) {
+    if (!elm || elm.tagName !== "E-INPUT") return;
+    trackValidity(elm, quickCheck(elm));
+  }
+  window.addEventListener("unhandledrejection", (e) => {
+    const msg = String((e && e.reason && (e.reason.message || e.reason)) || "");
+    if (msg.includes("setValidity") && msg.includes("HTMLElement")) {
+      e.preventDefault(); // known enhanced-inputs anchor defect, handled above
+    }
+  });
+  // Real typing targets the INNER native input (light DOM); library
+  // re-dispatches target the <e-input> host. closest() covers both.
+  function hostOf(t) {
+    if (!t || typeof t.closest !== "function") return null;
+    if (t.tagName === "E-INPUT") return t;
+    return t.closest("e-input");
+  }
+  document.addEventListener("e:input", (e) => {
+    const h = hostOf(e.target);
+    if (h) refreshValidity(h);
+  });
+  document.addEventListener("e:change", (e) => {
+    const h = hostOf(e.target);
+    if (h) refreshValidity(h);
+  });
+  document.addEventListener("e:validate", (e) => {
+    const h = hostOf(e.target);
+    if (h) refreshValidity(h);
+  });
+  document.addEventListener("e:success", (e) => {
+    const h = hostOf(e.target);
+    if (h) trackValidity(h, true);
+  });
+  document.addEventListener("e:error", (e) => {
+    const h = hostOf(e.target);
+    if (h) trackValidity(h, false);
+  });
+  // Blur re-gates only (no explicit validation: painting the error UI here
+  // would shift layout mid-click and swallow the click that caused the blur).
+  // Error painting happens in showBad, after the click has landed.
+  document.addEventListener("focusout", (e) => {
+    const h = hostOf(e.target);
+    if (h && h.tagName === "E-INPUT") refreshValidity(h);
+  });
+
+  /* ── variable panel builder (shared by run forms) ─────────────────────── */
+  const ALWAYS_VALID = new Set([
+    "checkbox", "switch", "radio", "select", "range", "buttongroup",
+    "color", "multiselect", "license", "time", "datetime",
+  ]);
+  const VALID_MSG = "Fill every value — numbers need numeric input, dates need a date.";
+  const TOKEN_ALIAS_PASSWORD = new Set(["input.token", "input.apikey", "input.secret"]);
+
+  function optionChildren(desc, pre) {
+    const out = [];
+    const preList = String(pre || "").split(",").map((s) => s.trim());
+    for (const o of desc.options || []) {
+      const c = document.createElement(o.tag);
+      c.setAttribute("value", o.value);
+      c.textContent = o.label || o.value;
+      if (o.description) c.setAttribute("description", o.description);
+      // The library reads `selected` from slotted children at connect.
+      if (o.tag === "e-checkbox-option") {
+        if (preList.includes(o.value)) c.setAttribute("checked", "");
+      } else if (o.value === pre) {
+        c.setAttribute("selected", "");
+      }
+      out.push(c);
+    }
+    return out;
+  }
+
+  function buildVarControl(vrows, token, pre, meta, opts) {
+    const g = G();
+    const desc = g.renderToken(token, pre == null ? "" : String(pre), {
+      label: (meta && meta.label) || undefined,
+      description: (meta && meta.description) || undefined,
+      options: (meta && meta.options) || undefined,
+      example: (meta && meta.example) || undefined,
+    });
+    opts = opts || {};
+    const wrap = el("div", "vrow");
+    const lb = el("label");
+    lb.appendChild(document.createTextNode(metaLabel(token, meta) + " "));
+    const sp = el("span", "vt", "· " + token.type +
+      (token.total > 1 ? " · " + token.occ + " of " + token.total : "") + " · " + token.token);
+    lb.appendChild(sp);
+    if (token.auto) {
+      const ap = el("span", "vbadge", "auto");
+      ap.style.marginLeft = "6px";
+      lb.appendChild(ap);
+    }
+    wrap.appendChild(lb);
+
+    // Unknown widget (never for parsed tokens): raw fallback row.
+    if (!desc) {
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.value = pre || "";
+      inp.setAttribute("aria-label", token.token);
+      wrap.appendChild(inp);
+      vrows.appendChild(wrap);
+      const getter = { v: token, el: inp, kind: "text", get: () => inp.value, focus: () => inp.focus() };
+      wireHooks(inp, opts);
+      return getter;
+    }
+
+    const kind = token.type === "license" ? "select"
+      : token.type === "buttongroup" ? "radio"
+      : token.type === "switch" ? "checkbox"
+      : token.type;
+    let input;
+    if (desc.paired) {
+      // keyvalue: two text fields joined with "=".
+      const kw = el("div", "kvpair");
+      const keyEl = document.createElement("e-input");
+      keyEl.setAttribute("type", "text");
+      keyEl.setAttribute("name", token.iid + "#k");
+      keyEl.setAttribute("aria-label", metaLabel(token, meta) + " key");
+      const valEl = document.createElement("e-input");
+      valEl.setAttribute("type", "text");
+      valEl.setAttribute("name", token.iid);
+      valEl.setAttribute("aria-label", metaLabel(token, meta) + " value");
+      const parts = String(pre || "").split("=");
+      kw.appendChild(keyEl);
+      kw.appendChild(document.createTextNode("="));
+      kw.appendChild(valEl);
+      wrap.appendChild(kw);
+      input = valEl;
+      vrows.appendChild(wrap);
+      if (parts[0]) keyEl.setAttribute("value", parts[0]);
+      if (parts.length > 1) valEl.setAttribute("value", parts.slice(1).join("="));
+      wireHooks(keyEl, opts);
+      wireHooks(valEl, opts);
       return {
-        // Page identifier (matches <body data-page>).
-        page: name,
-        // Set once Alpine mounts this component (drives [x-cloak] in Phase E).
-        ready: false,
-        init() {
-          this.ready = true;
-          window.__ccMounted = window.__ccMounted || {};
-          window.__ccMounted[name] = true;
+        v: token, el: valEl, kind: "keyvalue",
+        get: () => {
+          const k = (keyEl.value || "").trim();
+          const v = valEl.value || "";
+          return k !== "" ? k + "=" + v : v;
         },
+        focus: () => keyEl.focus(),
       };
+    }
+
+    input = document.createElement("e-input");
+    input.setAttribute("type", desc.type);
+    input.setAttribute("name", token.iid);
+    input.setAttribute("aria-label", metaLabel(token, meta));
+    // Automatic library validation is disabled (see E7 note above):
+    // validation runs explicitly through safeValidate().
+    input.setAttribute("validate-on", "");
+    if (desc.format) input.setAttribute("format", desc.format);
+    if (desc.placeholder) input.setAttribute("placeholder", desc.placeholder);
+    if (desc.description) input.setAttribute("description", desc.description);
+    if (desc.min !== undefined) input.setAttribute("min", String(desc.min));
+    if (desc.max !== undefined) input.setAttribute("max", String(desc.max));
+    if (desc.step !== undefined) input.setAttribute("step", String(desc.step));
+    if (token.type === "password") {
+      input.setAttribute("action-button", "show");
+      if (TOKEN_ALIAS_PASSWORD.has(token.name)) input.setAttribute("strength-meter", "false");
+    }
+    if (!ALWAYS_VALID.has(kind)) input.setAttribute("required", "");
+    for (const c of optionChildren(desc, pre)) input.appendChild(c);
+    wrap.appendChild(input);
+
+    // File widgets: the library renders no picker (unknown action-button is
+    // inert), so the host provides a Browse button beside the field.
+    let browseBtn = null;
+    if (token.type === "file" || token.type === "dir" || token.type === "files") {
+      browseBtn = el("button", "btn btn-g", "Browse…");
+      browseBtn.type = "button";
+      browseBtn.setAttribute("aria-label", "Browse for " + metaLabel(token, meta));
+      browseBtn.addEventListener("click", async () => {
+        try {
+          let picked = null;
+          if (token.name === "input.dir") picked = await B().pickFolder();
+          else picked = await B().pickFile("");
+          if (picked) {
+            input.value = picked;
+            safeValidate(input);
+          }
+        } catch (e) {
+          console.error("browse failed", e);
+        }
+      });
+      wrap.appendChild(browseBtn);
+    }
+
+    // Regen control for .autogenerate tokens (design ↻ Regenerate).
+    if (token.auto && typeof opts.regen === "function") {
+      const rb = el("button", "regen", "↻ Regenerate");
+      rb.type = "button";
+      rb.title = "Generate a new value — you can still edit";
+      rb.addEventListener("click", () => {
+        try {
+          const nv = opts.regen(token) || "";
+          setInputValue(input, kind, nv);
+          safeValidate(input);
+        } catch (e) {
+          console.error("regenerate failed", e);
+        }
+      });
+      wrap.appendChild(rb);
+    }
+
+    vrows.appendChild(wrap);
+    // Set value AFTER insertion (select/radio collect slotted options on connect).
+    setInputValue(input, kind, pre == null ? "" : String(pre), token);
+    input._ccKind = kind;
+    wireHooks(input, opts);
+    safeValidate(input);
+    return {
+      v: token, el: input, kind,
+      get: () => readInputValue(input, kind, token),
+      focus: () => { try { input.focus(); } catch (e) { /* noop */ } },
     };
   }
 
-  function register(Alpine) {
-    Alpine.data("ccCommands", base("commands"));
-    Alpine.data("ccDetail", base("detail"));
-    Alpine.data("ccAuthor", base("author"));
-    Alpine.data("ccLearn", base("learn"));
-    Alpine.data("ccHub", base("hub"));
-    Alpine.data("ccPublish", base("publish"));
+  function setInputValue(input, kind, pre, token) {
+    if (kind === "checkbox") {
+      // checkedDef===false starts unchecked; otherwise any non-empty pre checks.
+      const checked = token && token.checkedDef === false ? pre !== "" && pre !== undefined : pre !== "";
+      try {
+        input.checked = !!checked;
+      } catch (e) { /* noop */ }
+      if (!checked) {
+        try { input.value = ""; } catch (e2) { /* noop */ }
+      } else if (pre) {
+        try { input.value = pre; } catch (e3) { /* noop */ }
+      }
+      return;
+    }
+    if (pre === "" || pre == null) return;
+    try {
+      input.value = pre;
+    } catch (e) { /* noop */ }
+  }
+
+  function readInputValue(input, kind, token) {
+    if (kind === "checkbox") {
+      let checked = false;
+      try {
+        checked = !!input.checked;
+      } catch (e) {
+        checked = input.value === "on";
+      }
+      return checked ? (token.params || "--flag") : "";
+    }
+    if (kind === "multiselect") {
+      const v = input.value;
+      if (Array.isArray(v)) return v.join(",");
+      return v == null ? "" : String(v);
+    }
+    const v = input.value;
+    return v == null ? "" : String(v);
+  }
+
+  function wireHooks(input, opts) {
+    // hook:* events do not bubble — attach per element after insertion.
+    input.addEventListener("hook:onValidate", () => {
+      refreshValidity(input);
+    });
+    input.addEventListener("hook:onInput", () => {
+      if (opts && typeof opts.onInput === "function") {
+        try { opts.onInput(); } catch (e) { console.error(e); }
+      }
+    });
+  }
+
+  /* Collect + validate a getter list (design rules, exact message). */
+  function collectInputs(getters) {
+    const vals = {};
+    let bad = null;
+    for (const gt of getters) {
+      const val = gt.get();
+      vals[gt.v.iid] = val;
+      if (ALWAYS_VALID.has(gt.kind)) continue;
+      if (!val || (gt.kind === "number" && !isFinite(Number(val)))) {
+        if (!bad) bad = gt;
+      }
+    }
+    return { vals, bad };
+  }
+  function showBad(verrEl, getters) {
+    // Paint library error states first (post-click: no layout-shift hazard),
+    // then apply the design's own collect rules and exact message.
+    for (const gt of getters) {
+      if (gt && gt.el) safeValidate(gt.el);
+    }
+    const r = collectInputs(getters);
+    if (r.bad) {
+      verrEl.textContent = VALID_MSG;
+      verrEl.hidden = false;
+      if (r.bad.focus) r.bad.focus();
+      return r;
+    }
+    verrEl.hidden = true;
+    return r;
+  }
+
+  /* ── shared run flow (real execution + 250 ms poll) ────────────────────── */
+  async function runFlow(o) {
+    // o: {commandId, shell, cwd, line, status, body, dot, buttons, tname}
+    const status = o.status, body = o.body;
+    termShow(o.scope);
+    o.buttons.forEach((b) => {
+      if (!b.dataset.origText) b.dataset.origText = b.textContent;
+      b.textContent = "■ Cancel";
+    });
+    status.textContent = "Running…";
+    status.className = "status run";
+    if (o.dot) o.dot.className = "dot run";
+    let cancelled = false;
+    const doCancel = async () => {
+      cancelled = true;
+      try { await B().cancelRun(); } catch (e) { console.error(e); }
+    };
+    o.buttons.forEach((b) => {
+      b.onclick = () => { doCancel(); };
+    });
+    let res;
+    try {
+      const resP = B().run({ commandId: o.commandId, shell: o.shell, cwd: o.cwd, line: o.line });
+      let cursor = 0;
+      let running = true;
+      while (running) {
+        if (cancelled) break;
+        try {
+          const pr = await B().getRunProgress(cursor);
+          if (pr && pr.lines) {
+            for (const l of pr.lines) termAppend(body, l.stream, l.text);
+            cursor = pr.cursor;
+          }
+          running = !!(pr && pr.running);
+        } catch (e) {
+          console.error("progress poll failed", e);
+          break;
+        }
+        if (running) await sleep(250);
+      }
+      res = await resP;
+      // Drain anything the final poll missed.
+      try {
+        const pr = await B().getRunProgress(cursor);
+        if (pr && pr.lines) for (const l of pr.lines) termAppend(body, l.stream, l.text);
+      } catch (e) { console.error(e); }
+    } catch (e) {
+      status.textContent = String((e && e.message) || e);
+      status.className = "status stopped";
+      if (o.dot) o.dot.className = "dot stopped";
+      restoreRunButtons(o.buttons);
+      return { ok: false, error: e };
+    }
+    restoreRunButtons(o.buttons);
+    const secs = ((res.durationMs || 0) / 1000).toFixed(1);
+    if (res.cancelled || cancelled) {
+      status.textContent = "Cancelled";
+      status.className = "status stopped";
+      if (o.dot) o.dot.className = "dot stopped";
+      termNote(body, "— cancelled —");
+    } else if (res.exitCode === 0) {
+      status.textContent = "✓ exit 0 (" + secs + "s)";
+      status.className = "status ok";
+      if (o.dot) o.dot.className = "dot ok";
+      termNote(body, "— exit 0 in " + secs + "s —");
+    } else {
+      status.textContent = "✗ exit " + res.exitCode;
+      status.className = "status stopped";
+      if (o.dot) o.dot.className = "dot stopped";
+      termNote(body, "— exit " + res.exitCode + " in " + secs + "s —");
+    }
+    return { ok: !res.cancelled && res.exitCode === 0, result: res };
+  }
+  function restoreRunButtons(buttons) {
+    buttons.forEach((b) => {
+      if (b.dataset.origText) b.textContent = b.dataset.origText;
+      b.onclick = null;
+    });
+  }
+
+  /* Expose the shared core to later components in this file. */
+  window.__cc = {
+    $, el, on, sleep, B, G,
+    SHELL_PROMPTS, SHELL_ORDER, allowedShells,
+    refreshShells, loadShellChoices, shellFor, cycleShell, paintPrompt,
+    shellChoice, shellLabel, shellIcon,
+    humanize, metaLabel, originOf, matchMeta,
+    paintCmdline, termBodyEl, termShow, termAppend, termNote, termPlaceholder, wireTermActions,
+    trackValidity, gateScope, safeValidate, quickCheck, refreshValidity,
+    ALWAYS_VALID, VALID_MSG,
+    buildVarControl, collectInputs, showBad,
+    runFlow, restoreRunButtons,
+  };
+})();
+
+/* ── ccCommands — task E2 (list/run/variables/terminal) + E6 (status bar) ── */
+(function () {
+  "use strict";
+  var CC = window.__cc;
+
+  function markMounted(name) {
+    window.__ccMounted = window.__ccMounted || {};
+    window.__ccMounted[name] = true;
+  }
+
+  function commandsData() {
+    return {
+      cmds: [],
+      query: "",
+      tagFilter: null,
+      sortBy: "name-asc",
+      view: "command",
+      ready: false,
+
+      async init() {
+        this.ready = true;
+        markMounted("commands");
+        await CC.refreshShells();
+        await CC.loadShellChoices();
+        try {
+          const s = await CC.B().loadSettings();
+          if (s && s.sortBy) this.sortBy = s.sortBy;
+        } catch (e) {
+          console.warn("loadSettings failed", e);
+        }
+        try {
+          const v = localStorage.getItem("cc-view");
+          if (v === "command" || v === "control" || v === "tool") this.view = v;
+        } catch (e) { /* private mode */ }
+        await this.reload();
+        this.wireChrome();
+        this.paint();
+        this.fillStatusbar();
+      },
+
+      async reload() {
+        try {
+          this.cmds = await CC.B().listCommands();
+        } catch (e) {
+          console.error("listCommands failed", e);
+          this.cmds = [];
+        }
+      },
+
+      wireChrome() {
+        const q = document.getElementById("q");
+        if (q) {
+          q.addEventListener("input", () => {
+            this.query = q.value;
+            this.paint();
+          });
+          q.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+              q.value = "";
+              this.query = "";
+              this.tagFilter = null;
+              this.paint();
+            }
+          });
+        }
+        const vc = document.getElementById("viewCommand");
+        const vv = document.getElementById("viewControl");
+        const vt = document.getElementById("viewTool");
+        if (vc) vc.addEventListener("click", () => this.setView("command"));
+        if (vv) vv.addEventListener("click", () => this.setView("control"));
+        if (vt) vt.addEventListener("click", () => this.setView("tool"));
+        const count = document.getElementById("count");
+        if (count) {
+          count.title = "Click to change sort order";
+          count.style.cursor = "pointer";
+          count.addEventListener("click", () => this.cycleSort());
+        }
+      },
+
+      setView(view) {
+        this.view = view;
+        try { localStorage.setItem("cc-view", view); } catch (e) { /* noop */ }
+        this.paint();
+      },
+
+      async cycleSort() {
+        this.sortBy = this.sortBy === "name-asc" ? "name-desc" : "name-asc";
+        try {
+          const s = await CC.B().loadSettings();
+          await CC.B().saveSettings(Object.assign({}, s, { sortBy: this.sortBy }));
+        } catch (e) {
+          console.warn("persisting sort failed", e);
+        }
+        this.paint();
+      },
+
+      filtered() {
+        const q = this.query.trim().toLowerCase();
+        let rows = this.cmds.filter((c) => {
+          if (this.tagFilter) {
+            const tags = c.tags && c.tags.length ? c.tags : [c.tag || "custom"];
+            if (!tags.includes(this.tagFilter)) return false;
+          }
+          if (!q) return true;
+          return ((c.name || "") + " " + (c.cmd || "") + " " + (c.desc || "") + " " + (c.cwd || ""))
+            .toLowerCase().includes(q);
+        });
+        rows = rows.slice();
+        if (this.sortBy === "name-desc") rows.sort((a, b) => String(b.name || "").localeCompare(String(a.name || "")));
+        else rows.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+        return rows;
+      },
+
+      paint() {
+        const rows = this.filtered();
+        const list = document.getElementById("list");
+        const count = document.getElementById("count");
+        if (count) {
+          let txt = rows.length + " saved";
+          if (this.tagFilter) txt += " · tag: " + this.tagFilter + " (click a tag to clear)";
+          count.textContent = txt;
+          count.title = "Sort: " + (this.sortBy === "name-desc" ? "name ↓" : "name ↑") + " — click to change";
+        }
+        if (!list) return;
+        list.innerHTML = "";
+        if (!rows.length) {
+          const p = document.createElement("p");
+          p.style.color = "var(--muted)";
+          p.appendChild(document.createTextNode("No commands match. "));
+          const a = document.createElement("a");
+          a.href = "add.html";
+          a.style.color = "var(--accent)";
+          a.textContent = "Add a new command";
+          p.appendChild(a);
+          list.appendChild(p);
+        }
+        rows.forEach((c) => list.appendChild(this.buildCard(c)));
+        this.paintTool(rows);
+        this.applyView();
+      },
+
+      paintTool(rows) {
+        const tg = document.getElementById("toolGrid");
+        if (!tg || !window.Mustache) return;
+        tg.innerHTML = "";
+        if (!rows.length) {
+          tg.innerHTML = window.CCTemplates.toolEmpty;
+          return;
+        }
+        const g = CC.G();
+        rows.forEach((c) => {
+          const vars = g.parseVarInstances(c.cmd || "");
+          const badge = vars.length
+            ? '<span class="vbadge">' + vars.length + (vars.length === 1 ? " input" : " inputs") + "</span>"
+            : '<span class="vbadge" style="background:var(--surface);color:var(--muted)">no inputs</span>';
+          const html = window.Mustache.render(window.CCTemplates.tool, {
+            idHref: "command.html?id=" + encodeURIComponent(c.id),
+            name: c.name || "?",
+            desc: c.desc || "",
+            tag: (c.tags && c.tags[0]) || c.tag || "command",
+            shellIcon: CC.shellIcon(CC.shellFor(c.id)),
+            toolAria: (c.name || "?") + " — open and run" +
+              (vars.length ? " with " + vars.length + (vars.length === 1 ? " input" : " inputs") : ""),
+            badgeHtml: badge,
+          });
+          const tmp = document.createElement("template");
+          tmp.innerHTML = html.trim();
+          tg.appendChild(tmp.content.firstChild);
+        });
+      },
+
+      applyView() {
+        const view = this.view;
+        document.body.dataset.view = view;
+        const bc = document.getElementById("viewCommand");
+        const bv = document.getElementById("viewControl");
+        const bt = document.getElementById("viewTool");
+        [["command", bc], ["control", bv], ["tool", bt]].forEach(([v, b]) => {
+          if (!b) return;
+          const isOn = view === v;
+          b.classList.toggle("on", isOn);
+          b.setAttribute("aria-pressed", String(isOn));
+        });
+        const tg = document.getElementById("toolGrid");
+        if (tg) tg.hidden = view !== "tool";
+        if (view === "control") {
+          document.querySelectorAll("#list .cmd").forEach((card) => {
+            if (card._ccVars && card._ccVars.length && typeof card._ccOpenVars === "function") {
+              const varsBox = card.querySelector(".vars");
+              if (varsBox && varsBox.hidden) card._ccOpenVars();
+            }
+          });
+        }
+      },
+
+      buildCard(cmd) {
+        const g = CC.G();
+        const shellId = CC.shellFor(cmd.id);
+        const sh = CC.SHELL_PROMPTS[shellId] || CC.SHELL_PROMPTS.powershell;
+        const tag = (cmd.tags && cmd.tags[0]) || cmd.tag || "command";
+        const html = window.Mustache.render(window.CCTemplates.card, {
+          id: cmd.id,
+          idHref: "command.html?id=" + encodeURIComponent(cmd.id),
+          name: cmd.name || "?",
+          desc: cmd.desc || "",
+          tag,
+          origin: CC.originOf(cmd),
+          cwd: cmd.cwd || "",
+          shellAria: "Shell: " + sh.label + " — activate to change shell",
+          shellTitle: "Shell: " + sh.label + " (click to change)",
+          shellIcon: sh.icon,
+          shellPre: sh.pre,
+          shellPost: sh.post,
+        });
+        const tmp = document.createElement("template");
+        tmp.innerHTML = html.trim();
+        const card = tmp.content.firstChild;
+        card.setAttribute("data-run-scope", "");
+        card._ccVars = g.parseVarInstances(cmd.cmd || "");
+        const askMode = cmd.askMode === "once" ? "once" : "every";
+
+        CC.paintCmdline(card.querySelector(".c"), card.querySelector(".cmdline .pwd"), cmd.cmd, cmd.cwd, cmd.variables);
+        CC.paintPrompt(card, shellId);
+        CC.wireTermActions(card);
+
+        // Clickable tag → tag filter (no markup change, no redesign).
+        const tagEl = card.querySelector(".tags .tag");
+        if (tagEl) {
+          tagEl.setAttribute("role", "button");
+          tagEl.setAttribute("tabindex", "0");
+          tagEl.title = "Filter by this tag";
+          const toggle = () => {
+            this.tagFilter = this.tagFilter === tag ? null : tag;
+            this.paint();
+          };
+          tagEl.addEventListener("click", toggle);
+          tagEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              toggle();
+            }
+          });
+        }
+
+        // Input-count badge → opens the variable panel.
+        const vars = card._ccVars;
+        if (vars.length) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "vbadge";
+          b.textContent = vars.length + (vars.length === 1 ? " input" : " inputs");
+          b.title = "Show inputs";
+          b.setAttribute("aria-label", b.textContent + " needed — show inputs");
+          card.querySelector(".tags").appendChild(b);
+          b.addEventListener("click", () => this.openVars(card, cmd));
+        }
+
+        // Shell picker: cycles installed shells only, persists per command.
+        const shellBtn = card.querySelector("[data-shellbtn]");
+        if (shellBtn) {
+          shellBtn.addEventListener("click", () => {
+            const next = CC.cycleShell(cmd.id);
+            CC.paintPrompt(card, next);
+            CC.paintCmdline(card.querySelector(".c"), card.querySelector(".cmdline .pwd"), cmd.cmd, cmd.cwd, cmd.variables);
+          });
+        }
+
+        const runBtn = card.querySelector("[data-run]");
+        const vgo = card.querySelector(".vgo");
+        const vedit = card.querySelector(".vedit");
+        const vunlock = card.querySelector(".vunlock");
+        const vlock = card.querySelector(".vlock");
+        if (vgo) vgo.setAttribute("data-vgo", "");
+        if (runBtn) runBtn.addEventListener("click", () => this.runSide(card, cmd));
+        if (vgo) vgo.addEventListener("click", () => this.runFromPanel(card, cmd));
+        if (vedit) vedit.addEventListener("click", () => this.openVars(card, cmd, true));
+        if (vunlock) {
+          vunlock.addEventListener("click", async () => {
+            try { await CC.B().clearValues(cmd.id); } catch (e) { console.error(e); }
+            card._ccLast = null;
+            card._ccLocked = false;
+            vunlock.hidden = true;
+            if (vlock) vlock.checked = false;
+            this.refreshSavedState(card, cmd);
+          });
+        }
+        if (vlock) {
+          vlock.addEventListener("change", async () => {
+            if (!vlock.checked) {
+              card._ccLocked = false;
+              if (vunlock) vunlock.hidden = true;
+              return;
+            }
+            if (!card._ccGetters || !card._ccGetters.length) this.openVars(card, cmd);
+            const verr = card.querySelector(".verr");
+            const r = CC.showBad(verr, card._ccGetters);
+            if (r.bad) {
+              vlock.checked = false;
+              return;
+            }
+            card._ccLast = r.vals;
+            try { await CC.B().saveValues(cmd.id, r.vals); } catch (e) { console.error(e); }
+            card._ccLocked = true;
+            if (vunlock) vunlock.hidden = false;
+            this.refreshSavedState(card, cmd);
+          });
+        }
+
+        card._ccOpenVars = (focus) => this.openVars(card, cmd, focus);
+        this.refreshSavedState(card, cmd);
+        return card;
+      },
+
+      async refreshSavedState(card, cmd) {
+        const vars = card._ccVars || [];
+        const st = card.querySelector(".status");
+        const vedit = card.querySelector(".vedit");
+        if (!st) return;
+        if (!vars.length || cmd.askMode !== "once") {
+          if (!st.classList.contains("ok") && !st.classList.contains("stopped")) st.textContent = "Ready";
+          if (vedit && !vars.length) vedit.hidden = true;
+          return;
+        }
+        let sv = null;
+        try { sv = await CC.B().getValues(cmd.id); } catch (e) { console.error(e); }
+        if (this.completeVals(vars, sv)) {
+          st.textContent = "Saved values ready";
+          st.classList.remove("needs");
+          if (vedit) vedit.hidden = false;
+        } else {
+          st.textContent = "Needs " + vars.length + (vars.length === 1 ? " input" : " inputs");
+          st.classList.add("needs");
+          if (vedit) vedit.hidden = true;
+        }
+      },
+
+      completeVals(vars, map) {
+        if (!map) return false;
+        return vars.every((v) => {
+          const got = (v.iid in map) ? map[v.iid] : map[v.key];
+          if (got === undefined) return false;
+          if (CC.ALWAYS_VALID.has(v.type)) return true;
+          return String(got).trim() !== "";
+        });
+      },
+
+      openVars(card, cmd, focus) {
+        const g = CC.G();
+        const varsBox = card.querySelector(".vars");
+        const vrows = card.querySelector(".vrows");
+        const verr = card.querySelector(".verr");
+        const varsHead = card.querySelector(".vars-h");
+        if (varsHead) {
+          varsHead.textContent = card._ccVars.length +
+            (card._ccVars.length === 1 ? " input" : " inputs") + " for " + (cmd.name || "command");
+        }
+        varsBox.hidden = false;
+        if (!card._ccGetters) {
+          card._ccGetters = card._ccVars.map((v) => {
+            const used = new Set();
+            const meta = CC.matchMeta(cmd.variables, v, used);
+            let pre = meta && meta.example !== undefined && meta.example !== "" ? String(meta.example) : undefined;
+            if (pre === undefined) {
+              const sv = card._ccLastSaved || {};
+              pre = (v.iid in sv) ? sv[v.iid] : (v.key in sv ? sv[v.key] : undefined);
+            }
+            if (pre === undefined) {
+              pre = (v.auto && !v.default) ? g.ccAutoGenerate(v) || "" : g.exampleFor(v, meta);
+            }
+            return CC.buildVarControl(vrows, v, pre || "", meta, {
+              regen: (t) => g.ccAutoGenerate(t),
+              onInput: () => { verr.hidden = true; },
+            });
+          });
+          CC.gateScope(card);
+        }
+        if (this.view !== "control") {
+          const pv = card.querySelector(".preview");
+          if (pv) pv.open = true;
+        }
+        const first = card._ccGetters[0];
+        if (focus !== false && first && first.focus) first.focus();
+      },
+
+      async runSide(card, cmd) {
+        const vars = card._ccVars || [];
+        const shellId = CC.shellFor(cmd.id);
+        const base = {
+          commandId: cmd.id, shell: shellId, cwd: cmd.cwd || "C:\\projects\\app",
+          status: card.querySelector(".status"),
+          body: card.querySelector(".term-body"),
+          dot: card.querySelector(".dot"),
+          buttons: [card.querySelector("[data-run]")].filter(Boolean),
+          scope: card,
+        };
+        if (!vars.length) {
+          await CC.runFlow(Object.assign({ line: cmd.cmd }, base));
+          return;
+        }
+        if ((cmd.askMode || "every") === "once") {
+          let sv = null;
+          try { sv = await CC.B().getValues(cmd.id); } catch (e) { console.error(e); }
+          if (this.completeVals(vars, sv)) {
+            await CC.runFlow(Object.assign({ line: CC.G().renderCmd(cmd.cmd, sv) }, base));
+            return;
+          }
+        }
+        if (card._ccLocked && card._ccLast) {
+          await CC.runFlow(Object.assign({ line: CC.G().renderCmd(cmd.cmd, card._ccLast) }, base));
+          return;
+        }
+        this.openVars(card, cmd);
+      },
+
+      async runFromPanel(card, cmd) {
+        const verr = card.querySelector(".verr");
+        const r = CC.showBad(verr, card._ccGetters || []);
+        if (r.bad) return;
+        card._ccLast = r.vals;
+        if ((cmd.askMode || "every") === "once") {
+          try { await CC.B().saveValues(cmd.id, r.vals); } catch (e) { console.error(e); }
+          this.refreshSavedState(card, cmd);
+        }
+        const line = CC.G().renderCmd(cmd.cmd, r.vals);
+        if (line.includes("{{")) {
+          verr.textContent = "A value is still missing — fill every input.";
+          verr.hidden = false;
+          return;
+        }
+        await CC.runFlow({
+          commandId: cmd.id, shell: CC.shellFor(cmd.id), cwd: cmd.cwd || "C:\\projects\\app",
+          line,
+          status: card.querySelector(".status"),
+          body: card.querySelector(".term-body"),
+          dot: card.querySelector(".dot"),
+          buttons: [card.querySelector(".vgo"), card.querySelector("[data-run]")].filter(Boolean),
+          scope: card,
+        });
+      },
+
+      async fillStatusbar() {
+        const bar = document.getElementById("statusbar");
+        if (!bar) return;
+        try {
+          const [v, p] = await Promise.all([CC.B().getVersion(), CC.B().getPlatform()]);
+          const sv = document.getElementById("sbVersion");
+          const sp = document.getElementById("sbPlatform");
+          const ss = document.getElementById("sbShells");
+          if (sv) sv.textContent = "Command Centre v" + v;
+          if (sp) sp.textContent = (p && p.os ? p.os + " " + (p.arch || "") : "").trim() || "unknown platform";
+          if (ss) ss.textContent = "Shells: " + ((p && p.shells || []).map((s) => s.label || s.id).join(", ") || "none");
+        } catch (e) {
+          console.warn("status bar failed", e);
+        }
+      },
+    };
   }
 
   document.addEventListener("alpine:init", function () {
-    var Alpine = window.Alpine;
+    const Alpine = window.Alpine;
     if (!Alpine || typeof Alpine.data !== "function") return;
-    register(Alpine);
+    try {
+      Alpine.data("ccCommands", commandsData);
+    } catch (e) {
+      console.error("ccCommands registration failed", e);
+    }
   });
+})();
 
-  // Exposed for tests / Phase E handoff checks.
-  window.__ccStubComponents = ["ccCommands", "ccDetail", "ccAuthor", "ccLearn", "ccHub", "ccPublish"];
+/* ── ccDetail — task E3 (badges, preview, metadata, export, run) ─────────── */
+(function () {
+  "use strict";
+  var CC = window.__cc;
+
+  function badge(text, cls) {
+    const b = document.createElement("span");
+    b.className = "badge " + cls;
+    b.textContent = text;
+    return b;
+  }
+
+  function detailData() {
+    return {
+      cmd: null,
+      ready: false,
+
+      async init() {
+        this.ready = true;
+        window.__ccMounted = window.__ccMounted || {};
+        window.__ccMounted.detail = true;
+        await CC.refreshShells();
+        await CC.loadShellChoices();
+        let id = null;
+        try {
+          id = new URLSearchParams(location.search).get("id");
+        } catch (e) { id = null; }
+        if (!id) return this.showMissing();
+        let found = null;
+        try {
+          found = await CC.B().getCommand(id);
+        } catch (e) {
+          console.error("getCommand failed", e);
+        }
+        if (!found) return this.showMissing();
+        this.cmd = found;
+        this.paint();
+      },
+
+      showMissing() {
+        // The design never unhides #missing — unknown ids must not render
+        // the showcase fallback. Show the real not-found state instead.
+        const miss = document.getElementById("missing");
+        const detail = document.getElementById("detail");
+        if (miss) miss.hidden = false;
+        if (detail) detail.hidden = true;
+        document.title = "Not found — Command Center";
+      },
+
+      paint() {
+        const c = this.cmd;
+        const g = CC.G();
+        const detail = document.getElementById("detail");
+        const miss = document.getElementById("missing");
+        if (miss) miss.hidden = true;
+        if (detail) {
+          detail.hidden = false;
+          detail.setAttribute("data-run-scope", "");
+        }
+        document.title = (c.name || "Command") + " — Command Center";
+        document.getElementById("dname").textContent = c.name || "";
+        document.getElementById("ddesc").textContent = c.desc || "";
+
+        const badges = document.getElementById("dbadges");
+        badges.innerHTML = "";
+        badges.appendChild(badge(c.tag || (c.tags && c.tags[0]) || "command", "badge-tag"));
+        badges.appendChild(badge(CC.originOf(c), "badge-npub"));
+        const pubBadge = badge("not published", "badge-npub");
+        pubBadge.id = "pubBadge";
+        badges.appendChild(pubBadge);
+        this.refreshPublished(c, pubBadge);
+
+        document.getElementById("draw").textContent = c.cmd || "";
+        const prev = document.getElementById("dprev");
+        prev.innerHTML = "";
+        const dir = c.cwd || "C:\\projects\\app";
+        prev.appendChild(CC.el("span", "dim", "PS "));
+        prev.appendChild(CC.el("span", "pwd", dir));
+        prev.appendChild(CC.el("span", "dim", "> "));
+        const insts = g.parseVarInstances(c.cmd || "");
+        const used = new Set();
+        const metas = insts.map((v) => CC.matchMeta(c.variables, v, used));
+        const counts = {};
+        const re = /\{\{\s*([^{}]*?)\s*\}\}/g;
+        let last = 0, m;
+        const src = String(c.cmd || "");
+        while ((m = re.exec(src))) {
+          if (m.index > last) prev.appendChild(document.createTextNode(src.slice(last, m.index)));
+          const p = g.parseToken(m[1]);
+          if (p) {
+            const occ = (counts[p.key] || 0) + 1;
+            counts[p.key] = occ;
+            let label = p.token, ex = g.exampleFor(p, null);
+            const idx = this.indexOfInst(insts, p.key, occ);
+            if (idx >= 0) {
+              label = CC.metaLabel(insts[idx], metas[idx]);
+              ex = g.exampleFor(insts[idx], metas[idx]);
+            }
+            const chip = CC.el("span", "ex", label);
+            chip.title = p.token + " = " + ex;
+            prev.appendChild(chip);
+          } else {
+            prev.appendChild(document.createTextNode(m[0]));
+          }
+          last = m.index + m[0].length;
+        }
+        if (last < src.length) prev.appendChild(document.createTextNode(src.slice(last)));
+
+        this.paintFields(c);
+        this.paintMeta(c, insts, metas);
+        this.wireRun(c, insts);
+
+        const editBtn = document.getElementById("editBtn");
+        if (editBtn) editBtn.href = "add.html?id=" + encodeURIComponent(c.id);
+        const pubBtn = document.getElementById("pubBtn");
+        if (pubBtn) pubBtn.href = "publish.html?id=" + encodeURIComponent(c.id);
+        const dlBtn = document.getElementById("dlBtn");
+        if (dlBtn) dlBtn.addEventListener("click", () => this.download(c));
+      },
+
+      indexOfInst(insts, key, occ) {
+        let seen = 0;
+        for (let i = 0; i < insts.length; i++) {
+          if (insts[i].key === key && ++seen === occ) return i;
+        }
+        return -1;
+      },
+
+      paintFields(c) {
+        const dl = document.getElementById("dfields");
+        dl.innerHTML = "";
+        const rows = [
+          ["Working directory", c.cwd || "C:\\projects\\app"],
+          ["Ask mode", (c.askMode || "every") === "once" ? "Once, then remember" : "Every time"],
+          ["ID", c.id],
+          ["Source", CC.originOf(c) + (c.fromHub ? " · " + c.fromHub : "")],
+        ];
+        rows.forEach(([k, v]) => {
+          const wrap = document.createElement("div");
+          const dt = document.createElement("dt");
+          dt.textContent = k;
+          const dd = document.createElement("dd");
+          dd.textContent = v;
+          wrap.appendChild(dt);
+          wrap.appendChild(dd);
+          dl.appendChild(wrap);
+        });
+      },
+
+      paintMeta(c, insts, metas) {
+        const g = CC.G();
+        const box = document.getElementById("mrows");
+        box.innerHTML = "";
+        const mc = document.getElementById("mcount");
+        if (mc) mc.textContent = insts.length ? insts.length + (insts.length === 1 ? " input" : " inputs") : "";
+        insts.forEach((v, i) => {
+          const sv = metas[i];
+          const row = CC.el("div", "mrow");
+          const top = CC.el("div", "vmeta");
+          top.appendChild(CC.el("span", null, v.token));
+          top.appendChild(CC.el("span", "vpill", v.type));
+          if (v.total > 1) top.appendChild(CC.el("span", "ocpill", v.occ + " of " + v.total));
+          if (v.auto) top.appendChild(CC.el("span", "apill", "auto"));
+          const ex = g.exampleFor(v, sv);
+          top.appendChild(CC.el("span", "vex", "→ " + (ex === "" ? "(empty)" : ex)));
+          row.appendChild(top);
+          const lab = CC.el("div", "mlabel");
+          lab.appendChild(CC.el("strong", null, CC.metaLabel(v, sv)));
+          const d = sv && sv.description && String(sv.description).trim() !== "" ? String(sv.description).trim() : "";
+          lab.appendChild(CC.el("span", null, d === "" ? "No description yet." : d));
+          row.appendChild(lab);
+          if (["select", "radio", "buttongroup", "multiselect", "license"].includes(v.type)) {
+            const opts = (sv && sv.options && sv.options.length) ? sv.options
+              : (v.optionsArr || []).map((o) => ({ value: o, label: o, description: "" }));
+            if (opts.length) {
+              const t = document.createElement("table");
+              t.className = "optable";
+              const tr = document.createElement("tr");
+              ["Option", "Label", "Description"].forEach((h) => {
+                const th = document.createElement("th");
+                th.textContent = h;
+                tr.appendChild(th);
+              });
+              t.appendChild(tr);
+              opts.forEach((o) => {
+                const r = document.createElement("tr");
+                const c1 = document.createElement("td");
+                c1.className = "mono";
+                c1.textContent = o.value;
+                const c2 = document.createElement("td");
+                c2.textContent = o.label || o.value;
+                const c3 = document.createElement("td");
+                c3.textContent = o.description || "";
+                r.appendChild(c1);
+                r.appendChild(c2);
+                r.appendChild(c3);
+                t.appendChild(r);
+              });
+              row.appendChild(t);
+            }
+          }
+          box.appendChild(row);
+        });
+      },
+
+      async refreshPublished(c, pubBadge) {
+        try {
+          const queue = await CC.B().publishQueue();
+          const hit = (queue || []).find((r) => r && (r.commandId === c.id));
+          if (hit) {
+            pubBadge.textContent = "published ✓";
+            pubBadge.className = "badge badge-pub";
+            const ps = document.getElementById("pubStatus");
+            if (ps) ps.textContent = "Status: " + (hit.status || "pending-review");
+          }
+        } catch (e) {
+          console.warn("publishQueue failed", e);
+        }
+      },
+
+      wireRun(c, insts) {
+        const g = CC.G();
+        const rrows = document.getElementById("rrows");
+        const rerr = document.getElementById("rerr");
+        const runBtn = document.getElementById("runBtn");
+        const runStatus = document.getElementById("runStatus");
+        const rterm = document.getElementById("rterm");
+        const rbody = document.getElementById("rbody");
+        const rdot = document.getElementById("rdot");
+        const rtname = document.getElementById("rtname");
+        if (rtname) rtname.textContent = c.name || "";
+        const rc = document.getElementById("rcount");
+        if (rc) rc.textContent = insts.length ? insts.length + (insts.length === 1 ? " input" : " inputs") : "";
+        const runEmpty = document.getElementById("runEmpty");
+        if (runEmpty) runEmpty.hidden = insts.length > 0;
+        CC.wireTermActions(document.getElementById("detail"));
+        runBtn.setAttribute("data-run", "");
+        const getters = insts.map((v) => {
+          const used = new Set();
+          const meta = CC.matchMeta(c.variables, v, used);
+          let pre = meta && meta.example !== undefined && meta.example !== "" ? String(meta.example) : undefined;
+          if (pre === undefined) pre = (v.auto && !v.default) ? g.ccAutoGenerate(v) || "" : g.exampleFor(v, meta);
+          return CC.buildVarControl(rrows, v, pre || "", meta, {
+            regen: (t) => g.ccAutoGenerate(t),
+            onInput: () => { rerr.hidden = true; },
+          });
+        });
+        CC.gateScope(document.getElementById("detail"));
+        // Prefill saved values for ask-once commands.
+        if ((c.askMode || "every") === "once") {
+          CC.B().getValues(c.id).then((sv) => {
+            if (!sv) return;
+            getters.forEach((gt) => {
+              const got = (gt.v.iid in sv) ? sv[gt.v.iid] : sv[gt.v.key];
+              if (got !== undefined) {
+                try {
+                  if (gt.kind === "checkbox") gt.el.checked = got !== "";
+                  else gt.el.value = got;
+                  CC.safeValidate(gt.el);
+                } catch (e) { /* best effort */ }
+              }
+            });
+          }).catch(console.error);
+        }
+        runBtn.addEventListener("click", async () => {
+          const r = CC.showBad(rerr, getters);
+          if (r.bad) return;
+          if ((c.askMode || "every") === "once") {
+            try { await CC.B().saveValues(c.id, r.vals); } catch (e) { console.error(e); }
+          }
+          const line = g.renderCmd(c.cmd, r.vals);
+          if (line.includes("{{")) {
+            rerr.textContent = "A value is still missing — fill every input.";
+            rerr.hidden = false;
+            return;
+          }
+          await CC.runFlow({
+            commandId: c.id, shell: CC.shellFor(c.id), cwd: c.cwd || "C:\\projects\\app",
+            line, status: runStatus, body: rbody, dot: rdot,
+            buttons: [runBtn], scope: document.getElementById("detail"),
+          });
+        });
+      },
+
+      async download(c) {
+        let doc = null;
+        try {
+          doc = await CC.B().publishExport(c.id);
+        } catch (e) {
+          console.error("publishExport failed", e);
+        }
+        if (!doc) return;
+        const blob = new Blob([JSON.stringify(doc, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "command-" + String(c.id).replace(/[^a-zA-Z0-9_-]+/g, "-") + ".metadata.json";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          try { URL.revokeObjectURL(a.href); } catch (e) { /* noop */ }
+          a.remove();
+        }, 1000);
+      },
+    };
+  }
+
+  document.addEventListener("alpine:init", function () {
+    const Alpine = window.Alpine;
+    if (!Alpine || typeof Alpine.data !== "function") return;
+    try {
+      Alpine.data("ccDetail", detailData);
+    } catch (e) {
+      console.error("ccDetail registration failed", e);
+    }
+  });
+})();
+
+/* ── ccLearn — task E5 (reference rows from the live registry) ──────────────
+ * Rows render client-side from window.CCGrammar.CC_INPUT_TYPES (the same
+ * table Deno tests), so the page cannot drift from the 30-row table.
+ * Retired names are never listed. build-learn.ts guards the skeleton.
+ */
+(function () {
+  "use strict";
+  var CC = window.__cc;
+
+  // Design filter groups (learn.html #w values) → registry widgets.
+  var GROUP_OF = {
+    file: "file",
+    text: "text",
+    textarea: "text",
+    keyvalue: "text",
+    number: "number",
+    date: "date",
+    time: "date",
+    datetime: "date",
+    color: "date",
+    password: "date",
+    select: "choice",
+    radio: "choice",
+    buttongroup: "choice",
+    multiselect: "choice",
+    license: "choice",
+    checkbox: "flag",
+    switch: "flag",
+    range: "range",
+  };
+  var GROUP_LABEL = {
+    file: "File",
+    text: "Text",
+    number: "Number",
+    date: "Date · Color · Secret",
+    choice: "Choice",
+    flag: "Flag",
+    range: "Range",
+  };
+  var GROUP_ORDER = ["file", "text", "number", "date", "choice", "flag", "range"];
+
+  function learnData() {
+    return {
+      rows: [],
+      ready: false,
+
+      init() {
+        this.ready = true;
+        window.__ccMounted = window.__ccMounted || {};
+        window.__ccMounted.learn = true;
+        this.build();
+        const q = document.getElementById("q");
+        const w = document.getElementById("w");
+        if (q) q.addEventListener("input", () => this.paint());
+        if (w) w.addEventListener("change", () => this.paint());
+        this.paint();
+      },
+
+      build() {
+        const g = CC.G();
+        const tbody = document.getElementById("rows");
+        tbody.innerHTML = "";
+        this.rows = [];
+        for (const row of g.CC_INPUT_TYPES) {
+          const token = g.parseToken(row[0]);
+          if (!token) continue;
+          const tr = document.createElement("tr");
+          tr.dataset.group = GROUP_OF[token.type] || "text";
+          tr.dataset.search = (row[0] + " " + (row[2] || "") + " " + token.type).toLowerCase();
+          // Option cell: token + label.
+          const opt = document.createElement("td");
+          const code = document.createElement("code");
+          code.textContent = "{{" + row[0] + (row[3] ? ":" + row[3] : "") + "}}";
+          opt.appendChild(code);
+          opt.appendChild(document.createElement("br"));
+          opt.appendChild(document.createTextNode(row[2] || ""));
+          tr.appendChild(opt);
+          // See-it cell: live control from the shared descriptor.
+          const see = document.createElement("td");
+          const desc = g.renderToken(token, g.exampleFor(token, null), null);
+          if (desc) {
+            const input = document.createElement("e-input");
+            input.setAttribute("type", desc.type);
+            input.setAttribute("name", token.iid);
+            input.setAttribute("aria-label", row[2] || row[0]);
+            input.setAttribute("validate-on", "");
+            if (desc.format) input.setAttribute("format", desc.format);
+            if (desc.min !== undefined) input.setAttribute("min", String(desc.min));
+            if (desc.max !== undefined) input.setAttribute("max", String(desc.max));
+            if (desc.step !== undefined) input.setAttribute("step", String(desc.step));
+            if (token.type === "password") input.setAttribute("action-button", "show");
+            for (const o of desc.options || []) {
+              const c = document.createElement(o.tag);
+              c.setAttribute("value", o.value);
+              c.textContent = o.label || o.value;
+              if (o.value === desc.value || (o.tag !== "e-checkbox-option" && !desc.value)) {
+                if (o.tag !== "e-checkbox-option") c.setAttribute("selected", "");
+              }
+              input.appendChild(c);
+            }
+            see.appendChild(input);
+            if (desc.value) {
+              try { input.setAttribute("value", desc.value); } catch (e) { /* noop */ }
+            }
+            input.addEventListener("hook:onValidate", () => {
+              CC.trackValidity(input, input.valid);
+            });
+          } else {
+            see.appendChild(document.createTextNode("—"));
+          }
+          tr.appendChild(see);
+          // Use cell: copy button.
+          const use = document.createElement("td");
+          const cp = document.createElement("button");
+          cp.type = "button";
+          cp.className = "btn btn-g";
+          cp.textContent = "Copy";
+          cp.setAttribute("aria-label", "Copy " + row[0]);
+          cp.addEventListener("click", () => {
+            const tok = "{{" + row[0] + (row[3] ? ":" + row[3] : "") + "}}";
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(tok).catch(console.error);
+            }
+            cp.textContent = "Copied ✓";
+            setTimeout(() => { cp.textContent = "Copy"; }, 1200);
+          });
+          use.appendChild(cp);
+          tr.appendChild(use);
+          tbody.appendChild(tr);
+          this.rows.push(tr);
+        }
+        // Group header rows (hidden with their group when filtered empty).
+        const byGroup = {};
+        this.rows.forEach((tr) => {
+          (byGroup[tr.dataset.group] = byGroup[tr.dataset.group] || []).push(tr);
+        });
+        GROUP_ORDER.forEach((grp) => {
+          const members = byGroup[grp] || [];
+          if (!members.length) return;
+          const hr = document.createElement("tr");
+          hr.className = "group-header";
+          hr.dataset.groupHeader = grp;
+          const td = document.createElement("td");
+          td.colSpan = 3;
+          td.textContent = GROUP_LABEL[grp] || grp;
+          hr.appendChild(td);
+          tbody.insertBefore(hr, members[0]);
+        });
+      },
+
+      paint() {
+        const q = (document.getElementById("q") || {}).value || "";
+        const w = (document.getElementById("w") || {}).value || "";
+        const needle = q.trim().toLowerCase();
+        let shown = 0;
+        this.rows.forEach((tr) => {
+          const okQ = !needle || tr.dataset.search.includes(needle);
+          const okW = !w || tr.dataset.group === w;
+          const show = okQ && okW;
+          tr.hidden = !show;
+          if (show) shown++;
+        });
+        // Hide group headers whose group is fully hidden.
+        document.querySelectorAll("#rows tr.group-header").forEach((hr) => {
+          const grp = hr.dataset.groupHeader;
+          const anyShown = this.rows.some((tr) => tr.dataset.group === grp && !tr.hidden);
+          hr.hidden = !anyShown;
+        });
+        const count = document.getElementById("count");
+        if (count) count.textContent = shown === 1 ? "1 option" : shown + " options";
+        const empty = document.getElementById("empty");
+        if (empty) empty.hidden = shown !== 0;
+      },
+    };
+  }
+
+  document.addEventListener("alpine:init", function () {
+    const Alpine = window.Alpine;
+    if (!Alpine || typeof Alpine.data !== "function") return;
+    try {
+      Alpine.data("ccLearn", learnData);
+    } catch (e) {
+      console.error("ccLearn registration failed", e);
+    }
+  });
+})();
+
+/* ── ccAuthor — task E4 (editor, preview, metadata, save/edit) ──────────────
+ * CodeMirror 6 mounts over #cmd when window.__ccCM is available (cm-boot.js);
+ * the #cmd textarea is the offline fallback. cmdText() reads whichever lives.
+ */
+(function () {
+  "use strict";
+  var CC = window.__cc;
+
+  function authorData() {
+    return {
+      editingId: null,
+      cmView: null,
+      meta: {}, // (iid|key) → {label, description, options:{value:{label,description}}}
+      vals: {}, // iid → preview value (persisted as example on save)
+      lastKeys: "",
+      ready: false,
+
+      async init() {
+        this.ready = true;
+        window.__ccMounted = window.__ccMounted || {};
+        window.__ccMounted.author = true;
+        await CC.refreshShells();
+        await CC.loadShellChoices();
+        this.readEditingId();
+        this.tryMountCM();
+        // Late CM arrival (slow module fetch) upgrades the textarea once.
+        document.addEventListener("cc:cm-ready", () => this.tryMountCM(), { once: true });
+        const cmd = document.getElementById("cmd");
+        if (cmd) cmd.addEventListener("input", () => this.paint());
+        const cwd = document.getElementById("cwd");
+        if (cwd) cwd.addEventListener("input", () => this.paintPreview());
+        const form = document.getElementById("f");
+        if (form) form.addEventListener("submit", (e) => this.save(e));
+        const cwdbtn = document.getElementById("cwdbtn");
+        if (cwdbtn) {
+          cwdbtn.addEventListener("click", async () => {
+            try {
+              const picked = await CC.B().pickFolder();
+              if (picked && cwd) {
+                cwd.value = picked;
+                this.paintPreview();
+              }
+            } catch (e) {
+              console.error("pickFolder failed", e);
+            }
+          });
+        }
+        if (this.editingId) await this.prefill();
+        this.paint();
+      },
+
+      readEditingId() {
+        let id = null;
+        try {
+          id = new URLSearchParams(location.search).get("id");
+        } catch (e) { id = null; }
+        if (id) {
+          this.editingId = id;
+          document.title = "Edit command — Command Center";
+          const ft = document.getElementById("formTitle");
+          if (ft) ft.textContent = "Edit command";
+          const fl = document.getElementById("formLede");
+          if (fl) fl.textContent = "Update the reusable command. Fields marked * are required.";
+          this.addDuplicateButton();
+        }
+      },
+
+      addDuplicateButton() {
+        const saveBtn = document.getElementById("saveBtn");
+        if (!saveBtn || document.getElementById("dupBtn")) return;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.id = "dupBtn";
+        b.className = "btn btn-g";
+        b.textContent = "Duplicate";
+        b.addEventListener("click", async () => {
+          try {
+            const r = await CC.B().duplicateCommand(this.editingId);
+            location.href = "add.html?id=" + encodeURIComponent(r.id);
+          } catch (e) {
+            console.error("duplicate failed", e);
+          }
+        });
+        saveBtn.after(b);
+      },
+
+      tryMountCM() {
+        if (this.cmView) return;
+        const boot = window.__ccCM;
+        const textarea = document.getElementById("cmd");
+        if (!boot || !textarea) return;
+        try {
+          const view = boot.mount(textarea, () => this.paint());
+          if (view) {
+            this.cmView = view;
+            window.__cmView = view;
+          }
+        } catch (e) {
+          console.warn("CodeMirror mount failed, keeping textarea", e);
+        }
+      },
+
+      cmdText() {
+        const textarea = document.getElementById("cmd");
+        const boot = window.__ccCM;
+        if (boot) {
+          try { return boot.read(textarea, this.cmView); } catch (e) { /* fall through */ }
+        }
+        if (this.cmView && this.cmView.state) {
+          try { return this.cmView.state.doc.toString(); } catch (e2) { /* fall through */ }
+        }
+        return textarea ? textarea.value : "";
+      },
+
+      focusCmd() {
+        const boot = window.__ccCM;
+        const textarea = document.getElementById("cmd");
+        if (boot) boot.focus(this.cmView, textarea);
+        else if (textarea) textarea.focus();
+      },
+
+      async prefill() {
+        let found = null;
+        try {
+          found = await CC.B().getCommand(this.editingId);
+        } catch (e) {
+          console.error("getCommand failed", e);
+        }
+        if (!found) return;
+        // Restore author metadata + preview values FIRST: pushing the template
+        // into the mounted editor below fires a synchronous paint, which must
+        // already see the restored metadata.
+        for (const m of found.variables || []) {
+          const k = (m && (m.iid || m.key)) || "";
+          if (!k) continue;
+          const entry = {
+            label: m.label || "",
+            description: m.description || "",
+            options: {},
+          };
+          for (const o of m.options || []) {
+            entry.options[o.value] = { label: o.label || "", description: o.description || "" };
+          }
+          this.meta[k] = entry;
+          if (m.example !== undefined && m.example !== "") this.vals[k] = String(m.example);
+        }
+        const set = (id, v) => {
+          const n = document.getElementById(id);
+          if (n) n.value = v || "";
+        };
+        set("name", found.name);
+        set("desc", found.desc);
+        set("cwd", found.cwd);
+        set("tag", (found.tags && found.tags[0]) || found.tag || "custom");
+        const template = found.cmd || "";
+        const textarea = document.getElementById("cmd");
+        if (textarea) textarea.value = template;
+        if (this.cmView) {
+          // Push the loaded template into the mounted editor.
+          try {
+            this.cmView.dispatch({
+              changes: { from: 0, to: this.cmView.state.doc.length, insert: template },
+            });
+          } catch (e) {
+            console.warn("CM doc sync failed", e);
+          }
+        }
+        const radios = document.querySelectorAll('input[name="askmode"]');
+        radios.forEach((r) => {
+          r.checked = r.value === (found.askMode || "every");
+        });
+        // Force the varlist to (re)build against the restored metadata even
+        // if an intermediate paint already ran on the same token set.
+        this.lastKeys = "";
+      },
+
+      paint() {
+        this.paintPreview();
+        this.paintVarlist();
+      },
+
+      cwdDisplay() {
+        const cwd = document.getElementById("cwd");
+        const v = cwd ? cwd.value.trim() : "";
+        return v || "C:\\projects\\app";
+      },
+
+      paintPreview() {
+        const g = CC.G();
+        const prev = document.getElementById("prev");
+        const raw = this.cmdText();
+        const t = raw.trim();
+        const dir = this.cwdDisplay();
+        prev.innerHTML = "";
+        const ps = document.createElement("span");
+        ps.className = "dim";
+        ps.textContent = "PS ";
+        const pwd = document.createElement("span");
+        pwd.className = "pwd";
+        pwd.textContent = dir;
+        const gt = document.createElement("span");
+        gt.className = "dim";
+        gt.textContent = "> ";
+        prev.appendChild(ps);
+        prev.appendChild(pwd);
+        prev.appendChild(gt);
+        if (!t) {
+          const hint = document.createElement("span");
+          hint.className = "dim";
+          hint.textContent = "your command appears here…";
+          prev.appendChild(hint);
+          return;
+        }
+        const re = /\{\{\s*([^{}]*?)\s*\}\}/g;
+        let last = 0, m;
+        const occCounts = {};
+        while ((m = re.exec(raw))) {
+          if (m.index > last) prev.appendChild(document.createTextNode(raw.slice(last, m.index)));
+          const p = g.parseToken(m[1]);
+          if (p) {
+            const occ = (occCounts[p.key] || 0) + 1;
+            occCounts[p.key] = occ;
+            const iid = g.ccInstanceKey(p.key, occ);
+            const shown = (iid in this.vals) ? this.vals[iid]
+              : (p.key in this.vals) ? this.vals[p.key]
+              : ((p.auto && !p.default) ? (g.ccAutoGenerate(p) || "") : g.exampleFor(p, null));
+            const chip = document.createElement("span");
+            chip.className = "ex";
+            chip.textContent = shown;
+            chip.title = p.token;
+            prev.appendChild(chip);
+          } else {
+            prev.appendChild(document.createTextNode(m[0]));
+          }
+          last = m.index + m[0].length;
+        }
+        if (last < raw.length) prev.appendChild(document.createTextNode(raw.slice(last)));
+      },
+
+      metaFor(v) {
+        const store = this.meta;
+        const k = (v && (v.iid || v.key)) || "";
+        let m = store[k];
+        if (!m && v && v.iid && v.iid !== v.key && store[v.key]) {
+          m = store[v.key];
+          store[k] = m;
+        }
+        if (!m) {
+          let lbl = CC.humanize(v.name);
+          if (v.total > 1) lbl += " " + v.occ;
+          if (v.auto) lbl += " (auto)";
+          m = { label: lbl, description: "", options: {} };
+          store[k] = m;
+        }
+        if (!m.options) m.options = {};
+        return m;
+      },
+
+      paintVarlist() {
+        const g = CC.G();
+        const list = document.getElementById("varlist");
+        const rows = document.getElementById("varrows");
+        const ask = document.getElementById("fw-ask");
+        const insts = g.parseVarInstances(this.cmdText());
+        const keys = insts.map((v) => v.iid).join("|");
+        if (keys !== this.lastKeys) {
+          this.lastKeys = keys;
+          rows.innerHTML = "";
+          insts.forEach((v) => this.buildAuthorRow(rows, v));
+        }
+        const show = insts.length > 0;
+        list.hidden = !show;
+        if (ask) ask.hidden = !show;
+      },
+
+      buildAuthorRow(rows, v) {
+        const g = CC.G();
+        const meta = this.metaFor(v);
+        const ik = v.iid || v.key;
+        if (!Object.prototype.hasOwnProperty.call(this.vals, ik)) {
+          this.vals[ik] = (v.auto && !v.default) ? (g.ccAutoGenerate(v) || "") : g.exampleFor(v, meta.example ? { example: meta.example } : null);
+        }
+        const row = document.createElement("div");
+        row.className = "vrow";
+        // Value control (shared input layer + regen).
+        const holder = document.createElement("div");
+        row.appendChild(holder);
+        const vex = document.createElement("div");
+        vex.className = "vex";
+        row.appendChild(vex);
+        const commit = (val) => {
+          this.vals[ik] = val;
+          this.paintPreview();
+          vex.textContent = "→ " + (val === "" ? "(empty)" : val);
+        };
+        const getter = CC.buildVarControl(holder, v, this.vals[ik], meta, {
+          regen: (t) => g.ccAutoGenerate(t),
+          onInput: () => {
+            try { commit(getter.get()); } catch (e) { /* control not ready */ }
+          },
+        });
+        // The shared builder wraps its control in div.vrow; the author row
+        // already carries .vrow, so drop the nested one (no double styling).
+        const nested = holder.querySelector(":scope > .vrow");
+        if (nested) nested.classList.remove("vrow");
+        // Seed the → readout without overwriting the stored value.
+        try {
+          const cur = getter.get();
+          vex.textContent = "→ " + (cur === "" ? "(empty)" : cur);
+        } catch (e) { /* noop */ }
+        // Metadata editors (label / description / per-option labels).
+        const wrap = document.createElement("div");
+        wrap.className = "mwrap";
+        const grid = document.createElement("div");
+        grid.className = "mgrid";
+        const lab = document.createElement("input");
+        lab.type = "text";
+        lab.value = meta.label || "";
+        lab.placeholder = "Label — e.g. " + CC.humanize(v.name);
+        lab.setAttribute("aria-label", "Label for " + v.token);
+        lab.maxLength = 60;
+        lab.addEventListener("input", () => {
+          meta.label = lab.value;
+          this.paintPreview();
+        });
+        const des = document.createElement("input");
+        des.type = "text";
+        des.value = meta.description || "";
+        des.placeholder = "Description — e.g. value for " + v.token;
+        des.setAttribute("aria-label", "Description for " + v.token);
+        des.addEventListener("input", () => { meta.description = des.value; });
+        grid.appendChild(lab);
+        grid.appendChild(des);
+        wrap.appendChild(grid);
+        if (["select", "radio", "buttongroup", "multiselect", "license"].includes(v.type)) {
+          const arr = (v.optionsArr && v.optionsArr.length ? v.optionsArr : []);
+          arr.forEach((optVal) => {
+            const orow = document.createElement("div");
+            orow.className = "mgrid";
+            const oval = document.createElement("span");
+            oval.className = "mono";
+            oval.textContent = optVal;
+            const olab = document.createElement("input");
+            olab.type = "text";
+            olab.value = ((meta.options[optVal] || {}).label) || "";
+            olab.placeholder = "Label — defaults to " + optVal;
+            olab.setAttribute("aria-label", "Label for option " + optVal);
+            const odesc = document.createElement("input");
+            odesc.type = "text";
+            odesc.value = ((meta.options[optVal] || {}).description) || "";
+            odesc.placeholder = "Description (optional)";
+            odesc.setAttribute("aria-label", "Description for option " + optVal);
+            olab.addEventListener("input", () => {
+              meta.options[optVal] = meta.options[optVal] || {};
+              meta.options[optVal].label = olab.value;
+            });
+            odesc.addEventListener("input", () => {
+              meta.options[optVal] = meta.options[optVal] || {};
+              meta.options[optVal].description = odesc.value;
+            });
+            orow.appendChild(oval);
+            orow.appendChild(olab);
+            orow.appendChild(odesc);
+            wrap.appendChild(orow);
+          });
+        }
+        row.appendChild(wrap);
+        rows.appendChild(row);
+      },
+
+      async save(e) {
+        e.preventDefault();
+        const g = CC.G();
+        const nameEl = document.getElementById("name");
+        const name = nameEl.value.trim();
+        const template = this.cmdText().trim();
+        const okN = name.length > 1, okC = template.length > 1;
+        document.getElementById("fw-name").classList.toggle("invalid", !okN);
+        document.getElementById("fw-cmd").classList.toggle("invalid", !okC);
+        if (!okN) { nameEl.focus(); return; }
+        if (!okC) { this.focusCmd(); return; }
+        const vars = g.parseVarInstances(this.cmdText()).map((v) => {
+          const out = {
+            key: v.key, iid: v.iid, occ: v.occ, total: v.total,
+            type: v.type, name: v.name, params: v.params, auto: v.auto,
+            default: v.default, token: v.token,
+          };
+          if (v.checkedDef !== null && v.checkedDef !== undefined) out.checkedDef = v.checkedDef;
+          if (v.optionsArr) out.optionsArr = v.optionsArr.slice();
+          if (v.rangeDef) out.rangeDef = Object.assign({}, v.rangeDef);
+          const m = this.meta[(v.iid || v.key)] || this.meta[v.key];
+          if (m) {
+            out.label = (m.label || "").trim();
+            out.description = (m.description || "").trim();
+            if (["select", "radio", "buttongroup", "multiselect", "license"].includes(v.type)) {
+              const arr = v.optionsArr && v.optionsArr.length ? v.optionsArr : [];
+              out.options = arr.map((o) => {
+                const om = (m.options || {})[o] || {};
+                return { value: o, label: (om.label || "").trim() || o, description: (om.description || "").trim() };
+              });
+            }
+          }
+          const vs = this.vals[(v.iid || v.key)];
+          if (vs !== undefined) out.example = vs;
+          return out;
+        });
+        const picked = document.querySelector('input[name="askmode"]:checked');
+        const askMode = vars.length && picked ? picked.value : "every";
+        const cwdEl = document.getElementById("cwd");
+        const dir = (cwdEl ? cwdEl.value.trim() : "") || "";
+        const descEl = document.getElementById("desc");
+        const descText = (descEl ? descEl.value.trim() : "") || "Custom command added by user.";
+        const tagEl = document.getElementById("tag");
+        const tagText = (tagEl && tagEl.value.trim()) || "custom";
+        const payload = {
+          command: template,
+          title: name,
+          description: descText,
+          source_folder: dir,
+          tags: [tagText],
+          variables: vars,
+          askMode,
+          custom: true,
+        };
+        if (this.editingId) payload.id = this.editingId;
+        let id = this.editingId;
+        try {
+          const r = await CC.B().saveCommand(payload);
+          id = r.id;
+        } catch (err) {
+          console.error("save failed", err);
+          const fw = document.getElementById("fw-cmd");
+          if (fw) fw.classList.add("invalid");
+          return;
+        }
+        const ok = document.getElementById("ok");
+        if (ok) ok.style.display = "block";
+        location.href = "command.html?id=" + encodeURIComponent(id);
+      },
+
+      focusCmd() {
+        const boot = window.__ccCM;
+        const textarea = document.getElementById("cmd");
+        if (boot) boot.focus(this.cmView, textarea);
+        else if (textarea) textarea.focus();
+      },
+    };
+  }
+
+  document.addEventListener("alpine:init", function () {
+    const Alpine = window.Alpine;
+    if (!Alpine || typeof Alpine.data !== "function") return;
+    try {
+      Alpine.data("ccAuthor", authorData);
+    } catch (e) {
+      console.error("ccAuthor registration failed", e);
+    }
+  });
 })();
