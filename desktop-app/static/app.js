@@ -582,6 +582,7 @@
       b.onclick = () => { doCancel(); };
     });
     let res;
+    window.__ccDirty.runActive = true;
     try {
       const resP = B().run({ commandId: o.commandId, shell: o.shell, cwd: o.cwd, line: o.line });
       let cursor = 0;
@@ -612,9 +613,11 @@
       status.className = "status stopped";
       if (o.dot) o.dot.className = "dot stopped";
       restoreRunButtons(o.buttons);
+      window.__ccDirty.runActive = false;
       return { ok: false, error: e };
     }
     restoreRunButtons(o.buttons);
+    window.__ccDirty.runActive = false;
     const secs = ((res.durationMs || 0) / 1000).toFixed(1);
     if (res.cancelled || cancelled) {
       status.textContent = "Cancelled";
@@ -642,6 +645,17 @@
   }
 
   /* Expose the shared core to later components in this file. */
+  window.__ccDirty = { runActive: false, authorDirty: false };
+  // Close guard (task G2): while a run is active or an authoring form has
+  // unsaved changes, closing shows the native confirm dialog. Deno desktop
+  // 2.9.6 surfaces no window-close event to main.ts, so the webview
+  // beforeunload path is the native mechanism (preventDefault + returnValue).
+  window.addEventListener("beforeunload", (e) => {
+    if (window.__ccDirty.runActive || window.__ccDirty.authorDirty) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
   window.__cc = {
     $, el, on, sleep, B, G,
     SHELL_PROMPTS, SHELL_ORDER, allowedShells,
@@ -1656,12 +1670,22 @@
         this.tryMountCM();
         // Late CM arrival (slow module fetch) upgrades the textarea once.
         document.addEventListener("cc:cm-ready", () => this.tryMountCM(), { once: true });
+        const markDirty = () => {
+          if (!this._loading) window.__ccDirty.authorDirty = true;
+        };
         const cmd = document.getElementById("cmd");
         if (cmd) cmd.addEventListener("input", () => this.paint());
         const cwd = document.getElementById("cwd");
         if (cwd) cwd.addEventListener("input", () => this.paintPreview());
         const form = document.getElementById("f");
-        if (form) form.addEventListener("submit", (e) => this.save(e));
+        if (form) {
+          form.addEventListener("submit", (e) => this.save(e));
+          // Any user edit (fields, radios, variable controls) dirties the form.
+          // Programmatic prefill assigns .value directly (no events) — safe.
+          for (const t of ["input", "change", "e:input", "e:change"]) {
+            form.addEventListener(t, markDirty);
+          }
+        }
         const cwdbtn = document.getElementById("cwdbtn");
         if (cwdbtn) {
           cwdbtn.addEventListener("click", async () => {
@@ -1721,7 +1745,10 @@
         const textarea = document.getElementById("cmd");
         if (!boot || !textarea) return;
         try {
-          const view = boot.mount(textarea, () => this.paint());
+          const view = boot.mount(textarea, () => {
+            if (!this._loading) window.__ccDirty.authorDirty = true;
+            this.paint();
+          });
           if (view) {
             this.cmView = view;
             window.__cmView = view;
@@ -1752,10 +1779,13 @@
 
       async prefill() {
         let found = null;
+        this._loading = true;
         try {
           found = await CC.B().getCommand(this.editingId);
         } catch (e) {
           console.error("getCommand failed", e);
+        } finally {
+          if (!found) this._loading = false;
         }
         if (!found) return;
         // Restore author metadata + preview values FIRST: pushing the template
@@ -1803,6 +1833,7 @@
         // Force the varlist to (re)build against the restored metadata even
         // if an intermediate paint already ran on the same token set.
         this.lastKeys = "";
+        this._loading = false;
       },
 
       paint() {
@@ -2066,6 +2097,7 @@
         }
         const ok = document.getElementById("ok");
         if (ok) ok.style.display = "block";
+        window.__ccDirty.authorDirty = false;
         location.href = "command.html?id=" + encodeURIComponent(id);
       },
 
