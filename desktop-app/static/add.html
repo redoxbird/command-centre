@@ -28,6 +28,7 @@
 <div class="field" style="min-width:180px"><label for="tag">Tag <span class="hint">— grouping label, defaults to custom</span></label><input id="tag" maxlength="40" placeholder="e.g. video, git, ship" autocomplete="off" /></div>
 <div class="field" style="min-width:180px"><label for="cwd">Working directory <span class="hint">— optional</span></label><div class="cwd-row"><input id="cwd" placeholder="e.g. C:\projects\app" autocomplete="off" spellcheck="false" /><button class="btn btn-g" type="button" id="cwdbtn">Browse…</button><input type="file" id="cwdfiles" webkitdirectory directory multiple hidden /></div></div>
 <div class="field"><label>Live preview</label><div class="cmd-preview" id="prev" role="status" aria-live="polite"><span class="dim">$ your command appears here…</span></div></div>
+<div class="verr" id="formErr" role="alert" hidden></div>
 <div class="actions">
 <button class="btn btn-p" id="saveBtn" type="submit">Save command</button>
 <a class="btn btn-g" href="index.html">Cancel</a>

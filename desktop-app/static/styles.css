@@ -450,6 +450,8 @@ body[data-page="author"] .field input, body[data-page="author"] .field select, b
 body[data-page="author"] .field textarea {font-family:var(--font-mono);font-size:12px;min-height:64px;resize:vertical;}
 body[data-page="author"] .field input:focus, body[data-page="author"] .field select:focus, body[data-page="author"] .field textarea:focus {border-color:var(--accent);box-shadow:var(--focus-ring);}
 body[data-page="author"] .err {font-size:12px;color:var(--danger);display:none;}
+body[data-page="author"] .verr {font-size:12px;color:var(--danger);margin-bottom:8px;}
+body[data-page="author"] .verr[hidden] {display:none;}
 body[data-page="author"] .field.invalid input, body[data-page="author"] .field.invalid textarea {border-color:var(--danger);}
 body[data-page="author"] .field.invalid .err {display:block;}
 body[data-page="author"] .cm-wrap {border:1px solid var(--border);border-radius:var(--radius);background:#fff;overflow:hidden;}

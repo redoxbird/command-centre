@@ -20,6 +20,46 @@
   function on(elm, ev, fn) {
     if (elm) elm.addEventListener(ev, fn);
   }
+  // Human message out of any thrown shape: backend rejections cross the
+  // CEF bridge as plain objects that do not always carry .message (which
+  // produced "Could not save: [object Object]"). Never return that string.
+  function errorMessage(e, fallback) {
+    const fb = fallback || "Unknown error";
+    if (e === null || e === undefined) return fb;
+    if (typeof e === "string") return e || fb;
+    if (typeof e.message === "string" && e.message) return e.message;
+    if (Array.isArray(e.issues) && e.issues.length) {
+      const parts = e.issues.map((i) => {
+        if (!i) return "";
+        if (typeof i.message === "string" && i.message) return i.message;
+        if (typeof i.code === "string") return i.code;
+        try {
+          const s = JSON.stringify(i);
+          return s === "{}" ? "" : s;
+        } catch (err2) {
+          return "";
+        }
+      }).filter(Boolean);
+      if (parts.length) return parts.join("; ");
+    }
+    if (e.error !== undefined && e.error !== null && e.error !== e) {
+      return errorMessage(e.error, fb);
+    }
+    try {
+      const keys = Object.keys(e);
+      if (keys.length) {
+        const bits = [];
+        for (const k of ["name", "code", "detail", "hint", "reason"]) {
+          if (typeof e[k] === "string" && e[k]) bits.push(k === "name" ? e[k] : k + ": " + e[k]);
+        }
+        if (bits.length) return bits.join(" · ");
+        const s = JSON.stringify(e);
+        if (s && s !== "{}") return s;
+      }
+    } catch (err3) { /* fall through */ }
+    const s = String(e);
+    return s && s !== "[object Object]" ? s : fb;
+  }
   function sleep(ms) {
     return new Promise((r) => setTimeout(r, ms));
   }
@@ -609,7 +649,7 @@
         if (pr && pr.lines) for (const l of pr.lines) termAppend(body, l.stream, l.text);
       } catch (e) { console.error(e); }
     } catch (e) {
-      status.textContent = String((e && e.message) || e);
+      status.textContent = CC.errorMessage(e, "Run failed");
       status.className = "status stopped";
       if (o.dot) o.dot.className = "dot stopped";
       restoreRunButtons(o.buttons);
@@ -657,7 +697,7 @@
     }
   });
   window.__cc = {
-    $, el, on, sleep, B, G,
+    $, el, on, sleep, B, G, errorMessage,
     SHELL_PROMPTS, SHELL_ORDER, allowedShells,
     refreshShells, loadShellChoices, shellFor, cycleShell, paintPrompt,
     shellChoice, shellLabel, shellIcon,
@@ -1675,6 +1715,8 @@
         };
         const cmd = document.getElementById("cmd");
         if (cmd) cmd.addEventListener("input", () => this.paint());
+        const nameEl = document.getElementById("name");
+        if (nameEl) nameEl.addEventListener("input", () => this.clearStaleFlags());
         const cwd = document.getElementById("cwd");
         if (cwd) cwd.addEventListener("input", () => this.paintPreview());
         const form = document.getElementById("f");
@@ -1839,6 +1881,21 @@
       paint() {
         this.paintPreview();
         this.paintVarlist();
+        this.clearStaleFlags();
+      },
+
+      // Drop field-error flags that the current values no longer deserve.
+      // Flags are only ever ADDED on submit; clearing here keeps the message
+      // honest while typing (CodeMirror or textarea alike) without nagging
+      // on first keystrokes.
+      clearStaleFlags() {
+        const nameEl = document.getElementById("name");
+        if (nameEl && nameEl.value.trim().length > 1) {
+          document.getElementById("fw-name").classList.remove("invalid");
+        }
+        if (this.cmdText().trim().length > 1) {
+          document.getElementById("fw-cmd").classList.remove("invalid");
+        }
       },
 
       cwdDisplay() {
@@ -2086,13 +2143,19 @@
         };
         if (this.editingId) payload.id = this.editingId;
         let id = this.editingId;
+        const formErr = document.getElementById("formErr");
+        if (formErr) formErr.hidden = true;
         try {
           const r = await CC.B().saveCommand(payload);
           id = r.id;
         } catch (err) {
           console.error("save failed", err);
-          const fw = document.getElementById("fw-cmd");
-          if (fw) fw.classList.add("invalid");
+          // The field values are valid here (checked above) — report the
+          // backend failure on the form, not on the command field.
+          if (formErr) {
+            formErr.textContent = "Could not save: " + CC.errorMessage(err);
+            formErr.hidden = false;
+          }
           return;
         }
         const ok = document.getElementById("ok");
