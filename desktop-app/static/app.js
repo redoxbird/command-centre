@@ -206,8 +206,16 @@
     return scope.querySelector(".term-body");
   }
   function termShow(scope) {
+    // Reveal the terminal the design way: .open on the .term itself (detail
+    // page rule) and on the enclosing card (commands page rule). Clearing the
+    // hidden attribute alone is not enough — both pages hide .term in CSS.
     const t = scope.querySelector(".term");
-    if (t) t.hidden = false;
+    if (t) {
+      t.hidden = false;
+      t.classList.add("open");
+    }
+    const card = scope.closest ? scope.closest(".cmd") : null;
+    if (card) card.classList.add("open");
   }
   function termAppend(body, stream, text) {
     const empty = body.querySelector(".term-empty");
@@ -241,8 +249,15 @@
         } else if (a === "clear") {
           termPlaceholder(body);
         } else if (a === "hide") {
+          // Hide the way termShow reveals: drop .open (the hidden attribute
+          // alone loses to the .open display rules).
           const t = scope.querySelector(".term");
-          if (t) t.hidden = true;
+          if (t) {
+            t.hidden = true;
+            t.classList.remove("open");
+          }
+          const card = scope.closest ? scope.closest(".cmd") : null;
+          if (card) card.classList.remove("open");
         }
       });
     });
@@ -612,7 +627,7 @@
     });
     status.textContent = "Running…";
     status.className = "status run";
-    if (o.dot) o.dot.className = "dot run";
+    if (o.dot) o.dot.classList.add("live");
     let cancelled = false;
     const doCancel = async () => {
       cancelled = true;
@@ -649,9 +664,9 @@
         if (pr && pr.lines) for (const l of pr.lines) termAppend(body, l.stream, l.text);
       } catch (e) { console.error(e); }
     } catch (e) {
-      status.textContent = CC.errorMessage(e, "Run failed");
+      status.textContent = errorMessage(e, "Run failed");
       status.className = "status stopped";
-      if (o.dot) o.dot.className = "dot stopped";
+      if (o.dot) o.dot.classList.remove("live");
       restoreRunButtons(o.buttons);
       window.__ccDirty.runActive = false;
       return { ok: false, error: e };
@@ -662,17 +677,17 @@
     if (res.cancelled || cancelled) {
       status.textContent = "Cancelled";
       status.className = "status stopped";
-      if (o.dot) o.dot.className = "dot stopped";
+      if (o.dot) o.dot.classList.remove("live");
       termNote(body, "— cancelled —");
     } else if (res.exitCode === 0) {
       status.textContent = "✓ exit 0 (" + secs + "s)";
       status.className = "status ok";
-      if (o.dot) o.dot.className = "dot ok";
+      if (o.dot) o.dot.classList.remove("live");
       termNote(body, "— exit 0 in " + secs + "s —");
     } else {
       status.textContent = "✗ exit " + res.exitCode;
       status.className = "status stopped";
-      if (o.dot) o.dot.className = "dot stopped";
+      if (o.dot) o.dot.classList.remove("live");
       termNote(body, "— exit " + res.exitCode + " in " + secs + "s —");
     }
     return { ok: !res.cancelled && res.exitCode === 0, result: res };
@@ -895,6 +910,12 @@
         });
         const tg = document.getElementById("toolGrid");
         if (tg) tg.hidden = view !== "tool";
+        // Command View: the command is always visible (design rule). Only
+        // Control View may hide it behind the closed <details>.
+        document.querySelectorAll("#list .cmd").forEach((card) => {
+          const pv = card.querySelector(".preview");
+          if (pv && view !== "control") pv.open = true;
+        });
         if (view === "control") {
           document.querySelectorAll("#list .cmd").forEach((card) => {
             if (card._ccVars && card._ccVars.length && typeof card._ccOpenVars === "function") {
@@ -1252,15 +1273,41 @@
         this.refreshPublished(c, pubBadge);
 
         document.getElementById("draw").textContent = c.cmd || "";
-        const prev = document.getElementById("dprev");
-        prev.innerHTML = "";
-        const dir = c.cwd || "C:\\projects\\app";
-        prev.appendChild(CC.el("span", "dim", "PS "));
-        prev.appendChild(CC.el("span", "pwd", dir));
-        prev.appendChild(CC.el("span", "dim", "> "));
         const insts = g.parseVarInstances(c.cmd || "");
         const used = new Set();
         const metas = insts.map((v) => CC.matchMeta(c.variables, v, used));
+        this.paintPreview(c, insts, metas);
+
+        this.paintFields(c);
+        this.paintMeta(c, insts, metas);
+        this.wireRun(c, insts);
+        this.wireShell(c);
+
+        const editBtn = document.getElementById("editBtn");
+        if (editBtn) editBtn.href = "add.html?id=" + encodeURIComponent(c.id);
+        const pubBtn = document.getElementById("pubBtn");
+        if (pubBtn) pubBtn.href = "publish.html?id=" + encodeURIComponent(c.id);
+        const dlBtn = document.getElementById("dlBtn");
+        if (dlBtn) dlBtn.addEventListener("click", () => this.download(c));
+      },
+
+      indexOfInst(insts, key, occ) {
+        let seen = 0;
+        for (let i = 0; i < insts.length; i++) {
+          if (insts[i].key === key && ++seen === occ) return i;
+        }
+        return -1;
+      },
+
+      paintPreview(c, insts, metas) {
+        const g = CC.G();
+        const prev = document.getElementById("dprev");
+        prev.innerHTML = "";
+        const dir = c.cwd || "C:\\projects\\app";
+        const sh = CC.SHELL_PROMPTS[CC.shellFor(c.id)] || CC.SHELL_PROMPTS.powershell;
+        prev.appendChild(CC.el("span", "dim", sh.pre));
+        prev.appendChild(CC.el("span", "pwd", dir));
+        prev.appendChild(CC.el("span", "dim", sh.post));
         const counts = {};
         const re = /\{\{\s*([^{}]*?)\s*\}\}/g;
         let last = 0, m;
@@ -1286,25 +1333,26 @@
           last = m.index + m[0].length;
         }
         if (last < src.length) prev.appendChild(document.createTextNode(src.slice(last)));
-
-        this.paintFields(c);
-        this.paintMeta(c, insts, metas);
-        this.wireRun(c, insts);
-
-        const editBtn = document.getElementById("editBtn");
-        if (editBtn) editBtn.href = "add.html?id=" + encodeURIComponent(c.id);
-        const pubBtn = document.getElementById("pubBtn");
-        if (pubBtn) pubBtn.href = "publish.html?id=" + encodeURIComponent(c.id);
-        const dlBtn = document.getElementById("dlBtn");
-        if (dlBtn) dlBtn.addEventListener("click", () => this.download(c));
       },
 
-      indexOfInst(insts, key, occ) {
-        let seen = 0;
-        for (let i = 0; i < insts.length; i++) {
-          if (insts[i].key === key && ++seen === occ) return i;
-        }
-        return -1;
+      wireShell(c) {
+        const btn = document.getElementById("shellBtn");
+        if (!btn) return;
+        const sync = () => {
+          const sh = CC.SHELL_PROMPTS[CC.shellFor(c.id)] || CC.SHELL_PROMPTS.powershell;
+          btn.textContent = "Shell: " + sh.label;
+          btn.setAttribute("aria-label", "Shell: " + sh.label + " — activate to change shell");
+          btn.title = "Shell: " + sh.label + " (click to change)";
+        };
+        sync();
+        btn.addEventListener("click", () => {
+          CC.cycleShell(c.id);
+          sync();
+          const g = CC.G();
+          const insts = g.parseVarInstances(c.cmd || "");
+          const used = new Set();
+          this.paintPreview(c, insts, insts.map((v) => CC.matchMeta(c.variables, v, used)));
+        });
       },
 
       paintFields(c) {
