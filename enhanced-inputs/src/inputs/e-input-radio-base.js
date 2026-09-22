@@ -156,7 +156,7 @@ export default class InputRadioBase extends InputBase {
   // ------------------------------------------------------------------ //
   async validate() {
     this._callHook('onValidate');
-    this._dispatch('input:validate');
+    this._dispatch('e:validate');
 
     if (this.required && (!this.value || (Array.isArray(this.value) && this.value.length === 0))) {
       const errorMsg = this.requiredMessage || `${this.label || 'Selection'} is required`;

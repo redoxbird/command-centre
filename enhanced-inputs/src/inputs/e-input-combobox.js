@@ -1,3 +1,4 @@
+// @deprecated Standalone tag (see src/index.js): unstyled by all themes, undocumented, and emitting a divergent event vocabulary. Use <e-input type=...> instead; this file builds to dist/inputs/* for reference only.
 import { html } from 'lit';
 import uFuzzy from '@leeoniya/ufuzzy';
 import InputBase from './e-input-base.js';

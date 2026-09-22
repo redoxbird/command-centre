@@ -668,11 +668,12 @@ export default class EInput extends EInputBase {
   _renderSelect() {
     const ariaDescribedby = [this.description ? this.ids.desc : null, this.error ? this.ids.error : null].filter(Boolean).join(' ');
     const wrapperClasses = this.error ? 'i-wrapper i-wrapper-error' : 'i-wrapper';
+    const activeId = this.isOpen && this.highlightedIndex >= 0 ? `${this.ids.listbox}-opt-${this.highlightedIndex}` : '';
     return html`
       <div class="i-field">
         ${this._renderLabel()}
         <div class="${wrapperClasses}" @click="${this._toggleDropdown}">
-          <input class="i-input" id="${this.ids.input}" .value="${this._getDisplayValueForSelect()}" placeholder="${this.placeholder ?? ''}" ?disabled="${this.disabled}" @keydown="${this._onSelectKeydown}" @focus="${this._onFocus}" @click="${(e) => e.stopPropagation()}" aria-expanded="${this.isOpen}" aria-haspopup="listbox" aria-describedby="${ariaDescribedby}" readonly />
+          <input class="i-input" id="${this.ids.input}" .value="${this._getDisplayValueForSelect()}" placeholder="${this.placeholder ?? ''}" ?disabled="${this.disabled}" @keydown="${this._onSelectKeydown}" @focus="${this._onFocus}" @click="${(e) => e.stopPropagation()}" aria-expanded="${this.isOpen}" aria-haspopup="listbox" aria-controls="${this.ids.listbox}" aria-activedescendant="${activeId}" aria-describedby="${ariaDescribedby}" readonly />
           <button class="i-action i-action-dropdown" type="button" @click="${this._toggleDropdown}" aria-label="Toggle dropdown"><span class="i-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></button>
         </div>
         ${this.isOpen ? this._renderDropdown() : ''}
@@ -684,12 +685,13 @@ export default class EInput extends EInputBase {
   _renderCombobox() {
     const ariaDescribedby = [this.description ? this.ids.desc : null, this.error ? this.ids.error : null].filter(Boolean).join(' ');
     const wrapperClasses = this.error ? 'i-wrapper i-wrapper-error' : 'i-wrapper';
+    const activeId = this.isOpen && this.highlightedIndex >= 0 ? `${this.ids.listbox}-opt-${this.highlightedIndex}` : '';
     return html`
       <div class="i-field">
         ${this._renderLabel()}
         ${this._renderChips()}
         <div class="${wrapperClasses}" @click="${this._toggleDropdown}">
-          <input class="i-input" id="${this.ids.input}" .value="${this.isOpen ? this.searchQuery : this._getDisplayValueForSelect()}" placeholder="${this.isOpen ? 'Search...' : (this.placeholder ?? '')}" ?disabled="${this.disabled}" @input="${this._onComboboxInput}" @keydown="${this._onComboboxKeydown}" @focus="${this._onFocus}" @click="${(e) => e.stopPropagation()}" aria-expanded="${this.isOpen}" aria-haspopup="listbox" aria-describedby="${ariaDescribedby}" />
+          <input class="i-input" id="${this.ids.input}" .value="${this.isOpen ? this.searchQuery : this._getDisplayValueForSelect()}" placeholder="${this.isOpen ? 'Search...' : (this.placeholder ?? '')}" ?disabled="${this.disabled}" @input="${this._onComboboxInput}" @keydown="${this._onComboboxKeydown}" @focus="${this._onFocus}" @click="${(e) => e.stopPropagation()}" aria-expanded="${this.isOpen}" aria-haspopup="listbox" aria-controls="${this.ids.listbox}" aria-activedescendant="${activeId}" aria-describedby="${ariaDescribedby}" />
           <button class="i-action i-action-dropdown" type="button" @click="${this._toggleDropdown}" aria-label="Toggle dropdown"><span class="i-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></button>
         </div>
         ${this.isOpen ? this._renderComboboxDropdown() : ''}
@@ -714,10 +716,10 @@ export default class EInput extends EInputBase {
 
   _renderDropdown() {
     return html`
-      <div class="i-dropdown" role="listbox">
+      <div class="i-dropdown" role="listbox" id="${this.ids.listbox}" aria-multiselectable="${this.multiple ? 'true' : 'false'}">
         <div class="i-options" style="max-height: 200px; overflow-y: auto;">
           ${this.options.map((opt, index) => html`
-            <div class="i-option ${opt.selected ? 'i-option-selected' : ''} ${index === this.highlightedIndex ? 'i-option-highlighted' : ''}" @click="${() => this._selectOption(opt)}" role="option" aria-selected="${opt.selected}">${opt.text}</div>
+            <div class="i-option ${opt.selected ? 'i-option-selected' : ''} ${index === this.highlightedIndex ? 'i-option-highlighted' : ''}" id="${this.ids.listbox}-opt-${index}" @click="${() => this._selectOption(opt)}" role="option" aria-selected="${opt.selected}">${opt.text}</div>
           `)}
         </div>
       </div>`;
@@ -726,12 +728,12 @@ export default class EInput extends EInputBase {
   _renderComboboxDropdown() {
     const visibleOptions = this.filteredOptions.slice(this.virtualStart, this.virtualEnd);
     return html`
-      <div class="i-dropdown" role="listbox">
+      <div class="i-dropdown" role="listbox" id="${this.ids.listbox}" aria-multiselectable="${this.multiple ? 'true' : 'false'}">
         <div class="i-options" @scroll="${this._onScroll}" style="max-height: 200px; overflow-y: auto;">
           ${visibleOptions.map((opt, index) => {
             const globalIndex = this.virtualStart + index;
             return html`
-              <div class="i-option ${opt.selected ? 'i-option-selected' : ''} ${globalIndex === this.highlightedIndex ? 'i-option-highlighted' : ''}" @click="${() => this._selectOption(opt)}" role="option" aria-selected="${opt.selected}">
+              <div class="i-option ${opt.selected ? 'i-option-selected' : ''} ${globalIndex === this.highlightedIndex ? 'i-option-highlighted' : ''}" id="${this.ids.listbox}-opt-${globalIndex}" @click="${() => this._selectOption(opt)}" role="option" aria-selected="${opt.selected}">
                 <div class="i-option-label">${opt.text}</div>
                 ${opt.description ? html`<div class="i-option-description">${opt.description}</div>` : ''}
               </div>`;

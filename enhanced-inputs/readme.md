@@ -1,6 +1,6 @@
 # 🚀 Enhanced Inputs — Modern Form Elements, Simplified
 
-> **Zero dependencies**, **fully accessible**, **form-native** input components built with Lit. Just drop them in and they work.
+> Form-native input components built with Lit. Just drop them in and they work.
 
 ---
 
@@ -22,7 +22,7 @@ Or use directly from CDN:
 
 ```html
 <script type="module">
-  import 'enhanced-inputs/components/e-input.js';
+  import 'enhanced-inputs';
 </script>
 
 <e-input 
@@ -40,9 +40,9 @@ That's it. You now have a fully accessible, form-integrated input component.
 ## ✨ Why You'll Love This
 
 - **🎯 Progressive Enhancement** - Enhances native inputs, doesn't replace them
-- **♿ Accessibility First** - WCAG AA compliant out of the box
+- **♿ Accessibility Focused** - Form-native with labelled controls and live error announcements; known screen-reader gaps for select/combobox dropdowns are tracked in `sheets/report.csv` (rows L44–L46)
 - **📝 Form Native** - Works with `<form>`, `FormData`, `form.reset()` - no wrappers needed
-- **🔧 Zero Dependencies** - Just Lit. Nothing else.
+- **📦 Six Runtime Dependencies** - Lit, maska, uFuzzy, Pickr, range-slider-element, zod (zod is also a peer for ESM consumers; see Packaging below)
 - **🎨 Style It Your Way** - Uses semantic classes, no forced styling
 - **⚡ Instant Validation** - Schema-based validation with async support
 
@@ -223,40 +223,45 @@ input.onValidate = ({ valid, error }) => {
 
 ## 🎨 Styling Your Way
 
-No forced styles. Use semantic classes:
+No forced styles. Style the real hooks — `.i-*` classes plus `--input-*`
+custom properties (and a bare `--primary` accent):
 
 ```css
-.e-wrapper {
+.i-field {
   margin-bottom: 1rem;
 }
 
-.e-label {
+.i-label {
   font-weight: 600;
-  color: #374151;
+  color: var(--input-label-color, #374151);
 }
 
-.e-input {
-  border: 2px solid #e5e7eb;
+.i-input {
+  border: 2px solid var(--input-border, #e5e7eb);
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  border-radius: var(--input-radius, 0.375rem);
 }
 
-.e-input:focus {
+.i-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--primary);
+  box-shadow: var(--input-shadow-focus);
 }
 
-.e-error {
-  color: #ef4444;
+.i-error {
+  color: var(--input-error-text, #ef4444);
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
 
-.e-error-visible {
+.i-error-visible {
   display: block;
 }
 ```
+
+> The `e-` names you may see in older docs (`.e-wrapper`, `.e-label`, …)
+> come from generated element **IDs**, not CSS classes — styling them does
+> nothing. The six themes under `dist/themes/` target `.i-*` only.
 
 ---
 
@@ -328,14 +333,14 @@ Add copy, clear, or show/hide actions:
 </e-input>
 ```
 
-### Shadow DOM (Optional)
+### Shadow DOM (Unsupported — do not use)
 
 ```html
-<e-input type="text" 
-  shadow
-  label="Encapsulated input">
-</e-input>
+<!-- Do NOT do this: shadow mode renders unstyled (no shadow styles exist). -->
 ```
+
+Components always render to light DOM. The `shadow` attribute from older
+docs attaches an unreachable shadow root — treated as unsupported.
 
 ---
 
@@ -386,51 +391,67 @@ That's Enhanced Inputs. Simple, powerful, and accessible. Start building better 
 
 ---
 
-## 3. DOM Structure (All Components)
+## 3. DOM Structure (`<e-input>`)
 
-Every Enhanced Inputs component must render the same DOM structure: [6]
+The unified element renders light-DOM structure hooked by `.i-*` classes
+(no shadow styles exist — see §15):
 
 ```html
-<div class="e-wrapper">
-  <label class="e-label"></label>
-  <input class="e-input" />
-  <p class="e-description"></p>
-  <p class="e-error"></p>
+<div class="i-field">
+  <label class="i-label" for="…">…</label>
+  <div class="i-wrapper">
+    <input class="i-input" />
+    …
+  </div>
+  <p class="i-description"></p>
+  <p class="i-error" role="alert"></p>
 </div>
 ```
 
-**Structure rules**: [6]
+**Structure rules**:
 
-- `.e-wrapper` wraps all internal elements.
-- `.e-label` is linked to the input via `for` + `id`.
-- `.e-input` is the core `<input>` element.
-- `.e-description` is only visually shown when a `description` is provided.
-- `.e-error` is only visibly shown when an error exists.
+- `.i-field` wraps the whole control.
+- `.i-label` is linked to the input via `for` + `id`.
+- `.i-input` is the core `<input>` element (other types render their own
+  inner controls: listbox, slider, picker, fieldset).
+- `.i-description` is only visually shown when a `description` is provided.
+- `.i-error` (with `role="alert"`) is only visibly shown when an error exists.
 
 Additional state classes used by components:
 
-- `.e-error-visible` – toggled when there is an error [2]
-- `.e-input-error` – toggled on the input when invalid [2]
+- `.i-error-visible` – toggled when there is an error
+- `.i-wrapper-error` – toggled on the wrapper when invalid
 
 These classes are intended for your own CSS.
 
-> Implementation detail: some *base* classes (e.g. `e-input-text-base`, `e-input-number-base`) internally use helper markup like `.i-field`, `.i-wrapper`, etc. Public components must still conform to the DOM contract above. [3][5][6]
+> Older revisions of this document described an `.e-*` class contract
+> (`.e-wrapper`, `.e-label`, …). Those names never existed as classes — they
+> are generated element **IDs** (see `_generateIds()`), so CSS written
+> against them matches nothing. Style `.i-*`.
 
 ---
 
 ## 4. Styling
 
-Enhanced Inputs is **class-based only**; there is no built-in design system or utility framework. You style everything via the standard class names:
+Enhanced Inputs is **class-based only**; there is no built-in design system or utility framework. You style everything via the real hooks:
 
-- `e-wrapper`
-- `e-label`
-- `e-input`
-- `e-description`
-- `e-error`
-- `e-error-visible`
-- `e-input-error`
+- `i-field`
+- `i-label`
+- `i-input`
+- `i-description`
+- `i-error`
+- `i-error-visible`
+- `i-wrapper-error`
 
-You can keep components in light DOM (default) for full global CSS control, or enable Shadow DOM per-instance via the `shadow` attribute (see below). Shadow/root creation is delegated to the component’s `createRenderRoot()` method, which respects the `shadow` attribute. [1]
+plus the `--input-*` custom properties (and bare `--primary`) defined by
+whichever theme in `dist/themes/` you load. Six hand-authored themes ship
+(`default`, `classic`, `carbon`, `fluent`, `material`, `newspaper`); only
+`default.css` covers every widget.
+
+You can keep components in light DOM (default) for full global CSS control.
+The `shadow` attribute exists but attaches a shadow root the themes cannot
+reach (no shadow styles, no `part=` hooks) — treated as unsupported; do not
+use it. [1]
 
 ---
 
@@ -440,13 +461,12 @@ You can keep components in light DOM (default) for full global CSS control, or e
 
 ### 5.1 Install
 
-Assuming Enhanced Inputs is published as an ES module package:
-
 ```bash
-npm install inputs.js
+npm install enhanced-inputs
 ```
 
-Or include via `<script type="module">` pointing to the distributed files.
+Or include via `<script type="module">` pointing to the distributed files
+(`dist/index.esm.js` for bundlers, `dist/index.js` as a side-effect script).
 
 ### 5.2 Basic usage
 
@@ -472,6 +492,26 @@ Or include via `<script type="module">` pointing to the distributed files.
 
 Values will be part of the form’s `FormData` (e.g. `new FormData(form).get('email')`) thanks to `ElementInternals#setFormValue`. [1][6]
 
+### 5.3 Packaging & entry points
+
+One supported surface: `<e-input type="…">` plus the slotted option
+elements (`<e-select-option>`, `<e-combobox-option>`, `<e-radio-option>`,
+`<e-checkbox-option>`). The per-type `<input-*>` tags are deprecated —
+unstyled by all six themes, undocumented, and removed from the entry point
+(their files still build to `dist/inputs/*` for reference).
+
+| Importer | File | Shape |
+|---|---|---|
+| `<script>` tag (side effects) | `dist/index.js` | IIFE, self-contained: Lit, maska, uFuzzy, Pickr, range-slider-element and zod are inlined, zero installs |
+| Bundlers / Node ESM | `dist/index.esm.js` | Real ESM (`export default EInput` plus named option classes); runtime deps are external — install them (zod is additionally declared a `peerDependency`) |
+| Types | `dist/index.d.ts` | Hand-written, mirrors the entry exports |
+
+`src/index.js` re-exports `EInput` both as default and as a named export;
+there is deliberately no other default export. Every component emits one
+event vocabulary — `e:init`, `e:input`, `e:change`, `e:validate`,
+`e:success`, `e:error` (all bubbled + composed) — plus non-bubbling
+`hook:*` counterparts per element.
+
 ---
 
 ## 6. Core Attributes (Universal)
@@ -480,13 +520,13 @@ All Enhanced Inputs components must support these attributes:
 
 - `name` – form field name (participates in `FormData`) [1][3][5]
 - `value` – string value (also available as a property) [1]
-- `label` – text for `<label class="e-label">` [6]
+- `label` – text for `<label class="i-label">` [6]
 - `placeholder` – forwards to the internal `<input>` placeholder [1][2][3][5]
-- `description` – text for `.e-description` [1][2][6]
+- `description` – text for `.i-description` [1][2][6]
 - `required` – standard HTML required flag [1][2][3][5]
 - `disabled` – disables the control [1][2][3][5]
 - `readonly` – read-only value [1][2][3][5]
-- `shadow` – when present, component uses Shadow DOM; otherwise light DOM [1]
+- `shadow` – legacy attribute; attaches an unreachable shadow root (see §15). Do not use. [1]
 - `inline` – layout hint; used by components for styling/markup variations [1]
 - `error` – manually set or override the current error message (also mirrored as property) [1]
 - `validate-on` – controls when validation runs: `"input" | "change" | "blur"`; can be combined using comma, space, or `|` separated values (e.g. `validate-on="input|blur"`). [1]
@@ -500,10 +540,10 @@ Action / decoration attributes:
 - `prefix-icon` – visual icon (e.g. as text or styled element) displayed near the input.
 - `prefix` / `prefix-value` – text prefix or logical value prefix for text inputs (e.g. currency symbol, URL scheme). [5]
 
-### 6.1 Validation Attributes (zod-mini)
+### 6.1 Validation Attributes (full zod v4)
 
-Enhanced Inputs uses zod‑mini for schema-based validation.  
-All zod-mini rules are configurable via HTML attributes; for example:
+Enhanced Inputs uses full zod v4 for schema-based validation.
+All zod rules are configurable via HTML attributes; for example:
 
 - String-related:
   - `min` / `max` – length boundaries (`z.string().min(...)`, `z.string().max(...)`)
@@ -528,7 +568,7 @@ The component’s `validate()` method builds a zod schema from the active attrib
 
 Validation is centralized in base classes and handled consistently across components:
 
-- Attributes are read and converted into a zod-mini schema (string or number specific). [3][5]
+- Attributes are read and converted into a zod schema (string or number specific). [3][5]
 - Validation can be **debounced** and **async**, with an internal `AbortController` to cancel previous requests while a new validation run is scheduled. [1]
 - The public `validate()` method returns:
 
@@ -543,9 +583,9 @@ Validation is centralized in base classes and handled consistently across compon
   - `this.valid` and `this.error` are updated.
   - `ElementInternals#setValidity()` is called with appropriate flags. [1][2]
   - The component fires:
-    - `input:validate` (always)
-    - `input:error` if invalid
-    - `input:success` if valid [1]
+    - `e:validate` (always)
+    - `e:error` if invalid
+    - `e:success` if valid [1]
 
 - Triggers are controlled by `validate-on`:
   - `"input"` – validate while typing
@@ -569,17 +609,22 @@ These can be overridden by your own `*-message` attributes or by setting `error`
 
 All Enhanced Inputs components dispatch the same set of custom events, always with `{ bubbles: true, composed: true }`. [1][6]
 
-- `input:init` – fired when the component initializes (connected to DOM). [1]
-- `input:input` – fired on each input (`@input`) change.
-- `input:change` – fired on native `change`.
-- `input:validate` – fired when validation runs.
-- `input:error` – fired when validation fails or when an internal error is set.
-- `input:success` – fired when validation succeeds (no errors).
+- `e:init` – fired when the component initializes (connected to DOM). [1]
+- `e:input` – fired on each input (`@input`) change.
+- `e:change` – fired on native `change`.
+- `e:validate` – fired when validation runs.
+- `e:error` – fired when validation fails or when an internal error is set.
+- `e:success` – fired when validation succeeds (no errors).
+
+Every component — `<e-input>` and the deprecated standalone `<input-*>`
+tags alike — emits this one vocabulary. (An older `input:*` prefix survived
+in some leaf modules; it was unified to `e:*` and no `input:*` strings
+remain in `src/`.)
 
 You can handle them via:
 
 ```js
-el.addEventListener('input:validate', (event) => {
+el.addEventListener('e:validate', (event) => {
   console.log(event.detail); // component-specific payload
 });
 ```
@@ -681,15 +726,15 @@ Additional properties for specific components (e.g. `country` on `<e-input type=
 
 ## 12. Error Handling & Accessibility
 
-Error handling is defensive: components must never throw; internal errors are surfaced via `input:error` and through the `error` property. [System spec]
+Error handling is defensive: components must never throw; internal errors are surfaced via `e:error` and through the `error` property. [System spec]
 
 ### 12.1 Visual error state
 
 Components update CSS classes based on validity:
 
-- `.e-error` text updated to the current error message.
-- `.e-error-visible` toggled based on `valid` + `error`. [2]
-- `.e-input-error` toggled on the internal `<input>`. [2]
+- `.i-error` text updated to the current error message.
+- `.i-error-visible` toggled based on `valid` + `error`. [2]
+- `.i-wrapper-error` toggled on the wrapper when invalid. [2]
 
 ### 12.2 ARIA attributes
 
@@ -699,8 +744,8 @@ Components update CSS classes based on validity:
 
 Example (from email input update flow): [2]
 
-- If there is a description → `id="${inputId}-desc"` assigned to `.e-description`.
-- If there is an error → `id="${inputId}-error"` assigned to `.e-error`.
+- If there is a description → generated `${uid}-desc` id assigned to `.i-description`.
+- If there is an error → generated `${uid}-error` id assigned to `.i-error` (with `role="alert"`).
 - `aria-describedby` is computed as `"descId errorId"` where present, or removed if none. [2]
 
 This ensures assistive technologies correctly announce both help text and validation messages.
@@ -721,7 +766,7 @@ Responsibilities:
 - Core attributes: `name`, `value`, `label`, `placeholder`, `description`, `required`, `disabled`, `readonly`, `shadow`, `inline`, `validate-on`, `valid`, `error` [1]
 - Render root selection (`createRenderRoot` respects `shadow`) [1]
 - Lifecycle: `connectedCallback`, `willUpdate`, `updated` (with hooks and events) [1]
-- Standard event dispatch helper (`input:init`, `input:input`, `input:change`, `input:validate`, `input:error`, `input:success`) [1]
+- Standard event dispatch helper (`e:init`, `e:input`, `e:change`, `e:validate`, `e:error`, `e:success`) [1]
 - Debounced async validation with `AbortController` for cancellation [1]
 - Accessibility IDs generation (`this.ids = this._generateIds()`) [1]
 - Public API wiring: `value`, `valid`, `error`, `validate()`, `reset()`, `focus()` [1]
@@ -793,7 +838,7 @@ Example:
 
 Email-specific input, built on the text base with email semantics. Snippets for email show: [2]
 
-- Shadow or light DOM depending on `shadow`.
+- Renders to light DOM (see §15).
 - Syncs standard attributes (`name`, `placeholder`, `required`, `disabled`, `readonly`, `pattern`, `minlength`, `maxlength`, etc.) to the internal `<input type="email">`. [2]
 - Manages ARIA and error state via `updateErrorState()`. [2]
 
@@ -815,7 +860,7 @@ Usage:
 
 Number input built on `<e-input-number-base>`: [3]
 
-- Supports numeric zod-mini attributes:
+- Supports numeric zod attributes:
   - `gt`, `gte`, `lt`, `lte`, `min`, `max`, `int`, `positive`, `nonnegative` [3]
 - Can display prefixes like currency (`prefix="$"`) and optional action buttons. [3]
 
@@ -844,9 +889,9 @@ Phone input with country code selection. The snippet shows: [4]
 
 - Extends `LitElement`, `formAssociated = true`, uses zod for validation. [4]
 - Renders:
-  - `<label class="e-label">`
+  - `<label class="i-label">`
   - A country `<select>` with flag, name, dial code [4]
-  - The main `<input type="tel" class="e-input">` bound to `formattedValue` [4]
+  - The main `<input type="tel" class="i-input">` bound to `formattedValue` [4]
   - Optional `prefixIcon` near the input [4]
   - Optional `actionButton="copy"` button [4]
 - ARIA:
@@ -871,7 +916,8 @@ Example:
 
 ## 15. Shadow vs. Light DOM
 
-By default, components may use **light DOM** for easier global styling, or switch to **Shadow DOM** when the `shadow` attribute is present. `InputBase` implements `createRenderRoot()` accordingly: [1]
+Components render to **light DOM** so global CSS and the `.i-*` theme
+classes reach them. `InputBase` implements `createRenderRoot()` accordingly:
 
 ```js
 createRenderRoot() {
@@ -879,8 +925,9 @@ createRenderRoot() {
 }
 ```
 
-- Use `shadow` when you want encapsulated styles.
-- Omit `shadow` when you prefer to style with global CSS.
+The `shadow` branch exists but is unsupported: no shadow-scoped styles and
+no `part=` hooks ship anywhere in the library, so `<e-input shadow>`
+renders completely unstyled. Do not use it.
 
 ---
 
@@ -984,13 +1031,13 @@ In practice, you will have additional components (`e-input.js`, their base class
 If you need a new specialized input:
 
 1. Extend the appropriate base (e.g. `InputTextBase`, `InputNumberBase`, or `InputBase` directly). [1][3][5]
-2. Implement `render()` to match the required DOM structure (`e-wrapper`, etc.). [6]
+2. Implement `render()` to match the required DOM structure (`.i-*`, see §3). [6]
 3. Declare supported attributes in `static properties`.
-4. Implement any custom validation in `validate()` by augmenting the zod-mini schema.
+4. Implement any custom validation in `validate()` by augmenting the zod schema.
 5. Respect:
    - `validate-on` semantics
    - Hook calls (`onInit`, `onValidate`, etc.)
-   - Event dispatch (`input:*`) [1][6]
+    - Event dispatch (`e:*`) [1][6]
    - `formResetCallback` and `formStateRestoreCallback` [1]
 
 ---

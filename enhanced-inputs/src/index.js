@@ -1,18 +1,13 @@
+// Primary (and only supported) surface: the unified <e-input> element plus
+// its slotted option elements (<e-select-option>, <e-combobox-option>,
+// <e-radio-option>, <e-checkbox-option>).
+//
+// The per-type <input-*> tags (input-text, input-number, …) are DEPRECATED:
+// they are styled by none of the six themes, referenced by none of the docs
+// or demos, and emit a divergent input:* event vocabulary. They are no longer
+// re-exported here, so the main bundle does not register them. Their source
+// files still build to dist/inputs/* for reference only.
 export * from "./inputs/e-input";
 export * from "./inputs/e-input-options";
-export * from "./inputs/e-input-text";
-export * from "./inputs/e-input-email";
-export * from "./inputs/e-input-password";
-export * from "./inputs/e-input-url";
-export * from "./inputs/e-input-search";
-export * from "./inputs/e-input-number";
-export * from "./inputs/e-input-phone";
-export * from "./inputs/e-input-date";
-export * from "./inputs/e-input-color";
-export * from "./inputs/e-input-textarea";
-export * from "./inputs/e-input-select";
-export * from "./inputs/e-input-combobox";
-export * from "./inputs/e-input-radio";
-export * from "./inputs/e-input-checkbox";
-export * from "./inputs/e-input-toggle";
-export * from "./inputs/e-input-range";
+export { default } from "./inputs/e-input.js";
+export { default as EInput } from "./inputs/e-input.js";

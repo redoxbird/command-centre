@@ -1,0 +1,1268 @@
+/* Classic Theme - Based on Duet CSS Design System */
+:root {
+    /* Colors */
+    --input-border: rgb(181, 198, 208);
+    --input-border-focus: rgb(0, 119, 179);
+    --input-border-error: rgb(214, 28, 82);
+    --input-bg: rgb(255, 255, 255);
+    --input-text: rgb(8, 42, 77);
+    --input-placeholder: rgb(127, 150, 165);
+    --input-error-text: rgb(214, 28, 82);
+    --input-desc-text: rgb(98, 121, 138);
+    --input-label-color: rgb(8, 42, 77);
+    --input-label-secondary-color: rgb(98, 121, 138);
+    --input-disabled-bg: rgb(245, 248, 250);
+    --input-disabled-text: rgb(127, 150, 165);
+    --input-action-hover-bg: rgb(240, 247, 250);
+    --input-prefix-color: rgb(98, 121, 138);
+
+    /* Dimensions */
+    --input-radius: 4px;
+    --input-padding-x: 12px;
+    --input-padding-y: 10px;
+    --input-height: 2.5rem;
+
+    /* Typography */
+    --input-font-family: "localtapiola-sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --input-font-size: 1rem;
+    --input-line-height: 1.5rem;
+    --input-label-font-size: 0.875rem;
+    --input-label-line-height: 1.25rem;
+    --input-label-font-weight: 600;
+    --input-secondary-font-size: 0.75rem;
+    --input-secondary-line-height: 1rem;
+    --input-description-font-size: 0.75rem;
+    --input-description-line-height: 1rem;
+    --input-action-font-size: 0.75rem;
+    --input-action-font-weight: 600;
+
+    /* Shadows */
+    --input-shadow: 0 2px 6px 0 rgba(0, 41, 77, 0.07);
+    --input-shadow-focus: 0 0 0 4px rgba(0, 119, 179, 0.3), 0 0 0 1px rgb(0, 119, 179);
+    --input-shadow-error: 0 0 0 1px rgb(214, 28, 82);
+
+    /* Transitions */
+    --input-transition: all 0.3s ease;
+
+    /* Spacing */
+    --input-label-margin-bottom: 0.5rem;
+    --input-description-margin-top: 0.5rem;
+    --input-error-margin-top: 0.5rem;
+    --input-gap: 0.25rem;
+    --input-inline-gap: 0.75rem;
+
+    /* Border radius for specific elements */
+    --input-action-border-radius: 0 0.25rem 0.25rem 0;
+    --input-prefix-border-radius: 0.25rem 0 0 0.25rem;
+    --input-color-preview-radius: 0.25rem;
+    --input-color-button-radius: 4px;
+    --input-error-radius: var(--input-radius);
+}
+
+/* Core component styles */
+.i-field {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.i-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--input-gap);
+    font-family: var(--input-font-family);
+    font-size: var(--input-font-size);
+    line-height: var(--input-line-height);
+    position: relative;
+    border: 1px solid var(--input-border);
+    padding: 0;
+    margin: 0;
+    background-color: var(--input-bg);
+    border-radius: var(--input-radius);
+    overflow: hidden;
+    height: var(--input-height);
+    box-shadow: var(--input-shadow);
+    transition: var(--input-transition);
+}
+
+.i-wrapper-range {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--input-gap);
+    font-family: var(--input-font-family);
+    font-size: var(--input-font-size);
+    line-height: var(--input-line-height);
+    position: relative;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    height: auto;
+    box-shadow: none;
+    transition: none;
+}
+
+/* Label styles */
+.i-label {
+    font-weight: var(--input-label-font-weight);
+    font-size: var(--input-label-font-size);
+    line-height: var(--input-label-line-height);
+    color: var(--input-label-color);
+    margin-bottom: var(--input-label-margin-bottom);
+    display: block;
+}
+
+.i-label-group {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: var(--input-gap);
+}
+
+.i-label-secondary {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-weight: 400;
+    font-size: var(--input-secondary-font-size);
+    line-height: var(--input-secondary-line-height);
+    color: var(--input-label-secondary-color);
+}
+
+.i-label-secondary .i-icon svg {
+    margin: 0 0.25rem;
+    width: 1rem;
+    height: auto;
+}
+
+/* Input styles */
+.i-input {
+    padding: 0 var(--input-padding-x);
+    background: var(--input-bg);
+    color: var(--input-text);
+    font-size: var(--input-font-size);
+    line-height: var(--input-label-line-height);
+    transition: var(--input-transition);
+    border: none;
+    flex-grow: 1;
+    height: var(--input-height);
+    font-family: inherit;
+}
+
+/* Focus and error states */
+.i-wrapper:focus-within {
+    outline: none;
+    border-color: var(--input-border-focus);
+    box-shadow: var(--input-shadow-focus);
+}
+
+.i-wrapper-error {
+    border-color: var(--input-border-error);
+    box-shadow: var(--input-shadow-error);
+}
+
+/* Date picker styles */
+.i-field wc-datepicker {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.i-field wc-datepicker .wc-datepicker {
+    width: 100%;
+    max-width: none;
+}
+/* Datepicker component styles */
+wc-datepicker,
+wc-datepicker *,
+wc-datepicker *:before,
+wc-datepicker *:after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+wc-datepicker {
+  display: inline-flex;
+}
+
+.wc-datepicker {
+  display: block;
+  width: min-content;
+  min-width: 17rem;
+  max-width: 24rem;
+  border: 0.0625rem solid var(--input-border);
+  border-radius: var(--input-radius);
+  color: var(--input-text);
+  background-color: var(--input-bg);
+  font-family: var(--input-font-family);
+  font-size: var(--input-font-size);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.wc-datepicker--disabled *:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.wc-datepicker--disabled .wc-datepicker__weekday {
+  color: var(--input-disabled-text);
+}
+
+.wc-datepicker--disabled .wc-datepicker__date:focus > * {
+  outline: none;
+}
+
+.wc-datepicker--disabled .wc-datepicker__date {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.wc-datepicker--disabled .wc-datepicker__date:hover > * {
+  background-color: transparent;
+}
+
+.wc-datepicker--disabled .wc-datepicker__date--in-range:hover > * {
+  background-color: var(--input-action-hover-bg);
+}
+
+.wc-datepicker--disabled .wc-datepicker__date--selected:hover > * {
+  color: #fff;
+  background-color: var(--input-border-focus);
+}
+
+.wc-datepicker__header {
+  display: flex;
+  padding: 0.75rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wc-datepicker__current-month {
+  display: flex;
+  flex-grow: 1;
+  gap: 0.5rem;
+}
+
+.wc-datepicker__month-select,
+.wc-datepicker__year-select {
+  display: flex;
+  height: 2rem;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  align-items: center;
+  border: none;
+  border-radius: 0.25rem;
+  color: var(--input-text);
+  background: var(--input-action-hover-bg);
+  font: inherit;
+  line-height: 1.125;
+}
+
+.wc-datepicker__month-select {
+  flex-grow: 1;
+  cursor: pointer;
+  appearance: none;
+}
+
+.wc-datepicker__year-select {
+  max-width: 5rem;
+}
+
+.wc-datepicker__previous-month-button,
+.wc-datepicker__next-month-button,
+.wc-datepicker__previous-year-button,
+.wc-datepicker__next-year-button {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.375rem;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 0.25rem;
+  color: var(--input-text);
+  background-color: transparent;
+  background-color: var(--input-action-hover-bg);
+  cursor: pointer;
+}
+
+.wc-datepicker__body {
+  padding-right: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-left: 0.75rem;
+}
+
+.wc-datepicker__calendar {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.wc-datepicker__weekday > span {
+  display: flex;
+  padding: 0.125rem;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  aspect-ratio: 1;
+}
+
+.wc-datepicker__date {
+  padding: 0.125rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.wc-datepicker__date:focus {
+  outline: none;
+}
+
+.wc-datepicker__date:focus > * {
+  outline: 0.125rem solid var(--input-border-focus);
+}
+
+.wc-datepicker__date:hover > * {
+  background-color: var(--input-action-hover-bg);
+}
+
+.wc-datepicker__date > * {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.25rem;
+  aspect-ratio: 1;
+}
+
+.wc-datepicker__date--current {
+}
+
+.wc-datepicker__date--overflowing {
+}
+
+.wc-datepicker__date--today > * {
+  font-weight: 700;
+  font-style: normal;
+}
+
+.wc-datepicker__date--in-range > * {
+  background-color: var(--input-action-hover-bg);
+}
+
+.wc-datepicker__date--selected > *,
+.wc-datepicker__date--selected:hover > * {
+  color: #fff;
+  background-color: var(--input-border-focus);
+  font-weight: 600;
+}
+
+.wc-datepicker__date--disabled {
+  color: var(--input-disabled-text);
+  cursor: default;
+}
+
+.wc-datepicker__date--disabled:not(.wc-datepicker__date--selected):not(.wc-datepicker__date--in-range):hover
+  > * {
+  background-color: transparent;
+}
+
+.wc-datepicker__date--disabled.wc-datepicker__date--selected:not(.wc-datepicker__date--in-range):not(.wc-datepicker__date--in-range)
+  > * {
+  background-color: transparent;
+}
+
+.wc-datepicker__footer {
+  display: flex;
+  padding-right: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-left: 0.75rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wc-datepicker__clear-button,
+.wc-datepicker__today-button {
+  display: inline-flex;
+  height: 2rem;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 0.25rem;
+  color: var(--input-text);
+  background-color: var(--input-action-hover-bg);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Color picker styles */
+.i-color-preview {
+    display: inline-block;
+    width: calc(var(--input-height) - 1rem);
+    height: calc(var(--input-height) - 1rem);
+    border-radius: var(--input-color-preview-radius);
+    flex-shrink: 0;
+}
+
+.clr-field {
+    display: block;
+    width: 100%;
+}
+
+.clr-field button {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--input-color-button-radius);
+    cursor: pointer;
+    right: 0.5rem;
+    z-index: 10;
+}
+
+.clr-field input {
+    width: 100%;
+}
+
+/* Disabled state */
+.i-input:disabled {
+    background: var(--input-disabled-bg);
+    color: var(--input-disabled-text);
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.i-input:focus {
+    outline: none;
+}
+
+.i-input::-webkit-inner-spin-button,
+.i-input::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+/* Description text */
+.i-description {
+    font-size: var(--input-description-font-size);
+    line-height: var(--input-description-line-height);
+    color: var(--input-desc-text);
+    margin: var(--input-description-margin-top) 0 0 0;
+}
+
+/* Action button */
+.i-action {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    align-self: stretch;
+    font-size: var(--input-action-font-size);
+    font-weight: var(--input-action-font-weight);
+    border-radius: var(--input-action-border-radius);
+    cursor: pointer;
+    background-color: transparent;
+    flex-shrink: 0;
+    width: var(--input-height);
+    height: var(--input-height);
+    text-align: center;
+    transition: var(--input-transition);
+    border: none;
+    color: rgb(98, 121, 138);
+}
+
+.i-action:hover {
+    background-color: var(--input-action-hover-bg);
+    color: rgb(8, 42, 77);
+}
+
+/* Icon styles */
+.i-icon {
+    pointer-events: none;
+    line-height: 1;
+}
+
+.i-icon svg {
+    width: 1.25em;
+    height: 1.25em;
+    line-height: 1;
+}
+
+/* Action button states */
+.i-action-copy .i-action-icon-check {
+    display: none;
+}
+
+.i-action-copy .i-action-icon-copy {
+    display: block;
+}
+
+.i-action-copied .i-action-icon-check {
+    display: block;
+}
+
+.i-action-copied .i-action-icon-copy {
+    display: none;
+}
+
+/* Prefix and select country */
+.i-prefix,
+.i-select-country {
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: center;
+    align-self: stretch;
+    text-align: left;
+    border-radius: var(--input-prefix-border-radius);
+    padding: 0 0 0 0.75rem;
+    cursor: pointer;
+    align-self: stretch;
+    color: var(--input-prefix-color);
+    height: var(--input-height);
+    border: none;
+    font-size: var(--input-font-size);
+    line-height: var(--input-label-line-height);
+}
+
+.i-select-country {
+    width: intrinsic;
+    width: -moz-fit-content;
+    width: fit-content;
+}
+
+/* Error message */
+.i-error {
+    color: var(--input-error-text);
+    border-color: var(--input-border-error);
+    display: none;
+    font-size: var(--input-font-size);
+    font-weight: 600;
+    margin-top: var(--input-error-margin-top);
+    line-height: var(--input-label-line-height);
+    background-color: rgba(214, 28, 82, 0.05);
+    border: 1px solid rgba(214, 28, 82, 0.2);
+    border-radius: var(--input-error-radius);
+    padding: 0.75rem 1rem;
+}
+
+.i-error ul {
+    padding-left: 1rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    list-style: disc;
+}
+
+.i-error-visible {
+    display: block;
+}
+
+/* Inline variant: Horizontal layout */
+.i-wrapper.inline {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--input-inline-gap);
+}
+
+.i-wrapper.inline .i-label {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.i-wrapper.inline .i-input {
+    flex: 1;
+}
+
+.i-wrapper.inline .i-description,
+.i-wrapper.inline .i-error {
+    position: absolute;
+    left: -9999px;
+    /* Hidden off-screen for inline */
+}
+
+/* Responsive: Stack on small screens */
+@media (max-width: 640px) {
+    .i-wrapper.inline {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Range Slider Element Styles */
+@layer range-slider-element {
+    range-slider {
+        --track-size: .2rem;
+        --thumb-size: 1.2rem;
+        position: relative;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        block-size: var(--thumb-size);
+        inline-size: 100%;
+        outline: none;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none
+    }
+
+    range-slider[orientation=vertical] {
+        flex-direction: column;
+        inline-size: var(--thumb-size);
+        block-size: 130px
+    }
+
+    range-slider [data-track] {
+        pointer-events: none;
+        flex: 1;
+        block-size: var(--track-size);
+        border-radius: inherit;
+        box-sizing: inherit
+    }
+
+    range-slider[orientation=vertical] [data-track] {
+        inline-size: var(--track-size);
+        block-size: 100%
+    }
+
+    range-slider [data-track-fill] {
+        pointer-events: none;
+        position: absolute;
+        block-size: var(--track-size);
+        border-start-start-radius: inherit;
+        border-end-start-radius: inherit;
+        box-sizing: inherit
+    }
+
+    range-slider[orientation=vertical] [data-track-fill] {
+        inline-size: var(--track-size);
+        block-size: auto;
+        border-start-start-radius: unset;
+        border-end-end-radius: inherit
+    }
+
+    range-slider [data-runnable-track] {
+        pointer-events: none;
+        position: absolute;
+        inset: 0 calc(var(--thumb-size) / 2);
+        box-sizing: inherit
+    }
+
+    range-slider[orientation=vertical] [data-runnable-track] {
+        inset: calc(var(--thumb-size) / 2) 0
+    }
+
+    range-slider [data-thumb] {
+        pointer-events: auto;
+        touch-action: none;
+        inline-size: var(--thumb-size);
+        block-size: var(--thumb-size);
+        position: absolute;
+        margin-inline-start: calc(var(--thumb-size) / 2 * -1);
+        box-sizing: inherit
+    }
+
+    range-slider[orientation=vertical] [data-thumb] {
+        margin-inline-start: unset;
+        margin-block: calc(var(--thumb-size) / 2 * -1)
+    }
+
+    range-slider {
+        border-radius: var(--track-size);
+        margin: 2px
+    }
+
+    range-slider:active {
+        opacity: .8
+    }
+
+    range-slider[disabled] {
+        filter: grayscale(1);
+        opacity: .4
+    }
+
+    range-slider [data-track] {
+        background-color: var(--input-border);
+    }
+
+    range-slider [data-track-fill] {
+        background-color: var(--input-border-focus);
+    }
+
+    range-slider [data-thumb] {
+        background-color: var(--input-border-focus);
+        border-radius: 100%;
+    }
+}
+
+/* Select dropdown styles */
+.i-dropdown {
+    z-index: 9999;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--input-radius);
+    box-shadow: var(--input-shadow);
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.i-search {
+    width: 100%;
+    padding: var(--input-padding-x);
+    border: none;
+    border-bottom: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--input-text);
+    font-size: var(--input-font-size);
+    font-family: inherit;
+    outline: none;
+}
+
+.i-options {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.i-option {
+    padding: var(--input-padding-x);
+    cursor: pointer;
+    color: var(--input-text);
+    transition: var(--input-transition);
+}
+
+.i-option:hover {
+    background-color: var(--input-action-hover-bg);
+    color: var(--input-text);
+}
+
+.i-option-selected {
+    background-color: var(--input-border-focus);
+    color: #fff;
+}
+
+.i-option-highlighted {
+    background-color: var(--input-action-hover-bg);
+    color: var(--input-text);
+}
+
+.i-option-selected.i-option-highlighted {
+    background-color: var(--input-border-focus);
+    color: #fff;
+}
+
+/* Radio input styles */
+.i-radio-group {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--input-gap);
+}
+
+.i-radio-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.i-radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: var(--input-font-size);
+    line-height: var(--input-line-height);
+    color: var(--input-text);
+    transition: var(--input-transition);
+    padding: 0.25rem;
+    border-radius: var(--input-radius);
+    position: relative;
+}
+
+.i-radio-option:hover {
+    background-color: var(--input-action-hover-bg);
+}
+
+.i-radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.i-radio-option input[type="radio"]:focus + .i-radio-label::before {
+    outline: 2px solid var(--input-border-focus);
+    outline-offset: 2px;
+}
+
+.i-radio-option .i-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    position: relative;
+    padding-left: 1.75rem;
+}
+
+.i-radio-option .i-radio-label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--input-border);
+    border-radius: 50%;
+    background-color: var(--input-bg);
+    transition: var(--input-transition);
+    box-sizing: border-box;
+}
+
+.i-radio-option input[type="radio"]:checked + .i-radio-label::before {
+    border-color: var(--input-border-focus);
+    background-color: var(--input-border-focus);
+    box-shadow: inset 0 0 0 3px var(--input-bg);
+}
+
+.i-radio-option input[type="radio"]:checked + .i-radio-label::after {
+    content: '';
+    position: absolute;
+    left: 0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--input-bg);
+    opacity: 1;
+    transition: var(--input-transition);
+}
+
+.i-radio-option-disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.i-radio-option-disabled input[type="radio"]:disabled {
+    cursor: not-allowed;
+}
+
+.i-radio-option-disabled .i-radio-label {
+    cursor: not-allowed;
+    color: var(--input-disabled-text);
+}
+
+.i-radio-option-disabled .i-radio-label::before {
+    background-color: var(--input-disabled-bg);
+    border-color: var(--input-border);
+}
+
+.i-radio-description {
+    font-size: var(--input-secondary-font-size);
+    line-height: var(--input-secondary-line-height);
+    color: var(--input-label-secondary-color);
+    margin-top: 0.125rem;
+    margin-left: 1.75rem;
+    display: block;
+}
+
+/* Color picker styles - adapted for Duet design system */
+.pickr {
+    position: relative;
+    overflow: visible;
+    transform: translateY(0);
+}
+
+.pickr * {
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    -webkit-appearance: none;
+}
+
+.pickr .pcr-button {
+    position: relative;
+    height: 2em;
+    width: 2em;
+    padding: .5em;
+    cursor: pointer;
+    font-family: var(--input-font-family);
+    border-radius: var(--input-radius);
+    background: transparent;
+    transition: var(--input-transition);
+}
+
+.pickr .pcr-button::before {
+    display: none;
+}
+
+.pickr .pcr-button::after {
+    position: absolute;
+    content: "";
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    transition: var(--input-transition);
+    background: var(--pcr-color);
+    border-radius: var(--input-radius);
+}
+
+.pickr .pcr-button.clear {
+    background-size: 70%;
+}
+
+.pickr .pcr-button.clear::before {
+    opacity: 0;
+}
+
+.pickr .pcr-button.clear:focus {
+    box-shadow: var(--input-shadow-focus);
+}
+
+.pickr .pcr-button.disabled {
+    cursor: not-allowed;
+}
+
+.pickr *, .pcr-app * {
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+    -webkit-appearance: none;
+}
+
+.pickr input:focus, .pickr input.pcr-active, .pickr button:focus, .pickr button.pcr-active, .pcr-app input:focus, .pcr-app input.pcr-active, .pcr-app button:focus, .pcr-app button.pcr-active {
+    box-shadow: var(--input-shadow-focus);
+}
+
+.pickr .pcr-palette, .pickr .pcr-slider, .pcr-app .pcr-palette, .pcr-app .pcr-slider {
+    transition: box-shadow .3s;
+}
+
+.pickr .pcr-palette:focus, .pickr .pcr-slider:focus, .pcr-app .pcr-palette:focus, .pcr-app .pcr-slider:focus {
+    box-shadow: var(--input-shadow-focus);
+}
+
+.pcr-app {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+    border-radius: var(--input-radius);
+    background: var(--input-bg);
+    opacity: 0;
+    display: none;
+    transition: opacity .3s, visibility 0s .3s;
+    font-family: var(--input-font-family);
+    box-shadow: var(--input-shadow);
+    margin-top: 0.5rem;
+    width: 100%;
+    left: 0 !important;
+    right: 0 !important;
+}
+
+.pcr-app.visible {
+    transition: opacity .3s;
+    visibility: visible;
+    opacity: 1;
+    display: block;
+}
+
+/* Focus indicators for accessibility */
+.pcr-app .pcr-swatches > button:focus {
+    outline: 2px solid var(--input-border-focus);
+    outline-offset: 2px;
+}
+
+.pcr-app .pcr-interaction input:focus {
+    outline: 2px solid var(--input-border-focus);
+    outline-offset: 2px;
+}
+
+.pcr-app .pcr-interaction .pcr-save:focus,
+.pcr-app .pcr-interaction .pcr-cancel:focus,
+.pcr-app .pcr-interaction .pcr-clear:focus {
+    outline: 2px solid var(--input-border-focus);
+    outline-offset: 2px;
+}
+
+/* Keyboard navigation support */
+.pcr-app .pcr-swatches > button {
+    tabindex: 0;
+}
+
+.pcr-app .pcr-interaction input {
+    tabindex: 0;
+}
+
+.pcr-app .pcr-interaction .pcr-save,
+.pcr-app .pcr-interaction .pcr-cancel,
+.pcr-app .pcr-interaction .pcr-clear {
+    tabindex: 0;
+}
+
+/* High contrast focus for better accessibility */
+@media (prefers-contrast: high) {
+    .pcr-app .pcr-swatches > button:focus,
+    .pcr-app .pcr-interaction input:focus,
+    .pcr-app .pcr-interaction .pcr-save:focus,
+    .pcr-app .pcr-interaction .pcr-cancel:focus,
+    .pcr-app .pcr-interaction .pcr-clear:focus {
+        outline: 3px solid #000;
+        outline-offset: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .pcr-app {
+        transition: none;
+    }
+
+    .pcr-app .pcr-swatches > button,
+    .pcr-app .pcr-interaction input,
+    .pcr-app .pcr-interaction .pcr-save,
+    .pcr-app .pcr-interaction .pcr-cancel,
+    .pcr-app .pcr-interaction .pcr-clear {
+        transition: none;
+    }
+}
+
+.pcr-app .pcr-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: .75em;
+}
+
+.pcr-app .pcr-swatches.pcr-last {
+    margin: 0;
+}
+
+@supports (display: grid) {
+    .pcr-app .pcr-swatches {
+        display: grid;
+        align-items: center;
+        grid-template-columns: repeat(auto-fit, 1.75em);
+    }
+}
+
+.pcr-app .pcr-swatches > button {
+    font-size: 1em;
+    position: relative;
+    width: calc(1.75em - 5px);
+    height: calc(1.75em - 5px);
+    border-radius: var(--input-radius);
+    cursor: pointer;
+    margin: 2.5px;
+    flex-shrink: 0;
+    justify-self: center;
+    transition: var(--input-transition);
+    overflow: hidden;
+    background: rgba(0,0,0,0);
+    z-index: 1;
+}
+
+.pcr-app .pcr-swatches > button::before {
+    display: none;
+}
+
+.pcr-app .pcr-swatches > button::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--pcr-color);
+    border: 1px solid rgba(0,0,0,.05);
+    border-radius: var(--input-radius);
+    box-sizing: border-box;
+}
+
+.pcr-app .pcr-swatches > button:hover {
+    filter: brightness(1.05);
+}
+
+.pcr-app .pcr-swatches > button:not(.pcr-active) {
+    box-shadow: none;
+}
+
+.pcr-app .pcr-interaction {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0 -0.2em 0 -0.2em;
+}
+
+.pcr-app .pcr-interaction > * {
+    margin: 0 .2em;
+}
+
+.pcr-app .pcr-interaction input {
+    letter-spacing: .07em;
+    font-size: .75em;
+    text-align: center;
+    cursor: pointer;
+    color: var(--input-desc-text);
+    background: var(--input-action-hover-bg);
+    border-radius: var(--input-radius);
+    transition: var(--input-transition);
+    padding: .45em .5em;
+    margin-top: .75em;
+}
+
+.pcr-app .pcr-interaction input:hover {
+    filter: brightness(0.975);
+}
+
+.pcr-app .pcr-interaction input:focus {
+    box-shadow: var(--input-shadow-focus);
+    z-index: 2;
+}
+
+.pcr-app .pcr-interaction .pcr-result {
+    color: var(--input-desc-text);
+    text-align: left;
+    flex: 1 1 8em;
+    min-width: 8em;
+    transition: var(--input-transition);
+    border-radius: var(--input-radius);
+    background: var(--input-action-hover-bg);
+    cursor: text;
+}
+
+.pcr-app .pcr-interaction .pcr-result::-moz-selection {
+    background: var(--input-border-focus);
+    color: #fff;
+}
+
+.pcr-app .pcr-interaction .pcr-result::selection {
+    background: var(--input-border-focus);
+    color: #fff;
+}
+
+.pcr-app .pcr-interaction .pcr-type.active {
+    color: #fff;
+    background: var(--input-border-focus);
+}
+
+.pcr-app .pcr-interaction .pcr-save, .pcr-app .pcr-interaction .pcr-cancel, .pcr-app .pcr-interaction .pcr-clear {
+    color: #fff;
+    width: auto;
+}
+
+.pcr-app .pcr-interaction .pcr-save, .pcr-app .pcr-interaction .pcr-cancel, .pcr-app .pcr-interaction .pcr-clear {
+    color: #fff;
+}
+
+.pcr-app .pcr-interaction .pcr-save:hover, .pcr-app .pcr-interaction .pcr-cancel:hover, .pcr-app .pcr-interaction .pcr-clear:hover {
+    filter: brightness(0.925);
+}
+
+.pcr-app .pcr-interaction .pcr-save {
+    background: var(--input-border-focus);
+}
+
+.pcr-app .pcr-interaction .pcr-clear, .pcr-app .pcr-interaction .pcr-cancel {
+    background: var(--input-border-error);
+}
+
+.pcr-app .pcr-interaction .pcr-clear:focus, .pcr-app .pcr-interaction .pcr-cancel:focus {
+    box-shadow: var(--input-shadow-error);
+    z-index: 2;
+}
+
+.pcr-app[data-theme=monolith] {
+    width: 100%;
+    max-width: 95vw;
+    padding: .8em;
+    border: 1px solid var(--input-border);
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-preview {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 1em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: .5em;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-preview::before {
+    display: none;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-preview .pcr-last-color {
+    cursor: pointer;
+    transition: var(--input-transition);
+    border-radius: var(--input-radius) 0 0 var(--input-radius);
+    z-index: 2;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-preview .pcr-current-color {
+    border-radius: 0 var(--input-radius) var(--input-radius) 0;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-preview .pcr-last-color, .pcr-app[data-theme=monolith] .pcr-selection .pcr-color-preview .pcr-current-color {
+    background: var(--pcr-color);
+    width: 50%;
+    height: 100%;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-palette {
+    width: 100%;
+    height: 8em;
+    z-index: 1;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-palette .pcr-palette {
+    border-radius: var(--input-radius);
+    width: 100%;
+    height: 100%;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-palette .pcr-palette::before {
+    display: none;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-chooser, .pcr-app[data-theme=monolith] .pcr-selection .pcr-color-opacity {
+    height: .5em;
+    margin-top: .75em;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-chooser .pcr-picker, .pcr-app[data-theme=monolith] .pcr-selection .pcr-color-opacity .pcr-picker {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-chooser .pcr-slider, .pcr-app[data-theme=monolith] .pcr-selection .pcr-color-opacity .pcr-slider {
+    flex-grow: 1;
+    border-radius: 50em;
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-chooser .pcr-slider {
+    background: linear-gradient(to right, hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(0, 100%, 50%));
+}
+
+.pcr-app[data-theme=monolith] .pcr-selection .pcr-color-opacity .pcr-slider {
+    background: linear-gradient(to right, transparent, black);
+    background-size: 100%;
+}

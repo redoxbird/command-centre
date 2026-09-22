@@ -142,7 +142,7 @@ export default class InputNumberBase extends InputBase {
   _onActionCopy(e) {
     e.stopPropagation();
     navigator.clipboard.writeText(this.value).catch(() => {
-      this._dispatch('input:error', { error: 'Copy failed' });
+      this._dispatch('e:error', { error: 'Copy failed' });
     });
     e.target.classList.add('i-action-copied');
     setTimeout(() => e.target.classList.remove('i-action-copied'), 1000);
@@ -157,12 +157,12 @@ export default class InputNumberBase extends InputBase {
   // Input handlers – delegate to input-base core
   // ------------------------------------------------------------------ //
   _onInput(e) {
-    this._updateValue(e.target.value);     // → dispatches input:input + optional debounce
+    this._updateValue(e.target.value);     // → dispatches e:input + optional debounce
     this._callHook('onInput', e);
   }
 
   _onChange(e) {
-    this._handleChange();                  // → dispatches input:change + optional validate
+    this._handleChange();                  // → dispatches e:change + optional validate
     this._callHook('onChange', e);
   }
 
@@ -176,7 +176,7 @@ export default class InputNumberBase extends InputBase {
   // ------------------------------------------------------------------ //
   async validate() {
     this._callHook('onValidate');
-    this._dispatch('input:validate');
+    this._dispatch('e:validate');
 
     try {
       const schema = this._buildSchema();

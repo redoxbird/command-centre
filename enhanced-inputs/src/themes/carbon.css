@@ -1,0 +1,353 @@
+/* Carbon Design System Theme - Based on IBM Carbon Design System v10 */
+:root {
+    /* Carbon Design Colors */
+    --input-border: #8d8d8d;
+    --input-border-focus: #0f62fe;
+    --input-border-error: #da1e28;
+    --input-bg: #ffffff;
+    --input-text: #161616;
+    --input-placeholder: #6f6f6f;
+    --input-error-text: #da1e28;
+    --input-desc-text: #525252;
+    --input-label-color: #161616;
+    --input-label-secondary-color: #525252;
+    --input-disabled-bg: #f4f4f4;
+    --input-disabled-text: #a8a8a8;
+    --input-action-hover-bg: #e0e0e0;
+    --input-prefix-color: #525252;
+    
+    /* Carbon Design Dimensions */
+    --input-radius: 0;
+    --input-padding-x: 12px;
+    --input-padding-y: 10px;
+    --input-height: 2.5rem;
+    
+    /* Carbon Design Typography */
+    --input-font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --input-font-size: 0.875rem;
+    --input-line-height: 1.2857142857;
+    --input-label-font-size: 0.75rem;
+    --input-label-line-height: 1.3333333333;
+    --input-label-font-weight: 400;
+    --input-secondary-font-size: 0.75rem;
+    --input-secondary-line-height: 1.3333333333;
+    --input-description-font-size: 0.75rem;
+    --input-description-line-height: 1.3333333333;
+    --input-action-font-size: 0.75rem;
+    --input-action-font-weight: 400;
+    
+    /* Carbon Design Shadows */
+    --input-shadow: inset 0 -1px 0 0 #8d8d8d;
+    --input-shadow-focus: inset 0 -2px 0 0 #0f62fe;
+    --input-shadow-error: inset 0 -2px 0 0 #da1e28;
+    
+    /* Carbon Design Transitions */
+    --input-transition: all 0.15s ease;
+    
+    /* Carbon Design Spacing */
+    --input-label-margin-bottom: 0.5rem;
+    --input-description-margin-top: 0.5rem;
+    --input-error-margin-top: 0.5rem;
+    --input-gap: 0.25rem;
+    --input-inline-gap: 1rem;
+    
+    /* Carbon Design Border radius */
+    --input-action-border-radius: 0;
+    --input-prefix-border-radius: 0;
+    --input-color-preview-radius: 0;
+    --input-color-button-radius: 0;
+    --input-error-radius: 0;
+}
+
+/* Core component styles */
+.i-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.i-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--input-gap);
+    font-family: var(--input-font-family);
+    font-size: var(--input-font-size);
+    line-height: var(--input-line-height);
+    position: relative;
+    border: 0;
+    border-bottom: 1px solid var(--input-border);
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    border-radius: var(--input-radius);
+    overflow: hidden;
+    height: var(--input-height);
+    box-shadow: var(--input-shadow);
+    transition: var(--input-transition);
+}
+
+/* Label styles */
+.i-label {
+    font-weight: var(--input-label-font-weight);
+    font-size: var(--input-label-font-size);
+    line-height: var(--input-label-line-height);
+    color: var(--input-label-color);
+    margin-bottom: var(--input-label-margin-bottom);
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.32px;
+}
+
+.i-label-group {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: var(--input-gap);
+}
+
+.i-label-secondary {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-weight: 400;
+    font-size: var(--input-secondary-font-size);
+    line-height: var(--input-secondary-line-height);
+    color: var(--input-label-secondary-color);
+}
+
+.i-label-secondary .i-icon svg {
+    margin: 0 0.25rem;
+    width: 1rem;
+    height: auto;
+}
+
+/* Input styles */
+.i-input {
+    padding: 0 var(--input-padding-x);
+    background: transparent;
+    color: var(--input-text);
+    font-size: var(--input-font-size);
+    line-height: var(--input-label-line-height);
+    transition: var(--input-transition);
+    border: none;
+    flex-grow: 1;
+    height: var(--input-height);
+    font-family: inherit;
+    border-radius: 0;
+}
+
+/* Focus and error states */
+.i-wrapper:focus-within {
+    outline: none;
+    border-bottom-color: var(--input-border-focus);
+    box-shadow: var(--input-shadow-focus);
+    border-bottom-width: 2px;
+}
+
+.i-wrapper-error {
+    border-bottom-color: var(--input-border-error);
+    box-shadow: var(--input-shadow-error);
+    border-bottom-width: 2px;
+}
+
+/* Date picker styles */
+.i-field wc-datepicker {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.i-field wc-datepicker .wc-datepicker {
+    width: 100%;
+    max-width: none;
+}
+
+/* Color picker styles */
+.i-color-preview {
+    display: inline-block;
+    width: calc(var(--input-height) - 1rem);
+    height: calc(var(--input-height) - 1rem);
+    border-radius: var(--input-color-preview-radius);
+    flex-shrink: 0;
+}
+
+.clr-field {
+    display: block;
+    width: 100%;
+}
+
+.clr-field button {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--input-color-button-radius);
+    cursor: pointer;
+    right: 0.5rem;
+    z-index: 10;
+}
+
+.clr-field input {
+    width: 100%;
+}
+
+/* Disabled state */
+.i-input:disabled {
+    background: var(--input-disabled-bg);
+    color: var(--input-disabled-text);
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.i-input:focus {
+    outline: none;
+}
+
+.i-input::-webkit-inner-spin-button,
+.i-input::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+/* Description text */
+.i-description {
+    font-size: var(--input-description-font-size);
+    line-height: var(--input-description-line-height);
+    color: var(--input-desc-text);
+    margin: var(--input-description-margin-top) 0 0 0;
+}
+
+/* Action button */
+.i-action {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    align-self: stretch;
+    font-size: var(--input-action-font-size);
+    font-weight: var(--input-action-font-weight);
+    border-radius: var(--input-action-border-radius);
+    cursor: pointer;
+    background-color: transparent;
+    flex-shrink: 0;
+    width: var(--input-height);
+    height: var(--input-height);
+    text-align: center;
+    transition: var(--input-transition);
+    border: none;
+    color: #6b7280;
+}
+
+.i-action:hover {
+    background-color: #f4f4f4;
+    color: #374151;
+}
+
+/* Icon styles */
+.i-icon {
+    pointer-events: none;
+    line-height: 1;
+}
+
+.i-icon svg {
+    width: 1.25em;
+    height: 1.25em;
+    line-height: 1;
+}
+
+/* Action button states */
+.i-action-copy .i-action-icon-check {
+    display: none;
+}
+
+.i-action-copy .i-action-icon-copy {
+    display: block;
+}
+
+.i-action-copied .i-action-icon-check {
+    display: block;
+}
+
+.i-action-copied .i-action-icon-copy {
+    display: none;
+}
+
+/* Prefix and select country */
+.i-prefix,
+.i-select-country {
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: center;
+    align-self: stretch;
+    text-align: left;
+    border-radius: var(--input-prefix-border-radius);
+    padding: 0 0 0 0.75rem;
+    cursor: pointer;
+    align-self: stretch;
+    color: var(--input-prefix-color);
+    height: var(--input-height);
+    border: none;
+    font-size: var(--input-font-size);
+    line-height: var(--input-label-line-height);
+}
+
+.i-select-country {
+    width: intrinsic;
+    width: -moz-fit-content;
+    width: fit-content;
+}
+
+/* Error message */
+.i-error {
+    color: var(--input-error-text);
+    border-color: var(--input-border-error);
+    display: none;
+    font-size: var(--input-font-size);
+    font-weight: 500;
+    margin-top: var(--input-error-margin-top);
+    line-height: var(--input-label-line-height);
+    background-color: #fff1f1;
+    border: 1px solid #da1e28;
+    border-radius: var(--input-error-radius);
+    padding: 0.75rem 1rem;
+}
+
+.i-error ul {
+    padding-left: 1rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    list-style: disc;
+}
+
+.i-error-visible {
+    display: block;
+}
+
+/* Inline variant: Horizontal layout */
+.i-wrapper.inline {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--input-inline-gap);
+}
+
+.i-wrapper.inline .i-label {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.i-wrapper.inline .i-input {
+    flex: 1;
+}
+
+.i-wrapper.inline .i-description,
+.i-wrapper.inline .i-error {
+    position: absolute;
+    left: -9999px;
+    /* Hidden off-screen for inline */
+}
+
+/* Responsive: Stack on small screens */
+@media (max-width: 640px) {
+    .i-wrapper.inline {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

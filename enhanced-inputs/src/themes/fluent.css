@@ -1,0 +1,366 @@
+/* Fluent Design Theme - Based on Microsoft Fluent Design System */
+:root {
+    /* Fluent Design Colors */
+    --input-border: #c8c6c4;
+    --input-border-focus: #0063b1;
+    --input-border-error: #d13438;
+    --input-bg: #ffffff;
+    --input-text: #323130;
+    --input-placeholder: #605e5c;
+    --input-error-text: #d13438;
+    --input-desc-text: #605e5c;
+    --input-label-color: #323130;
+    --input-label-secondary-color: #605e5c;
+    --input-disabled-bg: #f3f2f1;
+    --input-disabled-text: #a19f9d;
+    --input-action-hover-bg: #e5e5e5;
+    --input-prefix-color: #605e5c;
+    
+    /* Fluent Design Dimensions */
+    --input-radius: 2px;
+    --input-padding-x: 12px;
+    --input-padding-y: 10px;
+    --input-height: 2.5rem;
+    
+    /* Fluent Design Typography */
+    --input-font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    --input-font-size: 0.875rem;
+    --input-line-height: 1.3333333333;
+    --input-label-font-size: 0.875rem;
+    --input-label-line-height: 1.3333333333;
+    --input-label-font-weight: 600;
+    --input-secondary-font-size: 0.75rem;
+    --input-secondary-line-height: 1.3333333333;
+    --input-description-font-size: 0.75rem;
+    --input-description-line-height: 1.3333333333;
+    --input-action-font-size: 0.75rem;
+    --input-action-font-weight: 600;
+    
+    /* Fluent Design Shadows */
+    --input-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --input-shadow-focus: 0 0 0 2px rgba(0, 99, 177, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1);
+    --input-shadow-error: 0 0 0 2px rgba(209, 52, 56, 0.4), 0 1px 3px rgba(0, 0, 0, 0.1);
+    
+    /* Fluent Design Transitions */
+    --input-transition: all 0.15s cubic-bezier(0.4, 0, 0.25, 1);
+    
+    /* Fluent Design Spacing */
+    --input-label-margin-bottom: 0.5rem;
+    --input-description-margin-top: 0.5rem;
+    --input-error-margin-top: 0.5rem;
+    --input-gap: 0.25rem;
+    --input-inline-gap: 0.75rem;
+    
+    /* Fluent Design Border radius */
+    --input-action-border-radius: 0 2px 2px 0;
+    --input-prefix-border-radius: 2px 0 0 2px;
+    --input-color-preview-radius: 2px;
+    --input-color-button-radius: 2px;
+    --input-error-radius: 2px;
+}
+
+/* Core component styles */
+.i-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.i-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--input-gap);
+    font-family: var(--input-font-family);
+    font-size: var(--input-font-size);
+    line-height: var(--input-line-height);
+    position: relative;
+    border: 1px solid var(--input-border);
+    padding: 0;
+    margin: 0;
+    background-color: var(--input-bg);
+    border-radius: var(--input-radius);
+    overflow: hidden;
+    height: var(--input-height);
+    box-shadow: var(--input-shadow);
+    transition: var(--input-transition);
+}
+
+/* Label styles */
+.i-label {
+    font-weight: var(--input-label-font-weight);
+    font-size: var(--input-label-font-size);
+    line-height: var(--input-label-line-height);
+    color: var(--input-label-color);
+    margin-bottom: var(--input-label-margin-bottom);
+    display: block;
+}
+
+.i-label-group {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: var(--input-gap);
+}
+
+.i-label-secondary {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-weight: 400;
+    font-size: var(--input-secondary-font-size);
+    line-height: var(--input-secondary-line-height);
+    color: var(--input-label-secondary-color);
+}
+
+.i-label-secondary .i-icon svg {
+    margin: 0 0.25rem;
+    width: 1rem;
+    height: auto;
+}
+
+/* Input styles */
+.i-input {
+    padding: 0 var(--input-padding-x);
+    background: var(--input-bg);
+    color: var(--input-text);
+    font-size: var(--input-font-size);
+    line-height: var(--input-label-line-height);
+    transition: var(--input-transition);
+    border: none;
+    flex-grow: 1;
+    height: var(--input-height);
+    font-family: inherit;
+    font-weight: 400;
+}
+
+/* Focus and error states */
+.i-wrapper:focus-within {
+    outline: none;
+    border-color: var(--input-border-focus);
+    box-shadow: var(--input-shadow-focus);
+}
+
+.i-wrapper-error {
+    border-color: var(--input-border-error);
+    box-shadow: var(--input-shadow-error);
+}
+
+/* Date picker styles */
+.i-field wc-datepicker {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.i-field wc-datepicker .wc-datepicker {
+    width: 100%;
+    max-width: none;
+}
+
+/* Color picker styles */
+.i-color-preview {
+    display: inline-block;
+    width: calc(var(--input-height) - 1rem);
+    height: calc(var(--input-height) - 1rem);
+    border-radius: var(--input-color-preview-radius);
+    flex-shrink: 0;
+}
+
+.clr-field {
+    display: block;
+    width: 100%;
+}
+
+.clr-field button {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--input-color-button-radius);
+    cursor: pointer;
+    right: 0.5rem;
+    z-index: 10;
+}
+
+.clr-field input {
+    width: 100%;
+}
+
+/* Disabled state */
+.i-input:disabled {
+    background: var(--input-disabled-bg);
+    color: var(--input-disabled-text);
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.i-input:focus {
+    outline: none;
+}
+
+.i-input::-webkit-inner-spin-button,
+.i-input::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+/* Description text */
+.i-description {
+    font-size: var(--input-description-font-size);
+    line-height: var(--input-description-line-height);
+    color: var(--input-desc-text);
+    margin: var(--input-description-margin-top) 0 0 0;
+}
+
+/* Action button */
+.i-action {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    align-self: stretch;
+    font-size: var(--input-action-font-size);
+    font-weight: var(--input-action-font-weight);
+    border-radius: var(--input-action-border-radius);
+    cursor: pointer;
+    background-color: transparent;
+    flex-shrink: 0;
+    width: var(--input-height);
+    height: var(--input-height);
+    text-align: center;
+    transition: var(--input-transition);
+    border: none;
+    color: #6b7280;
+}
+
+.i-action:hover {
+    background-color: #edebe9;
+    color: #374151;
+}
+
+/* Icon styles */
+.i-icon {
+    pointer-events: none;
+    line-height: 1;
+}
+
+.i-icon svg {
+    width: 1.25em;
+    height: 1.25em;
+    line-height: 1;
+}
+
+/* Action button states */
+.i-action-copy .i-action-icon-check {
+    display: none;
+}
+
+.i-action-copy .i-action-icon-copy {
+    display: block;
+}
+
+.i-action-copied .i-action-icon-check {
+    display: block;
+}
+
+.i-action-copied .i-action-icon-copy {
+    display: none;
+}
+
+/* Prefix and select country */
+.i-prefix,
+.i-select-country {
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: center;
+    align-self: stretch;
+    text-align: left;
+    border-radius: var(--input-prefix-border-radius);
+    padding: 0 0 0 0.75rem;
+    cursor: pointer;
+    align-self: stretch;
+    color: var(--input-prefix-color);
+    height: var(--input-height);
+    border: none;
+    font-size: var(--input-font-size);
+    line-height: var(--input-label-line-height);
+}
+
+.i-select-country {
+    width: intrinsic;
+    width: -moz-fit-content;
+    width: fit-content;
+}
+
+/* Error message */
+.i-error {
+    color: var(--input-error-text);
+    border-color: var(--input-border-error);
+    display: none;
+    font-size: var(--input-font-size);
+    font-weight: 500;
+    margin-top: var(--input-error-margin-top);
+    line-height: var(--input-label-line-height);
+    background-color: #fdeded;
+    border: 1px solid #d13438;
+    border-radius: var(--input-error-radius);
+    padding: 0.75rem 1rem;
+}
+
+.i-error ul {
+    padding-left: 1rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    list-style: disc;
+}
+
+.i-error-visible {
+    display: block;
+}
+
+/* Inline variant: Horizontal layout */
+.i-wrapper.inline {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--input-inline-gap);
+}
+
+.i-wrapper.inline .i-label {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.i-wrapper.inline .i-input {
+    flex: 1;
+}
+
+.i-wrapper.inline .i-description,
+.i-wrapper.inline .i-error {
+    position: absolute;
+    left: -9999px;
+    /* Hidden off-screen for inline */
+}
+
+/* Responsive: Stack on small screens */
+@media (max-width: 640px) {
+    .i-wrapper.inline {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Fluent Design Reveal focus effect */
+.i-wrapper:focus-within::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid #605e5c;
+    border-radius: calc(var(--input-radius) + 2px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.i-wrapper-error:focus-within::after {
+    border-color: #d13438;
+}

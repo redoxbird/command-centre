@@ -69,6 +69,7 @@ export default class EInputBase extends LitElement {
       input: `e-input-${uid}`,
       desc: `e-desc-${uid}`,
       error: `e-error-${uid}`,
+      listbox: `e-listbox-${uid}`,
     };
   }
 

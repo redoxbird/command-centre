@@ -1,0 +1,430 @@
+/* Material Design Theme - Material Design 3 */
+:root {
+  /* Colors */
+  --md-sys-color-primary: #6750A4;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #EADDFF;
+  --md-sys-color-on-primary-container: #21005D;
+  --md-sys-color-secondary: #625B71;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E8DEF8;
+  --md-sys-color-on-secondary-container: #1D192B;
+  --md-sys-color-tertiary: #7D5260;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #FFD8E4;
+  --md-sys-color-on-tertiary-container: #31111D;
+  --md-sys-color-error: #BA1A1A;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #FFDAD6;
+  --md-sys-color-on-error-container: #410002;
+  --md-sys-color-background: #FFFBFE;
+  --md-sys-color-on-background: #1C1B1F;
+  --md-sys-color-surface: #FFFBFE;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-surface-variant: #E7E0EC;
+  --md-sys-color-on-surface-variant: #49454F;
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-outline-variant: #CAC4D0;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-inverse-surface: #313033;
+  --md-sys-color-inverse-on-surface: #F4EFF4;
+  --md-sys-color-inverse-primary: #D0BCFF;
+  --md-sys-color-surface-dim: #DDD8DD;
+  --md-sys-color-surface-bright: #FFFBFE;
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #F7F2FA;
+  --md-sys-color-surface-container: #F1ECF4;
+  --md-sys-color-surface-container-high: #ECE6F0;
+  --md-sys-color-surface-container-highest: #E6E0E9;
+
+  /* Input component tokens */
+  --input-border: var(--md-sys-color-outline);
+  --input-border-focus: var(--md-sys-color-primary);
+  --input-border-error: var(--md-sys-color-error);
+  --input-bg: var(--md-sys-color-surface-container);
+  --input-text: var(--md-sys-color-on-surface);
+  --input-placeholder: var(--md-sys-color-on-surface-variant);
+  --input-error-text: var(--md-sys-color-error);
+  --input-desc-text: var(--md-sys-color-on-surface-variant);
+  --input-label-color: var(--md-sys-color-on-surface-variant);
+  --input-label-secondary-color: var(--md-sys-color-on-surface-variant);
+  --input-disabled-bg: var(--md-sys-color-surface-container-low);
+  --input-disabled-text: var(--md-sys-color-on-surface-variant);
+  --input-action-hover-bg: var(--md-sys-color-surface-container-high);
+  --input-prefix-color: var(--md-sys-color-on-surface-variant);
+
+  /* Dimensions */
+  --input-radius: 4px;
+  --input-padding-x: 16px;
+  --input-height: 56px;
+
+  /* Typography */
+  --input-font-family: "Roboto", sans-serif;
+  --input-font-size: 16px;
+  --input-line-height: 24px;
+  --input-label-font-size: 12px;
+  --input-label-line-height: 16px;
+  --input-label-font-weight: 400;
+  --input-secondary-font-size: 12px;
+  --input-secondary-line-height: 16px;
+  --input-description-font-size: 12px;
+  --input-description-line-height: 16px;
+  --input-action-font-size: 14px;
+  --input-action-font-weight: 500;
+
+  /* Shadows */
+  --input-shadow: 0px 1px 2px rgba(0,0,0,0.3), 0px 1px 3px rgba(0,0,0,0.15);
+  --input-shadow-focus: var(--input-shadow);
+  --input-shadow-error: var(--input-shadow);
+
+  /* Transitions */
+  --input-transition: all 200ms cubic-bezier(0.2,0,0,1);
+
+  /* Spacing */
+  --input-label-margin-bottom: 8px;
+  --input-description-margin-top: 4px;
+  --input-error-margin-top: 8px;
+  --input-gap: 8px;
+  --input-inline-gap: 16px;
+
+  /* Border radius for actions/prefixes */
+  --input-action-border-radius: 0 4px 4px 0;
+  --input-prefix-border-radius: 4px 0 0 4px;
+  --input-color-preview-radius: 4px;
+  --input-color-button-radius: 4px;
+  --input-error-radius: 4px;
+}
+
+/* Core field */
+.i-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Wrapper */
+.i-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--input-gap);
+  font-family: var(--input-font-family);
+  font-size: var(--input-font-size);
+  line-height: var(--input-line-height);
+  position: relative;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  border-radius: var(--input-radius);
+  overflow: hidden;
+  height: var(--input-height);
+  box-shadow: var(--input-shadow);
+  transition: var(--input-transition);
+}
+
+.i-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border-radius: var(--input-radius);
+  transition: background-color 200ms cubic-bezier(0.2,0,0,1);
+}
+
+.i-wrapper:hover::before {
+  background: rgba(var(--md-sys-color-outline-rgb,121,116,126),0.08);
+}
+
+.i-wrapper:focus-within::before {
+  background: rgba(var(--md-sys-color-primary-rgb,103,80,164),0.08);
+}
+
+.i-wrapper-error::before {
+  background: rgba(var(--md-sys-color-error-rgb,186,26,26),0.08);
+}
+
+/* Label */
+.i-label {
+  font-weight: var(--input-label-font-weight);
+  font-size: var(--input-label-font-size);
+  line-height: var(--input-label-line-height);
+  color: var(--input-label-color);
+  margin-bottom: var(--input-label-margin-bottom);
+  display: block;
+  letter-spacing: 0.4px;
+}
+
+.i-wrapper:focus-within .i-label,
+.i-wrapper:not(:placeholder-shown) .i-label {
+  color: var(--input-border-focus);
+}
+
+.i-wrapper-error .i-label {
+  color: var(--input-border-error);
+}
+
+/* Input */
+.i-input {
+  flex: 1;
+  padding: 0 var(--input-padding-x);
+  background: transparent;
+  color: var(--input-text);
+  font-size: var(--input-font-size);
+  line-height: var(--input-line-height);
+  border: none;
+  height: var(--input-height);
+  font-family: inherit;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  transition: var(--input-transition);
+}
+
+.i-input::placeholder {
+  color: var(--input-placeholder);
+  letter-spacing: 0.25px;
+}
+
+.i-input:focus {
+  outline: none;
+}
+
+/* Description */
+.i-description {
+  font-size: var(--input-description-font-size);
+  line-height: var(--input-description-line-height);
+  color: var(--input-desc-text);
+  margin: var(--input-description-margin-top) 0 0 0;
+}
+
+/* Error */
+.i-error {
+  color: var(--md-sys-color-error);
+  background-color: var(--md-sys-color-error-container);
+  border: 1px solid var(--md-sys-color-error);
+  border-radius: var(--input-error-radius);
+  padding: 12px 16px;
+  font-size: var(--input-font-size);
+  margin-top: var(--input-error-margin-top);
+  display: none;
+}
+.i-error-visible {
+  display: block;
+}
+
+/* Focus & error states */
+.i-wrapper:focus-within {
+  border-color: var(--input-border-focus);
+  box-shadow: var(--input-shadow-focus);
+  border-width: 2px;
+}
+
+.i-wrapper-error {
+  border-color: var(--input-border-error);
+  box-shadow: var(--input-shadow-error);
+  border-width: 2px;
+}
+
+.i-wrapper-error:focus-within {
+  border-color: var(--input-border-error);
+  box-shadow: var(--input-shadow-error);
+}
+
+/* Action button */
+.i-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--input-height);
+  height: var(--input-height);
+  font-size: var(--input-action-font-size);
+  font-weight: var(--input-action-font-weight);
+  border-radius: var(--input-action-border-radius);
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--input-transition);
+}
+
+.i-action::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  transition: background-color 200ms cubic-bezier(0.2,0,0,1);
+}
+
+.i-action:hover::before {
+  background: rgba(var(--md-sys-color-outline-rgb,121,116,126),0.08);
+}
+
+.i-action:hover {
+  color: var(--md-sys-color-on-surface);
+}
+
+.i-action:active::before {
+  background: rgba(var(--md-sys-color-outline-rgb,121,116,126),0.12);
+}
+
+/* Prefix & select country */
+.i-prefix,
+.i-select-country {
+  display: inline-flex;
+  align-items: center;
+  height: var(--input-height);
+  padding: 0 0.75rem;
+  border-radius: var(--input-prefix-border-radius);
+  color: var(--input-prefix-color);
+  font-size: var(--input-font-size);
+  line-height: var(--input-label-line-height);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+/* Inline variant */
+.i-wrapper.inline {
+  flex-direction: row;
+  gap: var(--input-inline-gap);
+}
+.i-wrapper.inline .i-label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+.i-wrapper.inline .i-input {
+  flex: 1;
+}
+
+/* Disabled */
+.i-input:disabled {
+  background: transparent;
+  color: var(--input-disabled-text);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.i-wrapper:disabled {
+  background-color: var(--input-disabled-bg);
+  pointer-events: none;
+}
+
+.i-wrapper:disabled::before {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .i-wrapper.inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* End of Material Theme */
+/* Demo overrides for Material Theme */
+:root {
+  --primary: var(--md-sys-color-primary);
+  --primary-dark: var(--md-sys-color-primary-container);
+  --secondary: var(--md-sys-color-secondary);
+  --dark: var(--md-sys-color-on-surface);
+  --gray: var(--md-sys-color-on-surface-variant);
+  --light-gray: var(--md-sys-color-surface-container-low);
+  --white: var(--md-sys-color-surface);
+  --gradient: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-secondary) 100%);
+  --card-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  --hover-shadow: 0 20px 40px rgba(0,0,0,0.12);
+}
+
+/* Buttons */
+.inputs-demo__btn {
+  font-family: var(--input-font-family);
+  font-weight: 600;
+  border-radius: var(--input-radius);
+  padding: 12px 30px;
+  cursor: pointer;
+  transition: var(--input-transition);
+  border: none;
+}
+.inputs-demo__btn--primary {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.inputs-demo__btn--primary:hover {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+.inputs-demo__btn--secondary {
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-primary);
+  border: 1px solid var(--md-sys-color-outline);
+}
+.inputs-demo__btn--secondary:hover {
+  background: var(--md-sys-color-surface-variant);
+}
+
+/* Hero */
+.inputs-demo__hero {
+  background: var(--gradient);
+  color: var(--md-sys-color-on-primary);
+}
+
+/* Card */
+.inputs-demo__input-card {
+  background: var(--md-sys-color-surface);
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: var(--card-shadow);
+  transition: var(--input-transition);
+  position: relative;
+}
+.inputs-demo__input-card:hover {
+  box-shadow: var(--hover-shadow);
+}
+
+/* Theme toggle button */
+.inputs-demo__theme-btn {
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline);
+}
+.inputs-demo__theme-btn--active {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-color: var(--md-sys-color-primary);
+}
+
+/* Code block */
+.inputs-demo__code-block {
+  background: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Copy button */
+.inputs-demo__copy-code {
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline);
+}
+
+/* Advanced card */
+.inputs-demo__advanced-card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-surface-variant);
+}
+
+/* Validation feedback */
+.inputs-demo__validation-feedback {
+  background: var(--md-sys-color-surface-container-high);
+  border-left-color: var(--md-sys-color-primary);
+}
+
+/* Theme preview colors */
+.inputs-demo__theme-preview--material {
+  background: var(--md-sys-color-surface-container-low);
+}
+.inputs-demo__theme-preview--material::before {
+  background: var(--md-sys-color-primary);
+}
+.inputs-demo__theme-preview--material::after {
+  background: var(--md-sys-color-outline);
+}

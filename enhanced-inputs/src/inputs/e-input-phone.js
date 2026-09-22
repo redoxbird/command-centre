@@ -1,3 +1,4 @@
+// @deprecated Standalone tag (see src/index.js): unstyled by all themes, undocumented, and emitting a divergent event vocabulary. Use <e-input type=...> instead; this file builds to dist/inputs/* for reference only.
 import InputTextBase from './e-input-text-base.js';
 import { html } from 'lit';
 import { MaskInput } from "maska";
@@ -376,7 +377,7 @@ export default class InputPhone extends InputTextBase {
     }
 
     this._updateFormattedValue();
-    this._updateValue();   // updates form value + fires input:input event
+    this._updateValue();   // updates form value + fires e:input event
   }
 
   // -----------------------------------------------------------------

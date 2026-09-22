@@ -24,11 +24,26 @@
   --input-font-size: 14px;
   --input-line-height: 1.5;
   --input-font-family: var(--font-body);
-  --input-label-font-size: 12px;
+  --input-label-font-size: 14px;
   --input-label-line-height: 1.5;
   --input-description-font-size: 12px;
   --input-description-line-height: 1.5;
   --input-action-hover-bg: var(--surface);
   --input-disabled-bg: var(--surface);
   --input-disabled-text: var(--muted);
+  --input-prefix-color: var(--muted);
+  /* Design inputs are flat (1px border, no resting shadow) at 36px height;
+     focus/error rings follow the design tokens, not Tailwind's. */
+  --input-height: 36px;
+  --input-shadow: none;
+  --input-shadow-focus: var(--focus-ring);
+  --input-shadow-error: 0 0 0 3px rgba(207, 34, 46, 0.25);
+}
+
+/* Hardcoded Tailwind grays in the default theme → design tokens. */
+.i-action {
+  color: var(--muted);
+}
+.i-action:hover {
+  color: var(--fg);
 }
