@@ -89,6 +89,20 @@ Deno.test("stderr is captured with its stream", async () => {
   }
 });
 
+Deno.test("linux-only UNC cwd is rejected before spawning (no permission trap)", async () => {
+  const err = await runCommand({
+    commandId: "sami-siru-sona",
+    shell: "powershell",
+    cwd: "\\\\wsl.localhost\\Ubuntu\\home\\ada",
+    line: "echo hi",
+  }).then(
+    () => null,
+    (e: unknown) => e,
+  );
+  assert(err instanceof Error, "expected a rejection");
+  assert(err.message.includes("Ubuntu shell"), err.message);
+});
+
 Deno.test("missing working directory is refused with a clear message", async () => {
   const err = await runCommand({
     commandId: "sami-siru-sona",

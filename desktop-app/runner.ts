@@ -4,7 +4,7 @@
 // Not a PTY: interactive prompts block; stderr is surfaced so the user sees why.
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { RunRequestSchema, type RunRequest } from "./types.ts";
-import { SHELLS, shellArgv } from "./shell.ts";
+import { checkWslDir, resolveCwdForShell, SHELLS, shellArgv } from "./shell.ts";
 
 export interface OutputLine {
   stream: "stdout" | "stderr";
@@ -126,19 +126,31 @@ export async function runCommand(req: RunRequest): Promise<RunResult> {
   }
   const shell = SHELLS[parsed.shell];
   const startedAt = Date.now();
-  // Fail fast with an actionable message: node reports a missing cwd as a
-  // bare ENOENT on spawn, which misattributes the problem to the binary.
+  // Resolve the working directory for this shell. WSL paths never touch
+  // Deno fs or spawn options (the permission sandbox cannot scope
+  // \\wsl.localhost UNC paths) — they are translated instead.
   // Synchronous on purpose — setting `active` below must not cross an await,
   // or a second run() could slip in before the reservation lands.
-  try {
-    const st = Deno.statSync(parsed.cwd);
-    if (!st.isDirectory) throw new Error(`working directory is not a directory: ${parsed.cwd}`);
-  } catch (e) {
-    if (e instanceof Deno.errors.NotFound) {
-      throw new Error(`working directory does not exist: ${parsed.cwd}`);
+  const resolved = resolveCwdForShell(parsed.shell, parsed.cwd);
+  if (parsed.shell === "ubuntu") {
+    if (!resolved.wslDir || !checkWslDir(resolved.wslDir)) {
+      throw new Error(`working directory does not exist (in Ubuntu): ${parsed.cwd}`);
     }
-    throw e;
+  } else {
+    try {
+      const st = Deno.statSync(resolved.windowsDir as string);
+      if (!st.isDirectory) throw new Error(`working directory is not a directory: ${parsed.cwd}`);
+    } catch (e) {
+      if (e instanceof Deno.errors.NotFound) {
+        throw new Error(`working directory does not exist: ${parsed.cwd}`);
+      }
+      if (e instanceof Deno.errors.PermissionDenied) {
+        throw new Error(`cannot access working directory (permission): ${parsed.cwd}`);
+      }
+      throw e;
+    }
   }
+  const line = resolved.prefix + parsed.line;
 
   return new Promise<RunResult>((resolve, reject) => {
     const run: ActiveRun = {
@@ -158,8 +170,8 @@ export async function runCommand(req: RunRequest): Promise<RunResult> {
     };
     let child: ChildProcess;
     try {
-      child = spawn(shell.bin, shellArgv(parsed.shell, parsed.line), {
-        cwd: parsed.cwd,
+      child = spawn(shell.bin, shellArgv(parsed.shell, line), {
+        cwd: resolved.spawnCwd,
         windowsHide: true,
         stdio: ["ignore", "pipe", "pipe"],
       });
