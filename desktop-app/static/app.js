@@ -1746,6 +1746,27 @@
               input.appendChild(c);
             }
             see.appendChild(input);
+            // File rows: the library renders no picker, so the host provides
+            // a Browse button beside the field (same as buildVarControl).
+            if (token.name === "input.file" || token.name === "input.dir" || token.name === "input.files") {
+              const browseBtn = document.createElement("button");
+              browseBtn.type = "button";
+              browseBtn.className = "btn btn-g";
+              browseBtn.textContent = "Browse…";
+              browseBtn.setAttribute("aria-label", "Browse for " + (row[2] || row[0]));
+              browseBtn.addEventListener("click", async () => {
+                try {
+                  let picked = null;
+                  if (token.name === "input.dir") picked = await CC.B().pickFolder();
+                  else picked = await CC.B().pickFile("");
+                  if (picked) {
+                    input.value = picked;
+                    CC.safeValidate(input);
+                  }
+                } catch (e) { console.error("browse failed", e); }
+              });
+              see.appendChild(browseBtn);
+            }
             if (desc.value) {
               try { input.setAttribute("value", desc.value); } catch (e) { /* noop */ }
             }

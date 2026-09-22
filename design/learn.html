@@ -242,6 +242,33 @@ var show=pw.type==="password";pw.type=show?"text":"password";
 t.textContent=show?"Hide":"Show";pw.focus();
 });
 });
+document.querySelectorAll('#rows tr.row[data-w="file"]').forEach(function(row){
+var tokEl=row.querySelector(".tok");
+var tok=tokEl?tokEl.textContent:"";
+var kind="file";
+if(tok.indexOf("{{input.dir}}")>=0)kind="dir";
+else if(tok.indexOf("{{input.files}}")>=0)kind="multi";
+var btn=row.querySelector(".see .btn");
+var field=row.querySelector('.see input[type="text"]');
+if(!btn||!field)return;
+var browseLabel=kind==="dir"?"Browse for folder":(kind==="multi"?"Browse for files":"Browse for file");
+btn.setAttribute("aria-label",browseLabel);
+var fi=document.createElement("input");
+fi.type="file";fi.hidden=true;
+fi.setAttribute("aria-label",browseLabel+" picker");
+if(kind==="dir"){fi.setAttribute("webkitdirectory","");fi.setAttribute("directory","");}
+if(kind==="multi"){fi.setAttribute("multiple","");}
+btn.parentElement.appendChild(fi);
+btn.addEventListener("click",function(){fi.click();});
+fi.addEventListener("change",function(){
+if(!fi.files||!fi.files.length)return;
+var pick=fi.files[0].name||"";
+if(kind==="dir"){var rel=fi.files[0].webkitRelativePath||pick;pick=(rel.split("/")[0]||pick)||pick;}
+else if(kind==="multi"){var names=[];for(var i=0;i<fi.files.length;i++){names.push(fi.files[i].name);}pick=names.join(" ");}
+field.value=pick;
+fi.value="";
+});
+});
 })();
 </script>
 </body>
