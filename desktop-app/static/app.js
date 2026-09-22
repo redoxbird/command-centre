@@ -1699,18 +1699,31 @@
           const token = g.parseToken(row[0]);
           if (!token) continue;
           const tr = document.createElement("tr");
+          tr.className = "row";
           tr.dataset.group = GROUP_OF[token.type] || "text";
           tr.dataset.search = (row[0] + " " + (row[2] || "") + " " + token.type).toLowerCase();
           // Option cell: token + label.
           const opt = document.createElement("td");
+          opt.className = "opt";
           const code = document.createElement("code");
-          code.textContent = "{{" + row[0] + (row[3] ? ":" + row[3] : "") + "}}";
+          code.className = "tok";
+          const fullToken = "{{" + row[0] + (row[3] ? ":" + row[3] : "") + "}}";
+          // Long default lists (country: 249 options) would make the row
+          // unreadable — truncate display, keep full text on title. The Copy
+          // button always copies the complete token.
+          code.textContent = fullToken.length > 120 ? fullToken.slice(0, 117) + "…" : fullToken;
+          code.title = fullToken;
           opt.appendChild(code);
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = token.type;
+          opt.appendChild(pill);
           opt.appendChild(document.createElement("br"));
           opt.appendChild(document.createTextNode(row[2] || ""));
           tr.appendChild(opt);
           // See-it cell: live control from the shared descriptor.
           const see = document.createElement("td");
+          see.className = "see";
           const desc = g.renderToken(token, g.exampleFor(token, null), null);
           if (desc) {
             const input = document.createElement("e-input");
@@ -1745,6 +1758,7 @@
           tr.appendChild(see);
           // Use cell: copy button.
           const use = document.createElement("td");
+          use.className = "use";
           const cp = document.createElement("button");
           cp.type = "button";
           cp.className = "btn btn-g";
@@ -1772,12 +1786,12 @@
           const members = byGroup[grp] || [];
           if (!members.length) return;
           const hr = document.createElement("tr");
-          hr.className = "group-header";
           hr.dataset.groupHeader = grp;
-          const td = document.createElement("td");
-          td.colSpan = 3;
-          td.textContent = GROUP_LABEL[grp] || grp;
-          hr.appendChild(td);
+          const th = document.createElement("th");
+          th.className = "group";
+          th.colSpan = 3;
+          th.textContent = GROUP_LABEL[grp] || grp;
+          hr.appendChild(th);
           tbody.insertBefore(hr, members[0]);
         });
       },
@@ -1795,7 +1809,7 @@
           if (show) shown++;
         });
         // Hide group headers whose group is fully hidden.
-        document.querySelectorAll("#rows tr.group-header").forEach((hr) => {
+        document.querySelectorAll("#rows tr[data-group-header]").forEach((hr) => {
           const grp = hr.dataset.groupHeader;
           const anyShown = this.rows.some((tr) => tr.dataset.group === grp && !tr.hidden);
           hr.hidden = !anyShown;
