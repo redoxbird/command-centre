@@ -89,6 +89,21 @@ Deno.test("stderr is captured with its stream", async () => {
   }
 });
 
+Deno.test("missing working directory is refused with a clear message", async () => {
+  const err = await runCommand({
+    commandId: "sami-siru-sona",
+    shell: "powershell",
+    cwd: "C:\\does-not-exist-xyz-123",
+    line: "echo hi",
+  }).then(
+    () => null,
+    (e: unknown) => e,
+  );
+  assert(err instanceof Error, "expected a rejection");
+  assert(err.message.includes("working directory does not exist"), err.message);
+  assert(err.message.includes("C:\\does-not-exist-xyz-123"), err.message);
+});
+
 Deno.test("unresolved {{token}} is refused with a visible message", async () => {
   const cwd = await tempCwd();
   try {

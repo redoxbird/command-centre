@@ -86,10 +86,10 @@ function runHidden(ps: string): Promise<string> {
   });
 }
 
-/** Serialize any thrown value into the {name, message, stack} webview contract.
- * Backend rejections do not always carry .message (bare objects, bridge
- * artifacts) — String() of those is "[object Object]", which is what the UI
- * used to display. This never returns that string. */
+/** Shape any thrown value into a {name, message, stack} triple for
+ * rethrowAsError. Backend rejections do not always carry .message (bare
+ * objects, bridge artifacts) — String() of those is "[object Object]".
+ * This never returns that string. */
 export function toBindingError(e: unknown): { name: string; message: string; stack: string } {
   if (e === null || e === undefined) return { name: "Error", message: "Unknown error", stack: "" };
   if (typeof e === "string") {
@@ -131,13 +131,37 @@ export function toBindingError(e: unknown): { name: string; message: string; sta
   return { name: "Error", message: s && s !== "[object Object]" ? s : "Unknown error", stack: "" };
 }
 
+/**
+ * Re-throw any failure as a real Error instance carrying the shaped message.
+ * The desktop bridge String()s non-Error rejections, which used to surface
+ * every backend failure in the webview as "Error: [object Object]" no matter
+ * what the original message was. Throwing Error instances keeps messages
+ * intact across the boundary. Exported for tests.
+ */
+export function rethrowAsError(e: unknown, binding: string): never {
+  const shaped = toBindingError(e);
+  const err = new Error(shaped.message);
+  err.name = shaped.name;
+  // Preserve the original server stack when present; otherwise the fresh
+  // capture below still pinpoints the failing binding.
+  if (shaped.stack) {
+    try {
+      err.stack = shaped.stack;
+    } catch {
+      // non-writable stack (frozen Error subclass) — keep the fresh one
+    }
+  }
+  console.error(`binding "${binding}" failed:`, e);
+  throw err;
+}
+
 export function registerBindings(win: DesktopWindow): void {
   const bind = (name: string, handler: (...args: unknown[]) => unknown) => {
     win.bind(name, (async (...args: unknown[]) => {
       try {
         return await handler(...args);
       } catch (e) {
-        throw toBindingError(e);
+        throw rethrowAsError(e, name);
       }
     }) as (...args: unknown[]) => unknown);
   };

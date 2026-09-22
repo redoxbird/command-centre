@@ -22,12 +22,21 @@
   }
   // Human message out of any thrown shape: backend rejections cross the
   // CEF bridge as plain objects that do not always carry .message (which
-  // produced "Could not save: [object Object]"). Never return that string.
+  // produced "Could not save: [object Object]"). This wrapper guarantees the
+  // UI never shows exactly that string, no matter which branch below fires.
   function errorMessage(e, fallback) {
+    const m = shapeErrorMessage(e, fallback);
+    return m === "[object Object]" ? (fallback || "Unknown error") : m;
+  }
+
+  function shapeErrorMessage(e, fallback) {
     const fb = fallback || "Unknown error";
     if (e === null || e === undefined) return fb;
     if (typeof e === "string") return e || fb;
-    if (typeof e.message === "string" && e.message) return e.message;
+    // A literal "[object Object]" message means the payload was poisoned
+    // upstream (bridge String() of a bare object) — treat as absent so the
+    // chain below (or the fallback) produces something actionable instead.
+    if (typeof e.message === "string" && e.message && e.message !== "[object Object]") return e.message;
     if (Array.isArray(e.issues) && e.issues.length) {
       const parts = e.issues.map((i) => {
         if (!i) return "";
@@ -43,7 +52,7 @@
       if (parts.length) return parts.join("; ");
     }
     if (e.error !== undefined && e.error !== null && e.error !== e) {
-      return errorMessage(e.error, fb);
+      return shapeErrorMessage(e.error, fb);
     }
     try {
       const keys = Object.keys(e);
@@ -57,8 +66,45 @@
         if (s && s !== "{}") return s;
       }
     } catch (err3) { /* fall through */ }
-    const s = String(e);
-    return s && s !== "[object Object]" ? s : fb;
+    // Last resort: name the shape instead of "[object Object]".
+    return describeError(e, fb);
+  }
+
+  // Structural fingerprint of a thrown value for diagnostics: constructor,
+  // all own property names (enumerable or not), and a short rendering of
+  // each value. Used when errorMessage has nothing better to show.
+  function describeError(e, fallback) {
+    try {
+      if (e === null || e === undefined) return fallback || "Unknown error";
+      if (typeof e !== "object" && typeof e !== "function") {
+        const s = String(e);
+        return s && s !== "[object Object]" ? s : (fallback || "Unknown error");
+      }
+      const ctor = (e.constructor && e.constructor.name) || typeof e;
+      const keys = Object.getOwnPropertyNames(e);
+      const shown = keys.slice(0, 8).map((k) => {
+        let v;
+        try {
+          v = e[k];
+        } catch (err4) {
+          return k + "=<unreadable>";
+        }
+        if (typeof v === "string") return k + "=" + (v.length > 120 ? v.slice(0, 120) + "…" : v || "(empty)");
+        if (v === null || v === undefined) return k + "=empty";
+        if (typeof v === "object") {
+          try {
+            const s = JSON.stringify(v);
+            return k + "=" + ((s && s !== "{}") ? s.slice(0, 120) : "(empty object)");
+          } catch (err5) {
+            return k + "=<unserializable>";
+          }
+        }
+        return k + "=" + String(v).slice(0, 120);
+      });
+      return ctor + " (" + (keys.length ? "keys: " + shown.join(", ") : "no own keys") + ")";
+    } catch (err6) {
+      return fallback || "Unknown error";
+    }
   }
   function sleep(ms) {
     return new Promise((r) => setTimeout(r, ms));
@@ -621,6 +667,10 @@
     // o: {commandId, shell, cwd, line, status, body, dot, buttons, tname}
     const status = o.status, body = o.body;
     termShow(o.scope);
+    // Echo the resolved line so a silent command still visibly passes through.
+    const ph = body.querySelector(".term-empty");
+    if (ph) ph.remove();
+    termNote(body, "$ " + o.line);
     o.buttons.forEach((b) => {
       if (!b.dataset.origText) b.dataset.origText = b.textContent;
       b.textContent = "■ Cancel";
@@ -664,7 +714,10 @@
         if (pr && pr.lines) for (const l of pr.lines) termAppend(body, l.stream, l.text);
       } catch (e) { console.error(e); }
     } catch (e) {
-      status.textContent = errorMessage(e, "Run failed");
+      const msg = errorMessage(e, "Run failed");
+      console.error("run failed:", describeError(e));
+      status.textContent = msg;
+      termNote(body, "error: " + msg);
       status.className = "status stopped";
       if (o.dot) o.dot.classList.remove("live");
       restoreRunButtons(o.buttons);
@@ -712,7 +765,7 @@
     }
   });
   window.__cc = {
-    $, el, on, sleep, B, G, errorMessage,
+    $, el, on, sleep, B, G, errorMessage, describeError,
     SHELL_PROMPTS, SHELL_ORDER, allowedShells,
     refreshShells, loadShellChoices, shellFor, cycleShell, paintPrompt,
     shellChoice, shellLabel, shellIcon,
@@ -1116,6 +1169,25 @@
       },
 
       async runSide(card, cmd) {
+        const status = card.querySelector(".status");
+        const body = card.querySelector(".term-body");
+        try {
+          await this.runSideInner(card, cmd);
+        } catch (e) {
+          console.error("run failed", e);
+          const msg = CC.errorMessage(e, "Run failed");
+          if (status) {
+            status.textContent = msg;
+            status.className = "status stopped";
+          }
+          if (body) {
+            CC.termShow(card);
+            CC.termNote(body, "error: " + msg);
+          }
+        }
+      },
+
+      async runSideInner(card, cmd) {
         const vars = card._ccVars || [];
         const shellId = CC.shellFor(cmd.id);
         const base = {
@@ -1147,6 +1219,16 @@
 
       async runFromPanel(card, cmd) {
         const verr = card.querySelector(".verr");
+        try {
+          await this.runFromPanelInner(card, cmd, verr);
+        } catch (e) {
+          console.error("run failed", e);
+          verr.textContent = CC.errorMessage(e, "Run failed");
+          verr.hidden = false;
+        }
+      },
+
+      async runFromPanelInner(card, cmd, verr) {
         const r = CC.showBad(verr, card._ccGetters || []);
         if (r.bad) return;
         card._ccLast = r.vals;
@@ -1492,22 +1574,28 @@
           }).catch(console.error);
         }
         runBtn.addEventListener("click", async () => {
-          const r = CC.showBad(rerr, getters);
-          if (r.bad) return;
-          if ((c.askMode || "every") === "once") {
-            try { await CC.B().saveValues(c.id, r.vals); } catch (e) { console.error(e); }
-          }
-          const line = g.renderCmd(c.cmd, r.vals);
-          if (line.includes("{{")) {
-            rerr.textContent = "A value is still missing — fill every input.";
+          try {
+            const r = CC.showBad(rerr, getters);
+            if (r.bad) return;
+            if ((c.askMode || "every") === "once") {
+              try { await CC.B().saveValues(c.id, r.vals); } catch (e) { console.error(e); }
+            }
+            const line = g.renderCmd(c.cmd, r.vals);
+            if (line.includes("{{")) {
+              rerr.textContent = "A value is still missing — fill every input.";
+              rerr.hidden = false;
+              return;
+            }
+            await CC.runFlow({
+              commandId: c.id, shell: CC.shellFor(c.id), cwd: c.cwd || "C:\\projects\\app",
+              line, status: runStatus, body: rbody, dot: rdot,
+              buttons: [runBtn], scope: document.getElementById("detail"),
+            });
+          } catch (e) {
+            console.error("run failed", e);
+            rerr.textContent = CC.errorMessage(e, "Run failed");
             rerr.hidden = false;
-            return;
           }
-          await CC.runFlow({
-            commandId: c.id, shell: CC.shellFor(c.id), cwd: c.cwd || "C:\\projects\\app",
-            line, status: runStatus, body: rbody, dot: rdot,
-            buttons: [runBtn], scope: document.getElementById("detail"),
-          });
         });
       },
 

@@ -126,6 +126,19 @@ export async function runCommand(req: RunRequest): Promise<RunResult> {
   }
   const shell = SHELLS[parsed.shell];
   const startedAt = Date.now();
+  // Fail fast with an actionable message: node reports a missing cwd as a
+  // bare ENOENT on spawn, which misattributes the problem to the binary.
+  // Synchronous on purpose — setting `active` below must not cross an await,
+  // or a second run() could slip in before the reservation lands.
+  try {
+    const st = Deno.statSync(parsed.cwd);
+    if (!st.isDirectory) throw new Error(`working directory is not a directory: ${parsed.cwd}`);
+  } catch (e) {
+    if (e instanceof Deno.errors.NotFound) {
+      throw new Error(`working directory does not exist: ${parsed.cwd}`);
+    }
+    throw e;
+  }
 
   return new Promise<RunResult>((resolve, reject) => {
     const run: ActiveRun = {
@@ -161,7 +174,7 @@ export async function runCommand(req: RunRequest): Promise<RunResult> {
     child.stdout?.on("data", (d: unknown) => append(run, "stdout", String(d)));
     child.stderr?.on("data", (d: unknown) => append(run, "stderr", String(d)));
     child.on("error", (e: Error) => {
-      run.fail(new Error(`failed to start ${shell.bin} in ${parsed.cwd}: ${e.message}`));
+      run.fail(new Error(`failed to start ${shell.bin}: ${e.message}`));
     });
     child.on("close", (code: number | null, signal: NodeJS.Signals | null) => {
       finish(run, {
