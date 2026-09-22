@@ -2183,3 +2183,65 @@
     }
   });
 })();
+
+/* ── ccHub / ccPublish stubs — full components land in Phase F (tasks F3/F4).
+ * These exist so hub.html / publish.html mount without Alpine expression
+ * errors. They render no data and submit nothing; the static skeletons stay
+ * visible. The publish form's native submit is suppressed to avoid a stray
+ * navigation before the real component arrives.
+ */
+(function () {
+  "use strict";
+
+  function markMounted(name) {
+    window.__ccMounted = window.__ccMounted || {};
+    window.__ccMounted[name] = true;
+  }
+
+  function hubStubData() {
+    return {
+      ready: false,
+      async init() {
+        this.ready = true;
+        markMounted("hub");
+        console.info("Community Hub data arrives with Phase F (hub.ts + F3 component).");
+      },
+    };
+  }
+
+  function publishStubData() {
+    return {
+      ready: false,
+      async init() {
+        this.ready = true;
+        markMounted("publish");
+        const form = document.getElementById("pubform");
+        if (form) {
+          form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            console.info("Publish submit arrives with Phase F (publish.ts + F4 component).");
+          });
+        }
+      },
+    };
+  }
+
+  // Exposed for tests; registered on alpine:init below.
+  window.__ccHubStub = hubStubData;
+  window.__ccPublishStub = publishStubData;
+
+  document.addEventListener("alpine:init", function () {
+    const Alpine = window.Alpine;
+    if (!Alpine || typeof Alpine.data !== "function") return;
+    try {
+      Alpine.data("ccHub", hubStubData);
+    } catch (e) {
+      console.error("ccHub registration failed", e);
+    }
+    try {
+      Alpine.data("ccPublish", publishStubData);
+    } catch (e) {
+      console.error("ccPublish registration failed", e);
+    }
+  });
+})();
