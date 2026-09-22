@@ -86,14 +86,58 @@ function runHidden(ps: string): Promise<string> {
   });
 }
 
+/** Serialize any thrown value into the {name, message, stack} webview contract.
+ * Backend rejections do not always carry .message (bare objects, bridge
+ * artifacts) — String() of those is "[object Object]", which is what the UI
+ * used to display. This never returns that string. */
+export function toBindingError(e: unknown): { name: string; message: string; stack: string } {
+  if (e === null || e === undefined) return { name: "Error", message: "Unknown error", stack: "" };
+  if (typeof e === "string") {
+    return { name: "Error", message: e || "Unknown error", stack: "" };
+  }
+  if (typeof e === "object") {
+    const o = e as Record<string, unknown>;
+    const stack = typeof o.stack === "string" ? o.stack : "";
+    const name = typeof o.name === "string" && o.name ? o.name : "Error";
+    if (typeof o.message === "string" && o.message) return { name, message: o.message, stack };
+    // zod-style issues array
+    if (Array.isArray(o.issues) && o.issues.length > 0) {
+      const parts = (o.issues as unknown[]).map((i) => {
+        if (i && typeof i === "object") {
+          const m = (i as Record<string, unknown>).message;
+          if (typeof m === "string" && m) return m;
+          const c = (i as Record<string, unknown>).code;
+          if (typeof c === "string") return c;
+        }
+        return null;
+      }).filter((p): p is string => p !== null);
+      if (parts.length > 0) return { name, message: parts.join("; "), stack };
+    }
+    // named fields before falling back to JSON
+    const bits: string[] = [];
+    for (const k of ["code", "errstr", "detail", "hint", "reason"]) {
+      const v = o[k];
+      if (typeof v === "string" && v) bits.push(k === "code" ? v : `${k}: ${v}`);
+    }
+    if (bits.length > 0) return { name, message: bits.join(" · "), stack };
+    try {
+      const s = JSON.stringify(o);
+      if (s && s !== "{}") return { name, message: s, stack };
+    } catch {
+      // fall through
+    }
+  }
+  const s = String(e);
+  return { name: "Error", message: s && s !== "[object Object]" ? s : "Unknown error", stack: "" };
+}
+
 export function registerBindings(win: DesktopWindow): void {
   const bind = (name: string, handler: (...args: unknown[]) => unknown) => {
     win.bind(name, (async (...args: unknown[]) => {
       try {
         return await handler(...args);
       } catch (e) {
-        const error = e as Error;
-        throw { name: error.name ?? "Error", message: error.message ?? String(e), stack: error.stack ?? "" };
+        throw toBindingError(e);
       }
     }) as (...args: unknown[]) => unknown);
   };

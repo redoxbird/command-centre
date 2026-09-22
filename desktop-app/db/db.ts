@@ -35,26 +35,43 @@ export function metadataDir(): string {
   return join(appBaseDir(), "commands");
 }
 
-function migrationsDir(): string {
-  // db/db.ts → db/migrations/
+async function dirExists(dir: string): Promise<boolean> {
   try {
-    return join(dirname(fromFileUrl(import.meta.url)), "migrations");
+    return (await Deno.stat(dir)).isDirectory;
   } catch {
-    return join(Deno.cwd(), "db", "migrations");
+    return false;
   }
 }
 
-async function listMigrations(): Promise<{ name: string; sql: string }[]> {
-  const dir = migrationsDir();
-  const out: { name: string; sql: string }[] = [];
+/**
+ * Locate db/migrations/. Under `deno desktop` import.meta.url points inside
+ * the embedded bundle, where the directory may not exist on the filesystem —
+ * so candidates are probed in order instead of trusting the first one.
+ * Returns null when nothing is found (caller fails loudly, never silently
+ * opening a table-less database).
+ */
+async function migrationsDir(): Promise<string | null> {
+  const candidates: string[] = [];
   try {
-    for await (const e of Deno.readDir(dir)) {
-      if (e.isFile && e.name.endsWith(".sql")) {
-        out.push({ name: e.name, sql: await Deno.readTextFile(join(dir, e.name)) });
-      }
-    }
+    candidates.push(join(dirname(fromFileUrl(import.meta.url)), "migrations"));
   } catch {
-    // no migrations dir (tests may override) — caller treats as empty
+    // non-file bundle URL — fall through to CWD probing
+  }
+  candidates.push(join(Deno.cwd(), "db", "migrations"));
+  for (const dir of candidates) {
+    if (await dirExists(dir)) return dir;
+  }
+  return null;
+}
+
+async function listMigrations(): Promise<{ name: string; sql: string }[]> {
+  const dir = await migrationsDir();
+  const out: { name: string; sql: string }[] = [];
+  if (!dir) return out;
+  for await (const e of Deno.readDir(dir)) {
+    if (e.isFile && e.name.endsWith(".sql")) {
+      out.push({ name: e.name, sql: await Deno.readTextFile(join(dir, e.name)) });
+    }
   }
   out.sort((a, b) => a.name < b.name ? -1 : 1);
   return out;
@@ -119,7 +136,21 @@ export async function openDatabase(dbPath?: string): Promise<Db> {
   if (_db) await closeDatabase();
   await Deno.mkdir(dirname(target), { recursive: true });
   const native = new DatabaseSync(target);
-  applyMigrations(native, await listMigrations());
+  const files = await listMigrations();
+  applyMigrations(native, files);
+  // Fail loudly when the core table is missing: that means no migration files
+  // were found (e.g. not embedded in the desktop bundle) and every later
+  // query would fail with a cryptic "no such table". Never open half-migrated.
+  const hasCommands = (native.prepare(
+    "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name='commands'",
+  ).get() as { n: number }).n > 0;
+  if (!hasCommands) {
+    native.close();
+    throw new Error(
+      `migrations not found — looked for db/migrations/*.sql next to the module and under ${Deno.cwd()}; ` +
+        `found ${files.length} file(s). The desktop build must embed ./db/migrations (see deno.json --include).`,
+    );
+  }
   _native = native;
   _path = target;
   _db = drizzle(callbackFor(native));
