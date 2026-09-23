@@ -917,35 +917,136 @@
         rows.forEach((c) => list.appendChild(this.buildCard(c)));
         this.paintTool(rows);
         this.applyView();
+        document.body.classList.add("painted");
       },
 
       paintTool(rows) {
-        const tg = document.getElementById("toolGrid");
-        if (!tg || !window.Mustache) return;
-        tg.innerHTML = "";
-        if (!rows.length) {
-          tg.innerHTML = window.CCTemplates.toolEmpty;
+        // Tool View master-detail (design/index.html paintTool verbatim): the
+        // left list picks, the right detail hosts the moved card so it runs
+        // in place. paint() rebuilds #list every time, so leaving Tool View
+        // restores every card with no extra bookkeeping.
+        const layout = document.getElementById("toolLayout");
+        if (!layout) return;
+        const lp = document.getElementById("toolList");
+        const dt = document.getElementById("toolDetail");
+        const list = document.getElementById("list");
+        if (!lp || !dt || !list) return;
+        dt.innerHTML = "";
+        lp.innerHTML = "";
+        this._toolCards = [];
+        const g = CC.G();
+        (rows || []).forEach((c) => {
+          const vars = g.parseVarInstances(c.cmd || "");
+          const nInputs = vars.length;
+          const sh = CC.SHELL_PROMPTS[CC.shellFor(c.id)] || CC.SHELL_PROMPTS.powershell;
+          const row = document.createElement("div");
+          row.className = "tool-row";
+          row.dataset.id = c.id;
+          const pick = document.createElement("button");
+          pick.type = "button";
+          pick.className = "tool-pick";
+          pick.dataset.id = c.id;
+          pick.setAttribute("aria-label", (c.name || "?") + (nInputs ? " — open with " + nInputs + (nInputs === 1 ? " input" : " inputs") : " — open"));
+          const tx = document.createElement("span");
+          tx.className = "tool-pick-text";
+          const nm = document.createElement("span");
+          nm.className = "tool-pick-name";
+          nm.textContent = c.name || "?";
+          tx.appendChild(nm);
+          const tg = document.createElement("span");
+          tg.className = "tag";
+          tg.textContent = ((c.tags && c.tags[0]) || c.tag || "command") + (nInputs ? " · " + nInputs + (nInputs === 1 ? " input" : " inputs") : "");
+          tx.appendChild(tg);
+          pick.appendChild(tx);
+          const go = document.createElement("span");
+          go.className = "tool-go";
+          go.setAttribute("aria-hidden", "true");
+          go.textContent = "→";
+          pick.appendChild(go);
+          pick.addEventListener("click", () => {
+            this.toolSelId = c.id;
+            this.renderToolSelection();
+          });
+          const shBtn = document.createElement("button");
+          shBtn.type = "button";
+          shBtn.className = "tool-shell";
+          shBtn.setAttribute("data-shell-id", c.id);
+          shBtn.setAttribute("aria-label", "Shell: " + sh.label + " — activate to change shell");
+          shBtn.title = "Shell: " + sh.label + " (click to change)";
+          const im = document.createElement("img");
+          im.src = sh.icon;
+          im.alt = "";
+          shBtn.appendChild(im);
+          shBtn.addEventListener("click", () => {
+            const next = CC.cycleShell(c.id);
+            const card = list.querySelector('.cmd[data-id="' + c.id + '"]') || dt.querySelector('.cmd[data-id="' + c.id + '"]');
+            if (card) {
+              CC.paintPrompt(card, next);
+              const cmd = (this.cmds || []).find((x) => x.id === c.id);
+              if (cmd) CC.paintCmdline(card.querySelector(".c"), card.querySelector(".cmdline .pwd"), cmd.cmd, cmd.cwd, cmd.variables);
+            }
+            const cur = CC.SHELL_PROMPTS[next] || CC.SHELL_PROMPTS.powershell;
+            im.src = cur.icon;
+            shBtn.setAttribute("aria-label", "Shell: " + cur.label + " — activate to change shell");
+            shBtn.title = "Shell: " + cur.label + " (click to change)";
+          });
+          row.appendChild(shBtn);
+          row.appendChild(pick);
+          lp.appendChild(row);
+          const card = list.querySelector('.cmd[data-id="' + c.id + '"]');
+          if (card) this._toolCards.push({ id: c.id, el: card, ph: null });
+        });
+        if (!(rows || []).length) {
+          const p = document.createElement("p");
+          p.className = "tool-empty";
+          p.appendChild(document.createTextNode("No tools match. "));
+          const a = document.createElement("a");
+          a.href = "add.html";
+          a.textContent = "Add a new command";
+          p.appendChild(a);
+          lp.appendChild(p);
           return;
         }
-        const g = CC.G();
-        rows.forEach((c) => {
-          const vars = g.parseVarInstances(c.cmd || "");
-          const badge = vars.length
-            ? '<span class="vbadge">' + vars.length + (vars.length === 1 ? " input" : " inputs") + "</span>"
-            : '<span class="vbadge" style="background:var(--surface);color:var(--muted)">no inputs</span>';
-          const html = window.Mustache.render(window.CCTemplates.tool, {
-            idHref: "command.html?id=" + encodeURIComponent(c.id),
-            name: c.name || "?",
-            desc: c.desc || "",
-            tag: (c.tags && c.tags[0]) || c.tag || "command",
-            shellIcon: CC.shellIcon(CC.shellFor(c.id)),
-            toolAria: (c.name || "?") + " — open and run" +
-              (vars.length ? " with " + vars.length + (vars.length === 1 ? " input" : " inputs") : ""),
-            badgeHtml: badge,
+        if (!this.toolSelId || !rows.some((c) => c.id === this.toolSelId)) this.toolSelId = rows[0].id;
+        // Only Tool View hosts the detail panel. In Command/Control View every
+        // card stays in #list: the design moves the selection unconditionally,
+        // which would hide a card inside the hidden panel (design defect —
+        // same class of fix as the #missing fallback in E3/A9).
+        if (this.view === "tool") this.renderToolSelection();
+        else {
+          document.querySelectorAll("#toolList .tool-row").forEach((r) => {
+            r.classList.toggle("on", r.dataset.id === this.toolSelId);
           });
-          const tmp = document.createElement("template");
-          tmp.innerHTML = html.trim();
-          tg.appendChild(tmp.content.firstChild);
+        }
+      },
+
+      renderToolSelection() {
+        const dt = document.getElementById("toolDetail");
+        const list = document.getElementById("list");
+        if (!dt || !list) return;
+        (this._toolCards || []).forEach((o) => {
+          if (o.ph && o.ph.parentNode) {
+            o.ph.parentNode.insertBefore(o.el, o.ph);
+            o.ph.parentNode.removeChild(o.ph);
+            o.ph = null;
+          } else if (o.el.parentNode !== list) {
+            list.appendChild(o.el);
+          }
+        });
+        const found = (this._toolCards || []).filter((o) => o.id === this.toolSelId)[0];
+        if (found && found.el.parentNode === list) {
+          const ph = document.createElement("span");
+          ph.hidden = true;
+          ph.setAttribute("data-tph", found.id);
+          list.insertBefore(ph, found.el);
+          found.ph = ph;
+          dt.appendChild(found.el);
+          const pv = found.el.querySelector(".preview");
+          if (pv) pv.open = false;
+          if (typeof found.el._ccOpenVars === "function") found.el._ccOpenVars(false);
+        }
+        document.querySelectorAll("#toolList .tool-row").forEach((r) => {
+          r.classList.toggle("on", r.dataset.id === this.toolSelId);
         });
       },
 
@@ -961,8 +1062,8 @@
           b.classList.toggle("on", isOn);
           b.setAttribute("aria-pressed", String(isOn));
         });
-        const tg = document.getElementById("toolGrid");
-        if (tg) tg.hidden = view !== "tool";
+        const tl = document.getElementById("toolLayout");
+        if (tl) tl.hidden = view !== "tool";
         // Command View: the command is always visible (design rule). Only
         // Control View may hide it behind the closed <details>.
         document.querySelectorAll("#list .cmd").forEach((card) => {
@@ -1060,6 +1161,17 @@
         if (runBtn) runBtn.addEventListener("click", () => this.runSide(card, cmd));
         if (vgo) vgo.addEventListener("click", () => this.runFromPanel(card, cmd));
         if (vedit) vedit.addEventListener("click", () => this.openVars(card, cmd, true));
+        const vclose = card.querySelector(".vclose");
+        if (vclose) {
+          vclose.addEventListener("click", () => {
+            const varsBox = card.querySelector(".vars");
+            if (varsBox) varsBox.hidden = true;
+            if ((card._ccVars || []).length && this.view !== "control") {
+              const vd = card.querySelector(".vedit");
+              if (vd) vd.hidden = false;
+            }
+          });
+        }
         if (vunlock) {
           vunlock.addEventListener("click", async () => {
             try { await CC.B().clearValues(cmd.id); } catch (e) { console.error(e); }
@@ -1141,6 +1253,10 @@
             (card._ccVars.length === 1 ? " input" : " inputs") + " for " + (cmd.name || "command");
         }
         varsBox.hidden = false;
+        // Command View: inputs form and terminal are mutually exclusive —
+        // opening vars keeps the terminal shut (design openVars).
+        if (this.view === "command") card.classList.remove("open");
+        else card.classList.add("open");
         if (!card._ccGetters) {
           card._ccGetters = card._ccVars.map((v) => {
             const used = new Set();
@@ -1160,7 +1276,7 @@
           });
           CC.gateScope(card);
         }
-        if (this.view !== "control") {
+        if (this.view !== "control" && !card.closest("#toolDetail")) {
           const pv = card.querySelector(".preview");
           if (pv) pv.open = true;
         }
@@ -1168,8 +1284,7 @@
         if (focus !== false && first && first.focus) first.focus();
       },
 
-      async runSide(card, cmd) {
-        const status = card.querySelector(".status");
+      async runSide(card, cmd) {        const status = card.querySelector(".status");
         const body = card.querySelector(".term-body");
         try {
           await this.runSideInner(card, cmd);
@@ -1187,6 +1302,18 @@
         }
       },
 
+      hideVarsForRun(card, cmd) {
+        // Command View: inputs form and terminal are mutually exclusive —
+        // running hides the form and reveals the terminal (design runCmd).
+        if (this.view !== "command") return;
+        const varsBox = card.querySelector(".vars");
+        if (varsBox) varsBox.hidden = true;
+        if ((card._ccVars || []).length) {
+          const vedit = card.querySelector(".vedit");
+          if (vedit) vedit.hidden = false;
+        }
+      },
+
       async runSideInner(card, cmd) {
         const vars = card._ccVars || [];
         const shellId = CC.shellFor(cmd.id);
@@ -1199,6 +1326,7 @@
           scope: card,
         };
         if (!vars.length) {
+          this.hideVarsForRun(card, cmd);
           await CC.runFlow(Object.assign({ line: cmd.cmd }, base));
           return;
         }
@@ -1206,11 +1334,13 @@
           let sv = null;
           try { sv = await CC.B().getValues(cmd.id); } catch (e) { console.error(e); }
           if (this.completeVals(vars, sv)) {
+            this.hideVarsForRun(card, cmd);
             await CC.runFlow(Object.assign({ line: CC.G().renderCmd(cmd.cmd, sv) }, base));
             return;
           }
         }
         if (card._ccLocked && card._ccLast) {
+          this.hideVarsForRun(card, cmd);
           await CC.runFlow(Object.assign({ line: CC.G().renderCmd(cmd.cmd, card._ccLast) }, base));
           return;
         }
@@ -1242,6 +1372,7 @@
           verr.hidden = false;
           return;
         }
+        this.hideVarsForRun(card, cmd);
         await CC.runFlow({
           commandId: cmd.id, shell: CC.shellFor(cmd.id), cwd: cmd.cwd || "C:\\projects\\app",
           line,
@@ -1418,11 +1549,12 @@
       },
 
       wireShell(c) {
-        const btn = document.getElementById("shellBtn");
+        const btn = document.getElementById("shellCycle");
         if (!btn) return;
         const sync = () => {
           const sh = CC.SHELL_PROMPTS[CC.shellFor(c.id)] || CC.SHELL_PROMPTS.powershell;
-          btn.textContent = "Shell: " + sh.label;
+          const img = document.getElementById("shellCycleImg");
+          if (img) img.src = sh.icon;
           btn.setAttribute("aria-label", "Shell: " + sh.label + " — activate to change shell");
           btn.title = "Shell: " + sh.label + " (click to change)";
         };
@@ -1430,6 +1562,9 @@
         btn.addEventListener("click", () => {
           CC.cycleShell(c.id);
           sync();
+          btn.classList.remove("spin");
+          void btn.offsetWidth;
+          btn.classList.add("spin");
           const g = CC.G();
           const insts = g.parseVarInstances(c.cmd || "");
           const used = new Set();

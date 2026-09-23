@@ -177,6 +177,7 @@ body[data-page="commands"] .vrow .showbtn {font-family:inherit;font-size:12px;bo
 body[data-page="commands"] .vrow .showbtn:hover {background:#f3f4f6;}
 body[data-page="commands"] .term {margin:12px 0 0;border:1px solid #30363d;border-radius:var(--radius);overflow:hidden;background:#0d1117;color:#e6edf3;display:none;}
 body[data-page="commands"] .cmd.open .term {display:block;}
+body[data-page="commands"][data-view="command"] .cmd:has(.vars:not([hidden])) .term {display:none !important;}
 body[data-page="commands"] .term-bar {display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid #30363d;font-size:12px;color:#8b949e;flex-wrap:wrap;}
 body[data-page="commands"] .term-bar .dot {width:8px;height:8px;border-radius:50%;background:#30363d;}
 body[data-page="commands"] .term-bar .dot.live {background:#1f883d;}
@@ -238,21 +239,52 @@ body[data-page="commands"] .add-card strong {display:block;color:var(--fg);font-
 body[data-page="commands"] .foot {padding:0 20px 18px;color:var(--muted);font-size:12px;}
 body[data-page="commands"] .statusbar {display:flex;gap:12px;align-items:center;padding:8px 20px 14px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);}
 body[data-page="commands"] .statusbar .sp {flex:1;}
-body[data-page="commands"] .tool-grid {padding:12px 20px 8px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));}
-body[data-page="commands"] .tool-grid[hidden] {display:none;}
-body[data-page="commands"] .tool {display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-decoration:none;color:inherit;min-height:96px;}
-body[data-page="commands"] .tool:hover {background:var(--surface);border-color:var(--accent);}
-body[data-page="commands"] .tool:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
-body[data-page="commands"] .tool-icon {width:40px;height:40px;flex:none;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--accent);}
-body[data-page="commands"] .tool-icon img {width:22px;height:22px;display:block;}
-body[data-page="commands"] .tool-main {min-width:0;flex:1;}
-body[data-page="commands"] .tool-main strong {display:block;font-size:14px;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis;}
-body[data-page="commands"] .tool-main p {margin:2px 0 8px;color:var(--muted);font-size:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-body[data-page="commands"] .tool-meta {display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-body[data-page="commands"] .tool-meta .vbadge {font-size:11px;font-weight:600;background:#fff8c5;border:1px solid var(--border-soft);color:var(--warn);border-radius:9999px;padding:0 8px;}
-body[data-page="commands"] .tool-meta .tag {font-size:11px;font-weight:600;background:#ddf4ff;border:1px solid var(--border-soft);color:var(--accent);border-radius:9999px;padding:0 8px;}
-body[data-page="commands"] .tool-go {font-size:12px;color:var(--muted);flex:none;}
-body[data-page="commands"] .tool:hover .tool-go {color:var(--accent);}
+body[data-page="commands"] .tool-layout {padding:12px 20px 8px;display:grid;gap:12px;grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:start;}
+body[data-page="commands"] .tool-layout[hidden] {display:none;}
+body[data-page="commands"] .tool-list {display:flex;flex-direction:column;gap:8px;min-width:0;}
+body[data-page="commands"] .tool-row {display:flex;gap:4px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px 6px 6px;}
+body[data-page="commands"] .tool-row:hover {border-color:var(--accent);}
+body[data-page="commands"] .tool-row.on {border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="commands"] .tool-pick {flex:1 1 0;min-width:0;display:flex;flex-direction:row;align-items:center;gap:8px;text-align:left;background:transparent;border:none;padding:4px;border-radius:4px;cursor:pointer;font:inherit;color:inherit;}
+body[data-page="commands"] .tool-pick:focus-visible {outline:none;box-shadow:var(--focus-ring);}
+body[data-page="commands"] .tool-pick-text {flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
+body[data-page="commands"] .tool-go {font-size:14px;color:var(--muted);flex:none;}
+body[data-page="commands"] .tool-row:hover .tool-go, body[data-page="commands"] .tool-row.on .tool-go {color:var(--accent);}
+body[data-page="commands"] .tool-pick-name {font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+body[data-page="commands"] .tool-pick .tag {font-size:11px;font-weight:600;background:#ddf4ff;color:var(--accent);border:1px solid var(--border-soft);border-radius:9999px;padding:0 8px;}
+body[data-page="commands"] .tool-shell {flex:none;width:36px;align-self:center;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer;padding:0;}
+body[data-page="commands"] .tool-shell img {width:20px;height:20px;display:block;}
+body[data-page="commands"] .tool-detail .cmd-icon-btn {display:none;}
+body[data-page="commands"] .tool-shell {background:transparent;border-color:transparent;}
+body[data-page="commands"] .tool-shell:hover {background:#fff;border-color:var(--border);}
+body[data-page="commands"] .tool-shell:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="commands"] .tool-detail {min-width:0;}
+body[data-page="commands"] .tool-detail .cmd {margin:0;}
+body[data-page="commands"] .tool-detail .cmd:has(.vars:not([hidden])) .cmd-side {display:none;}
+body[data-page="commands"] .tool-detail .tags {display:none;}
+body[data-page="commands"] .tool-detail .vclose {display:none;}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview {border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);margin-top:8px;}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview>summary {list-style:none;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted);padding:6px 10px;min-height:32px;border-radius:var(--radius);cursor:pointer;}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview>summary::-webkit-details-marker {display:none;}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview>summary::before {content:"▾";font-size:12px;color:var(--muted);flex:none;}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview:not([open])>summary::before {content:"▸";}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview>summary:hover {color:var(--fg);}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview>summary:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview .live {font-weight:400;font-size:11px;color:var(--muted);border:1px solid var(--border);background:#fff;border-radius:9999px;padding:0 8px;}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview .cmdline {margin:0 8px 8px;padding:8px 10px;}
+body[data-page="commands"][data-view="tool"] .tool-detail .preview:not([open])>:not(summary) {display:none;}
+body[data-page="commands"] .vacts .vclose {margin-left:auto;}
+body[data-page="commands"] .tool-empty {color:var(--muted);font-size:14px;padding:8px 0;}
+body[data-page="commands"] .tool-empty a {color:var(--accent);}
+body[data-page="commands"]:not(.painted) .cmd, body[data-page="commands"]:not(.painted) .tool-row {animation:od-rise .24s cubic-bezier(.2,0,0,1) both;}
+body[data-page="commands"] .cmd.open .term {animation:od-rise .18s cubic-bezier(.2,0,0,1) both;}
+body[data-page="commands"] .vars:not([hidden]) {animation:od-rise .18s cubic-bezier(.2,0,0,1) both;}
+body[data-page="commands"] .tool-row {transition:background-color .16s cubic-bezier(.2,0,0,1),border-color .16s cubic-bezier(.2,0,0,1),box-shadow .16s cubic-bezier(.2,0,0,1);}
+body[data-page="commands"] .cmd {transition:border-color .16s cubic-bezier(.2,0,0,1);}
+body[data-page="commands"] .cmd:hover {border-color:var(--accent);}
+body[data-page="commands"] .cmd-side .btn-run, body[data-page="commands"] .cmd-side .btn-stop {transition:background-color .12s cubic-bezier(.16,1,.3,1),transform .12s cubic-bezier(.16,1,.3,1);}
+body[data-page="commands"] .cmd-side .btn-run:active, body[data-page="commands"] .cmd-side .btn-stop:active {transform:scale(.9);}
+body[data-page="commands"] .term-body>div {animation:od-fade .14s ease-out both;}
 body[data-page="commands"][data-view="tool"] .list {display:none;}
 body[data-page="commands"][data-view="tool"] .add-wrap {display:none;}
 @media(max-width:640px) {
@@ -266,8 +298,13 @@ body[data-page="commands"][data-view="tool"] .add-wrap {display:none;}
   body[data-page="commands"] .app-head {padding:14px 8px 6px;}
   body[data-page="commands"] .tabs {padding:10px 8px 0;}
   body[data-page="commands"] .list {padding:10px 8px 8px;}
+  body[data-page="commands"] .tool-layout {grid-template-columns:1fr;padding:10px 8px 8px;}
   body[data-page="commands"] .add-wrap {padding:8px 8px 16px;}
   body[data-page="commands"] .foot {padding:0 8px 14px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  body[data-page="commands"]:not(.painted) .cmd, body[data-page="commands"]:not(.painted) .tool-row, body[data-page="commands"] .cmd.open .term, body[data-page="commands"] .vars:not([hidden]), body[data-page="commands"] .term-body>div {animation:none;}
+  body[data-page="commands"] .tool-pick, body[data-page="commands"] .cmd, body[data-page="commands"] .cmd-side .btn-run, body[data-page="commands"] .cmd-side .btn-stop {transition:none;}
 }
 
 /* ── command.html (body[data-page="detail"]) ── */
@@ -278,6 +315,15 @@ body[data-page="commands"][data-view="tool"] .add-wrap {display:none;}
   body[data-page="detail"] .od-fixed {flex:none;}
 }
 body[data-page="detail"] * {box-sizing:border-box;}
+body[data-page="detail"] .shell-cycle {margin-left:auto;width:32px;height:32px;flex:none;border-radius:50%;background:#fff;border:1px solid var(--border);display:inline-grid;place-items:center;cursor:pointer;padding:0;}
+body[data-page="detail"] .shell-cycle img {width:18px;height:18px;display:block;}
+body[data-page="detail"] .shell-cycle:hover {border-color:var(--accent);}
+body[data-page="detail"] .shell-cycle:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="detail"] .shell-cycle.spin img {animation:od-shell-spin .3s cubic-bezier(.2,0,0,1);}
+@keyframes od-shell-spin {from {transform:rotate(0);} to {transform:rotate(360deg);}}
+@media(prefers-reduced-motion:reduce) {
+  body[data-page="detail"] .shell-cycle.spin img {animation:none;}
+}
 body[data-page="detail"], body[data-page="detail"] {margin:0;padding:0;}
 body[data-page="detail"] {background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;min-height:100vh;display:flex;justify-content:center;padding:0;}
 body[data-page="detail"] .app-window {width:100%;background:var(--bg);border:none;border-radius:0;overflow:hidden;box-shadow:none;}

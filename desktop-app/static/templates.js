@@ -22,7 +22,8 @@
       '<div class="vars" hidden><div class="vars-h"></div><div class="vrows"></div>' +
       '<div class="verr" hidden></div>' +
       '<div class="vacts"><button class="btn btn-run vgo" type="button"><span class="ric" aria-hidden="true">▶</span>Run Command</button>' +
-      '<label class="lock-check"><input type="checkbox" class="vlock" aria-label="Lock values" /> Lock Values</label></div></div>' +
+      '<label class="lock-check"><input type="checkbox" class="vlock" aria-label="Lock values" /> Lock Values</label>' +
+      '<button class="btn btn-ghost vclose" type="button" aria-label="Close inputs"><span aria-hidden="true">✕</span> Close</button></div></div>' +
       '<div class="term" aria-live="polite"><div class="term-bar"><span class="dot"></span>' +
       "<span>terminal — <span class=\"tname\">{{name}}</span></span><span class=\"sp\"></span>" +
       '<button type="button" data-a="copy">Copy</button><button type="button" data-a="clear">Clear</button><button type="button" data-a="hide">Hide</button></div>' +
@@ -33,16 +34,6 @@
       '<div class="status" role="status">Ready</div>' +
       '<button class="linklike vedit" type="button" hidden>Edit values</button></div>' +
       "</div></section>",
-
-    // Grid/tool card (design/index.html paintTool).
-    tool: "" +
-      '<a class="tool" href="{{idHref}}" aria-label="{{toolAria}}">' +
-      '<span class="tool-icon"><img src="{{shellIcon}}" alt="" /></span>' +
-      '<span class="tool-main"><strong>{{name}}</strong><p>{{desc}}</p>' +
-      '<span class="tool-meta"><span class="tag">{{tag}}</span>{{{badgeHtml}}}</span></span>' +
-      '<span class="tool-go" aria-hidden="true">→</span></a>',
-    toolEmpty: "" +
-      '<p style="color:var(--muted)">No tools match. <a href="add.html" style="color:var(--accent)">Add a new command</a>.</p>',
 
     // Community Hub card (design/hub.html hub item skeleton; F3 fills behavior).
     hubCard: "" +
