@@ -94,6 +94,7 @@ body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:1
 .btn-run:hover{background:var(--success)}
 .btn-run[disabled]{opacity:.6;cursor:default}
 .vgo{min-width:0;padding:4px 12px}
+.cmd-side .btn-run,.cmd-side .btn-stop{flex:none;align-self:flex-end;width:32px;height:32px;min-width:0;padding:0;border-radius:50%;font-size:13px;line-height:1}
 .vgo .ric{flex:none;font-size:12px;line-height:1}
 .status.needs{color:var(--warn)}
 .tags button.vbadge{font:inherit;cursor:pointer}
@@ -135,6 +136,7 @@ body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:1
 .verr{font-size:12px;color:var(--danger);margin-bottom:8px}
 .verr[hidden]{display:none}
 .vacts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.vacts .vclose{margin-left:auto}
 .linklike{background:none;border:none;padding:0;font:inherit;font-size:12px;color:var(--accent);cursor:pointer;text-align:right}
 .linklike:hover{text-decoration:underline}
 .linklike:focus-visible{outline:none;box-shadow:var(--focus-ring)}
@@ -174,6 +176,8 @@ body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:1
 .vrow .showbtn:hover{background:#f3f4f6}
 .term{margin:12px 0 0;border:1px solid #30363d;border-radius:var(--radius);overflow:hidden;background:#0d1117;color:#e6edf3;display:none}
 .cmd.open .term{display:block}
+/* Command view: inputs form and terminal are mutually exclusive. */
+body[data-view="command"] .cmd:has(.vars:not([hidden])) .term{display:none !important}
 .term-bar{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid #30363d;font-size:12px;color:#8b949e;flex-wrap:wrap}
 .term-bar .dot{width:8px;height:8px;border-radius:50%;background:#30363d}
 .term-bar .dot.live{background:#1f883d}
@@ -239,25 +243,60 @@ body[data-view="control"] .term:has(.term-empty){display:none}
 .add-card p{margin:0;color:var(--muted);font-size:14px}
 .add-card strong{display:block;color:var(--fg);font-size:14px}
 .foot{padding:0 20px 18px;color:var(--muted);font-size:12px}
-/* Tool View — command grid. Same tokens, flat cards, fill-only hover. */
-.tool-grid{padding:12px 20px 8px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
-.tool-grid[hidden]{display:none}
-.tool{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-decoration:none;color:inherit;min-height:96px}
-.tool:hover{background:var(--surface);border-color:var(--accent)}
-.tool:focus-visible{outline:none;border-color:var(--accent);box-shadow:var(--focus-ring)}
-.tool-icon{width:40px;height:40px;flex:none;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--accent)}
-.tool-icon img{width:22px;height:22px;display:block}
-.tool-main{min-width:0;flex:1}
-.tool-main strong{display:block;font-size:14px;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis}
-.tool-main p{margin:2px 0 8px;color:var(--muted);font-size:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tool-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.tool-meta .vbadge{font-size:11px;font-weight:600;background:#fff8c5;border:1px solid var(--border-soft);color:var(--warn);border-radius:9999px;padding:0 8px}
-.tool-meta .tag{font-size:11px;font-weight:600;background:#ddf4ff;border:1px solid var(--border-soft);color:var(--accent);border-radius:9999px;padding:0 8px}
-.tool-go{font-size:12px;color:var(--muted);flex:none}
-.tool:hover .tool-go{color:var(--accent)}
+/* Tool View — master-detail list. Left picks, right runs. Same tokens, flat rows. */
+.tool-layout{padding:12px 20px 8px;display:grid;gap:12px;grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:start}
+.tool-layout[hidden]{display:none}
+.tool-list{display:flex;flex-direction:column;gap:8px;min-width:0}
+.tool-row{display:flex;gap:4px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px 6px 6px}
+.tool-row:hover{border-color:var(--accent)}
+.tool-row.on{border-color:var(--accent);box-shadow:var(--focus-ring)}
+.tool-pick{flex:1 1 0;min-width:0;display:flex;flex-direction:row;align-items:center;gap:8px;text-align:left;background:transparent;border:none;padding:4px;border-radius:4px;cursor:pointer;font:inherit;color:inherit}
+.tool-pick:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.tool-pick-text{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.tool-go{font-size:14px;color:var(--muted);flex:none}
+.tool-row:hover .tool-go,.tool-row.on .tool-go{color:var(--accent)}
+.tool-pick-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.tool-pick .tag{font-size:11px;font-weight:600;background:#ddf4ff;color:var(--accent);border:1px solid var(--border-soft);border-radius:9999px;padding:0 8px}
+.tool-shell{flex:none;width:36px;align-self:center;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer;padding:0}
+.tool-shell img{width:20px;height:20px;display:block}
+.tool-detail .cmd-icon-btn{display:none}
+.tool-shell{background:transparent;border-color:transparent}
+.tool-shell:hover{background:#fff;border-color:var(--border)}
+.tool-shell:focus-visible{outline:none;border-color:var(--accent);box-shadow:var(--focus-ring)}
+.tool-detail{min-width:0}
+.tool-detail .cmd{margin:0}
+.tool-detail .cmd:has(.vars:not([hidden])) .cmd-side{display:none}
+.tool-detail .tags{display:none}
+.tool-detail .vclose{display:none}
+/* Tool detail preview collapses like Control View. */
+body[data-view="tool"] .tool-detail .preview{border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);margin-top:8px}
+body[data-view="tool"] .tool-detail .preview>summary{list-style:none;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted);padding:6px 10px;min-height:32px;border-radius:var(--radius);cursor:pointer}
+body[data-view="tool"] .tool-detail .preview>summary::-webkit-details-marker{display:none}
+body[data-view="tool"] .tool-detail .preview>summary::before{content:"▾";font-size:12px;color:var(--muted);flex:none}
+body[data-view="tool"] .tool-detail .preview:not([open])>summary::before{content:"▸"}
+body[data-view="tool"] .tool-detail .preview>summary:hover{color:var(--fg)}
+body[data-view="tool"] .tool-detail .preview>summary:focus-visible{outline:none;border-color:var(--accent);box-shadow:var(--focus-ring)}
+body[data-view="tool"] .tool-detail .preview .live{font-weight:400;font-size:11px;color:var(--muted);border:1px solid var(--border);background:#fff;border-radius:9999px;padding:0 8px}
+body[data-view="tool"] .tool-detail .preview .cmdline{margin:0 8px 8px;padding:8px 10px}
+body[data-view="tool"] .tool-detail .preview:not([open])>:not(summary){display:none}
+.tool-empty{color:var(--muted);font-size:14px;padding:8px 0}
+.tool-empty a{color:var(--accent)}
 body[data-view="tool"] .list{display:none}
 body[data-view="tool"] .add-wrap{display:none}
-@media(max-width:640px){.cmd-top{flex-direction:column}.cmd-side{flex-direction:row;width:100%;align-items:center}.cmd-side .btn-run,.cmd-side .btn-stop{flex:1}.cmd-side .status{text-align:left;flex:1}.search{width:100%}.search input{flex:1;min-width:0}.vacts .btn:not(.vgo){flex:1}.app-head{padding:14px 8px 6px}.tabs{padding:10px 8px 0}.list{padding:10px 8px 8px}.add-wrap{padding:8px 8px 16px}.foot{padding:0 8px 14px}}
+/* Motion — one language: quick ease-out, transform/opacity only. */
+body:not(.painted) .cmd,body:not(.painted) .tool-row{animation:od-rise .24s cubic-bezier(.2,0,0,1) both}
+.cmd.open .term{animation:od-rise .18s cubic-bezier(.2,0,0,1) both}
+.vars:not([hidden]){animation:od-rise .18s cubic-bezier(.2,0,0,1) both}
+.tool-row{transition:background-color .16s cubic-bezier(.2,0,0,1),border-color .16s cubic-bezier(.2,0,0,1),box-shadow .16s cubic-bezier(.2,0,0,1)}
+.cmd{transition:border-color .16s cubic-bezier(.2,0,0,1)}
+.cmd:hover{border-color:var(--accent)}
+.cmd-side .btn-run,.cmd-side .btn-stop{transition:background-color .12s cubic-bezier(.16,1,.3,1),transform .12s cubic-bezier(.16,1,.3,1)}
+.cmd-side .btn-run:active,.cmd-side .btn-stop:active{transform:scale(.9)}
+.term-body>div{animation:od-fade .14s ease-out both}
+@keyframes od-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes od-fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){body:not(.painted) .cmd,body:not(.painted) .tool-row,.cmd.open .term,.vars:not([hidden]),.term-body>div{animation:none}.tool-pick,.cmd,.cmd-side .btn-run,.cmd-side .btn-stop{transition:none}}
+@media(max-width:640px){.cmd-top{flex-direction:column}.cmd-side{flex-direction:row;width:100%;align-items:center}.cmd-side .btn-run,.cmd-side .btn-stop{flex:none}.cmd-side .status{text-align:left;flex:1}.search{width:100%}.search input{flex:1;min-width:0}.vacts .btn:not(.vgo){flex:1}.app-head{padding:14px 8px 6px}.tabs{padding:10px 8px 0}.list{padding:10px 8px 8px}.add-wrap{padding:8px 8px 16px}.foot{padding:0 8px 14px}.tool-layout{grid-template-columns:1fr;padding:10px 8px 8px}}
 </style>
 </head>
 <body>
@@ -270,7 +309,7 @@ body[data-view="tool"] .add-wrap{display:none}
 <a class="btn btn-run" href="add.html">+ Add command</a>
 </div>
 <div class="list" id="list"></div>
-<div class="tool-grid" id="toolGrid" hidden></div>
+<div class="tool-layout" id="toolLayout" hidden><div class="tool-list" id="toolList" aria-label="Tools"></div><div class="tool-detail" id="toolDetail"></div></div>
 <div class="add-wrap">
 <div class="add-card">
 <div class="cmd-icon">+</div>
@@ -323,7 +362,10 @@ function getShell(id){try{const m=JSON.parse(localStorage.getItem("cc-shells")||
 function setShell(id,s){try{const m=JSON.parse(localStorage.getItem("cc-shells")||"{}");m[id]=s;localStorage.setItem("cc-shells",JSON.stringify(m));}catch(e){}}
 function paintPrompt(elm,id){const sh=SHELLS[getShell(id)]||SHELLS.powershell;const spans=elm.querySelectorAll(".cmdline span");if(spans.length>=3){spans[0].textContent=sh.pre;spans[2].textContent=sh.post;}}
 function getView(){try{const v=localStorage.getItem("cc-view");if(v==="control"||v==="command"||v==="tool")return v;}catch(e){}return "command";}
-function applyViewToDom(view){document.body.dataset.view=view;const bc=document.getElementById("viewCommand"),bv=document.getElementById("viewControl"),bt=document.getElementById("viewTool");if(bc&&bv&&bt){const isC=view==="command",isV=view==="control",isT=view==="tool";bc.classList.toggle("on",isC);bv.classList.toggle("on",isV);bt.classList.toggle("on",isT);bc.setAttribute("aria-pressed",String(isC));bv.setAttribute("aria-pressed",String(isV));bt.setAttribute("aria-pressed",String(isT));}const tg=document.getElementById("toolGrid");if(tg)tg.hidden=view!=="tool";document.querySelectorAll("#list .cmd").forEach(el=>{const pv=el.querySelector(".preview");if(pv&&view!=="control")pv.open=true;if(view==="control"&&el._hasVars&&el._openVars){if(el.querySelector(".vars").hidden)el._openVars(true);} });}
+function applyViewToDom(view){document.body.dataset.view=view;const bc=document.getElementById("viewCommand"),bv=document.getElementById("viewControl"),bt=document.getElementById("viewTool");if(bc&&bv&&bt){const isC=view==="command",isV=view==="control",isT=view==="tool";bc.classList.toggle("on",isC);bv.classList.toggle("on",isV);bt.classList.toggle("on",isT);bc.setAttribute("aria-pressed",String(isC));bv.setAttribute("aria-pressed",String(isV));bt.setAttribute("aria-pressed",String(isT));}const tl=document.getElementById("toolLayout");if(tl)tl.hidden=view!=="tool";document.querySelectorAll("#list .cmd").forEach(el=>{const pv=el.querySelector(".preview");if(pv&&view!=="control")pv.open=true;if(view==="control"&&el._hasVars&&el._openVars){if(el.querySelector(".vars").hidden)el._openVars(true);} });}
+let toolSelId=null;
+function cycleShell(id){const cur=getShell(id);const next=SHELL_ORDER[(SHELL_ORDER.indexOf(cur)+1)%SHELL_ORDER.length];setShell(id,next);syncShell(id);}
+function syncShell(id){const sh=SHELLS[getShell(id)]||SHELLS.powershell;document.querySelectorAll('[data-shell-id="'+id+'"]').forEach(function(b){const img=b.querySelector("img");if(img)img.src=sh.icon;b.setAttribute("aria-label","Shell: "+sh.label+" — activate to change shell");b.title="Shell: "+sh.label+" (click to change)";});document.querySelectorAll('.cmd[data-id="'+id+'"]').forEach(function(card){paintPrompt(card,id);});}
 function setView(view,silent){try{localStorage.setItem("cc-view",view);}catch(e){}applyViewToDom(view);}
 const list=document.getElementById("list"),q=document.getElementById("q"),count=document.getElementById("count");
 function paint(filter=""){
@@ -332,9 +374,9 @@ const rows=all.filter(c=>(c.name+" "+c.cmd+" "+(c.desc||"")+" "+(c.cwd||"")).toL
 count.textContent=rows.length+" saved";
 rows.forEach(c=>{
 const el=document.createElement("section");el.className="cmd";el.dataset.id=c.id;
-el.innerHTML=`<div class="cmd-top"><button type="button" class="cmd-icon cmd-icon-btn" data-shellbtn aria-label="Shell: ${SHELLS[getShell(c.id)].label} — activate to change shell" title="Shell: ${SHELLS[getShell(c.id)].label} (click to change)"><img src="${SHELLS[getShell(c.id)].icon}" alt="" /></button>
-<div class="cmd-main"><h2></h2><p></p><details class="preview"><summary>Command preview <span class="live">live</span></summary><div class="cmdline"><span class="dim">PS </span><span class="pwd"></span><span class="dim">&gt; </span><span class="c"></span></div></details><div class="tags"><span></span><span>local</span></div><div class="vars" hidden><div class="vars-h"></div><div class="vrows"></div><div class="verr" hidden></div><div class="vacts"><button class="btn btn-run vgo" type="button"><span class="ric" aria-hidden="true">▶</span>Run Command</button><label class="lock-check"><input type="checkbox" class="vlock" aria-label="Lock values" /> Lock Values</label></div></div><div class="term" aria-live="polite"><div class="term-bar"><span class="dot"></span><span>terminal — <span class="tname"></span></span><span class="sp"></span><button type="button" data-a="copy">Copy</button><button type="button" data-a="clear">Clear</button><button type="button" data-a="hide">Hide</button></div><div class="term-body"><span class="term-empty">Not run yet — press Run to execute.</span></div></div></div>
-<div class="cmd-side"><button class="btn btn-run" title="Run this command" aria-label="Run this command">▶ Run</button><button class="linklike vunlock" type="button" hidden>Unlock Values</button><div class="status" role="status">Ready</div><button class="linklike vedit" type="button" hidden>Edit values</button></div></div>`;
+el.innerHTML=`<div class="cmd-top"><button type="button" class="cmd-icon cmd-icon-btn" data-shellbtn data-shell-id="${c.id}" aria-label="Shell: ${SHELLS[getShell(c.id)].label} — activate to change shell" title="Shell: ${SHELLS[getShell(c.id)].label} (click to change)"><img src="${SHELLS[getShell(c.id)].icon}" alt="" /></button>
+<div class="cmd-main"><h2></h2><p></p><details class="preview"><summary>Command preview <span class="live">live</span></summary><div class="cmdline"><span class="dim">PS </span><span class="pwd"></span><span class="dim">&gt; </span><span class="c"></span></div></details><div class="tags"><span></span><span>local</span></div><div class="vars" hidden><div class="vars-h"></div><div class="vrows"></div><div class="verr" hidden></div><div class="vacts"><button class="btn btn-run vgo" type="button"><span class="ric" aria-hidden="true">▶</span>Run Command</button><label class="lock-check"><input type="checkbox" class="vlock" aria-label="Lock values" /> Lock Values</label><button class="btn btn-ghost vclose" type="button" aria-label="Close inputs"><span aria-hidden="true">✕</span> Close</button></div></div><div class="term" aria-live="polite"><div class="term-bar"><span class="dot"></span><span>terminal — <span class="tname"></span></span><span class="sp"></span><button type="button" data-a="copy">Copy</button><button type="button" data-a="clear">Clear</button><button type="button" data-a="hide">Hide</button></div><div class="term-body"><span class="term-empty">Not run yet — press Run to execute.</span></div></div></div>
+<div class="cmd-side"><button class="btn btn-run" title="Run this command" aria-label="Run this command">▶</button><button class="linklike vunlock" type="button" hidden>Unlock Values</button><div class="status" role="status">Ready</div><button class="linklike vedit" type="button" hidden>Edit values</button></div></div>`;
 const h2=el.querySelector("h2");const tl=document.createElement("a");tl.href="command.html?id="+encodeURIComponent(c.id);tl.textContent=c.name;h2.appendChild(tl);el.querySelector("p").textContent=c.desc||"";
 paintCmdline(el.querySelector(".c"),el.querySelector(".cmdline .pwd"),c.cmd,c.cwd);paintPrompt(el,c.id);el.querySelector(".tags span").textContent=c.tag||"command";el.querySelector(".tname").textContent=c.name;
 const run=el.querySelector(".cmd-side .btn-run"),st=el.querySelector(".status"),body=el.querySelector(".term-body"),dot=el.querySelector(".dot");
@@ -344,22 +386,23 @@ function savedVals(){return askMode==="once"?getVals(c.id):null;}
 function completeVals(v){if(!v)return false;return vars.every(x=>{const got=vStored(v,x);if(got===undefined)return false;if(x.type==="checkbox"||x.type==="switch"||x.type==="radio"||x.type==="select"||x.type==="range"||x.type==="buttongroup"||x.type==="color"||x.type==="multiselect"||x.type==="license"||x.type==="time"||x.type==="datetime")return true;return String(got).trim()!=="";});}
 if(vars.length){const b=document.createElement("button");b.type="button";b.className="vbadge";b.textContent=vars.length+(vars.length===1?" input":" inputs");b.title="Show inputs";b.setAttribute("aria-label",b.textContent+" needed — show inputs");el.querySelector(".tags").appendChild(b);b.addEventListener("click",()=>openVars());const sv0=savedVals();if(completeVals(sv0)){st.textContent="Saved values ready";st.classList.remove("needs");vedit.hidden=false;}else{st.textContent="Needs "+vars.length+(vars.length===1?" input":" inputs");st.classList.add("needs");}}
 function buildRows(){vrows.innerHTML="";verr.hidden=true;const sv=savedVals()||{};const last=el._last||{};const getters=[];vars.forEach((v,i)=>{const w=document.createElement("div");w.className="vrow";const lb=document.createElement("label");lb.textContent=ccLabel(v)+" ";const sp=document.createElement("span");sp.className="vt";sp.textContent="· "+v.type+(v.total>1?" · "+v.occ+" of "+v.total:"")+" · "+v.token;if(v.auto){const ap=document.createElement("span");ap.className="vbadge";ap.textContent="auto";ap.style.marginLeft="6px";lb.appendChild(ap);}lb.appendChild(sp);w.appendChild(lb);let pre=vStored(sv,v);if(pre==null)pre=vStored(last,v);if(pre==null)pre=(v.auto&&!v.default)?ccAutogen(v):ccExampleFor(v);if(v.type==="select"||v.type==="license"||v.type==="radio"){const opts=optList(v.params);if(!opts.length){const inp=document.createElement("input");inp.type="text";inp.setAttribute("aria-label","Value "+(i+1)+" ("+v.type+")");inp.value=pre;w.appendChild(inp);getters.push({v:v,el:inp,kind:"text"});}else if(v.type==="select"||v.type==="license"){const s=document.createElement("select");s.setAttribute("aria-label","Value "+(i+1)+" (select)");opts.forEach(o=>{const op=document.createElement("option");op.value=o;op.textContent=o;s.appendChild(op);});if(opts.indexOf(pre)>=0)s.value=pre;w.appendChild(s);getters.push({v:v,el:s,kind:"select"});}else{const g=document.createElement("div");g.className="rgroup";const rname="vr_"+String(c.id).replace(/[^a-zA-Z0-9_-]/g,"")+"_"+i;opts.forEach((o,oi)=>{const l=document.createElement("label");l.className="radio-pill";const r=document.createElement("input");r.type="radio";r.name=rname;r.value=o;if((pre&&pre===o)||(!pre&&oi===0))r.checked=true;l.appendChild(r);const t=document.createElement("span");t.textContent=o;l.appendChild(t);g.appendChild(l);});w.appendChild(g);getters.push({v:v,el:g,kind:"radio"});}}else if(v.type==="checkbox"){const on=v.params!==""?v.params:"true";const l=document.createElement("label");l.className="flag-check";const cb=document.createElement("input");cb.type="checkbox";cb.checked=(pre===on);cb.setAttribute("aria-label","Value "+(i+1)+" (checkbox)");l.appendChild(cb);const t=document.createElement("code");t.textContent=on;l.appendChild(t);w.appendChild(l);getters.push({v:v,el:cb,kind:"check",on:on});}else if(v.type==="buttongroup"){const bgopts=optList(v.params);if(!bgopts.length){const inp0=document.createElement("input");inp0.type="text";inp0.setAttribute("aria-label","Value "+(i+1)+" ("+v.type+")");inp0.value=pre;w.appendChild(inp0);getters.push({v:v,el:inp0,kind:"text"});}else{const bg=document.createElement("div");bg.className="seg-group";bg.setAttribute("role","radiogroup");bg.setAttribute("aria-label","Value "+(i+1)+" (choice)");let bgval=(bgopts.indexOf(pre)>=0)?pre:bgopts[0];bg.dataset.val=bgval;bgopts.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="seg-btn";b.textContent=o;b.setAttribute("role","radio");b.setAttribute("aria-pressed",String(o===bgval));b.addEventListener("click",()=>{bgval=o;bg.dataset.val=o;bg.querySelectorAll(".seg-btn").forEach(x=>x.setAttribute("aria-pressed",String(x.textContent===o)));});bg.appendChild(b);});w.appendChild(bg);getters.push({v:v,el:bg,kind:"buttongroup"});}}else if(v.type==="switch"){const swon=v.params!==""?v.params:"true";const sw=document.createElement("label");sw.className="switch-row";const scb=document.createElement("input");scb.type="checkbox";scb.checked=(pre===swon);scb.setAttribute("role","switch");scb.setAttribute("aria-label","Value "+(i+1)+" (switch)");const tr=document.createElement("span");tr.className="switch-track";tr.setAttribute("aria-hidden","true");sw.appendChild(scb);sw.appendChild(tr);const stx=document.createElement("code");stx.textContent=swon;sw.appendChild(stx);w.appendChild(sw);getters.push({v:v,el:scb,kind:"switch",on:swon});}else if(v.type==="range"){const rs=rangeSpec(v.params);const wrap=document.createElement("div");wrap.className="rrange";const r=document.createElement("input");r.type="range";r.min=rs.min;r.max=rs.max;r.step=rs.step;r.setAttribute("aria-label","Value "+(i+1)+" (range "+rs.min+" to "+rs.max+")");let start=parseFloat(pre);r.value=isFinite(start)?Math.min(rs.max,Math.max(rs.min,start)):rs.min;const num=document.createElement("input");num.type="number";num.min=rs.min;num.max=rs.max;num.step=rs.step;num.value=r.value;num.style.width="76px";num.setAttribute("aria-label","Value "+(i+1)+" (range number)");r.addEventListener("input",()=>{num.value=r.value;});num.addEventListener("input",()=>{r.value=num.value;});wrap.appendChild(r);wrap.appendChild(num);w.appendChild(wrap);getters.push({v:v,el:r,kind:"range",numEl:num});}else if(v.type==="multiselect"){const msopts=optList(v.params);if(!msopts.length){const inp0=document.createElement("input");inp0.type="text";inp0.setAttribute("aria-label","Value "+(i+1)+" ("+v.type+")");inp0.value=pre;w.appendChild(inp0);getters.push({v:v,el:inp0,kind:"text"});}else{const preSet=String(pre||"").split(",").map(s=>s.trim()).filter(s=>s!=="");const mg=document.createElement("div");mg.className="mgroup";msopts.forEach(o=>{const l=document.createElement("label");l.className="mopt";const cb=document.createElement("input");cb.type="checkbox";cb.value=o;if(preSet.indexOf(o)>=0)cb.checked=true;l.appendChild(cb);const t=document.createElement("span");t.textContent=o;l.appendChild(t);mg.appendChild(l);});w.appendChild(mg);getters.push({v:v,el:mg,kind:"multiselect"});}}else if(v.type==="textarea"){const ta=document.createElement("textarea");ta.rows=3;ta.setAttribute("aria-label","Value "+(i+1)+" (multiline)");ta.value=pre;w.appendChild(ta);getters.push({v:v,el:ta,kind:"textarea"});}else if(v.type==="keyvalue"){const kvpre=String(pre||"");const eqi=kvpre.indexOf("=");const kvk=eqi>=0?kvpre.slice(0,eqi):"";const kvv=eqi>=0?kvpre.slice(eqi+1):kvpre;const krow=document.createElement("div");krow.className="kvrow";const ki=document.createElement("input");ki.type="text";ki.classList.add("mono");ki.placeholder="KEY";ki.setAttribute("aria-label","Key for Value "+(i+1));ki.value=kvk;const keq=document.createElement("span");keq.textContent="=";keq.setAttribute("aria-hidden","true");const vi=document.createElement("input");vi.type="text";vi.classList.add("mono");vi.placeholder="value";vi.setAttribute("aria-label","Value "+(i+1)+" (key value)");vi.value=kvv;krow.appendChild(ki);krow.appendChild(keq);krow.appendChild(vi);w.appendChild(krow);getters.push({v:v,el:krow,kind:"keyvalue",keyEl:ki,valEl:vi});}else if(v.type==="color"){const cwrap=document.createElement("div");cwrap.className="crow";const ci=document.createElement("input");ci.type="color";ci.setAttribute("aria-label","Value "+(i+1)+" (color)");ci.value=/^#[0-9a-fA-F]{6}$/.test(pre)?pre:"#1677ff";const hx=document.createElement("input");hx.type="text";hx.className="hex";hx.value=ci.value;hx.setAttribute("aria-label","Value "+(i+1)+" (color hex)");hx.spellcheck=false;ci.addEventListener("input",function(){hx.value=ci.value;});hx.addEventListener("input",function(){if(/^#[0-9a-fA-F]{6}$/.test(hx.value))ci.value=hx.value;});cwrap.appendChild(ci);cwrap.appendChild(hx);w.appendChild(cwrap);getters.push({v:v,el:ci,kind:"color",hexEl:hx});}else{const inp=document.createElement("input");if(v.type==="number"){inp.type="number";inp.inputMode="numeric";}else if(v.type==="date"){inp.type="date";}else if(v.type==="password"){inp.type="password";}else if(v.type==="time"){inp.type="time";}else if(v.type==="datetime"){inp.type="datetime-local";}else{inp.type="text";if(v.type==="file"){inp.classList.add("mono");inp.placeholder="e.g. input.mp4";}}inp.setAttribute("aria-label","Value "+(i+1)+" ("+v.type+")");inp.value=pre;if(v.type==="file"){const isDir=v.name==="input.dir"||v.name==="input.folder"||v.name==="input.workdir";const isMulti=v.name==="input.files";const fr=document.createElement("div");fr.className="filerow";const pk=document.createElement("button");pk.type="button";pk.className="btn btn-ghost";pk.textContent=isDir?"Select Folder":"Select File";const fi=document.createElement("input");fi.type="file";fi.hidden=true;fi.setAttribute("aria-label",(isDir?"Folder":"File")+" picker for Value "+(i+1));if(isDir){fi.setAttribute("webkitdirectory","");fi.setAttribute("directory","");}if(isMulti){fi.setAttribute("multiple","");}pk.addEventListener("click",()=>fi.click());fi.addEventListener("change",()=>{if(!fi.files||!fi.files.length)return;let pick=fi.files[0].name||"";if(isDir){const rel=fi.files[0].webkitRelativePath||pick;pick=(rel.split("/")[0]||pick)||pick;}else if(isMulti){const names=[];for(let mi=0;mi<fi.files.length;mi++){names.push(fi.files[mi].name);}pick=names.join(" ");}inp.value=pick;if(inp.classList)inp.classList.remove("bad");fi.value="";});fr.appendChild(inp);fr.appendChild(pk);fr.appendChild(fi);w.appendChild(fr);}else if(v.type==="password"){const pw=document.createElement("span");pw.className="pwrow";const sh=document.createElement("button");sh.type="button";sh.className="showbtn";sh.textContent="Show";sh.setAttribute("aria-label","Show password for Value "+(i+1));sh.addEventListener("click",()=>{const show=inp.type==="password";inp.type=show?"text":"password";sh.textContent=show?"Hide":"Show";inp.focus();});pw.appendChild(inp);pw.appendChild(sh);if(v.auto){const rg=document.createElement("button");rg.type="button";rg.className="btn btn-ghost";rg.textContent="↻ Regenerate";rg.addEventListener("click",()=>{inp.value=ccAutogen(v);});pw.appendChild(rg);}w.appendChild(pw);}else{if(v.auto&&(v.type==="text"||v.type==="number"||v.type==="date")){const fr2=document.createElement("div");fr2.className="filerow";const rg=document.createElement("button");rg.type="button";rg.className="btn btn-ghost";rg.textContent="↻ Regenerate";rg.setAttribute("aria-label","Regenerate value for "+ccLabel(v));rg.addEventListener("click",()=>{inp.value=ccAutogen(v);if(inp.classList)inp.classList.remove("bad");});fr2.appendChild(inp);fr2.appendChild(rg);w.appendChild(fr2);}else{w.appendChild(inp);}}getters.push({v:v,el:inp,kind:v.type});}vrows.appendChild(w);});el._getters=getters;el.querySelector(".vars-h").textContent="This command needs "+vars.length+(vars.length===1?" value":" values")+" — fill to run";}
-function openVars(silent){var vh0=el.querySelector(".vars-h");if(vh0)vh0.textContent="Inputs · "+vars.length+(vars.length===1?" value":" values")+" needed";buildRows();varsBox.hidden=false;if(!silent){el.classList.add("open");const f=vrows.querySelector("input");if(f)f.focus();}}
+function openVars(silent){var vh0=el.querySelector(".vars-h");if(vh0)vh0.textContent="Inputs · "+vars.length+(vars.length===1?" value":" values")+" needed";buildRows();varsBox.hidden=false;if(!silent){if(getView()==="command"){el.classList.remove("open");}else{el.classList.add("open");}const f=vrows.querySelector("input");if(f)f.focus();}}
 el._openVars=openVars;el._hasVars=vars.length>0;
 function runCmd(vals){
 const rendered=vars.length?renderCmd(c.cmd,vals||{}):c.cmd;
 el.querySelector(".c").textContent=rendered;
-el.classList.add("open");el._running=true;run.disabled=false;run.classList.remove("btn-run");run.classList.add("btn-stop");run.textContent="■ Stop";run.title="Stop running command";run.setAttribute("aria-label","Stop running command");st.textContent="Running…";st.className="status run";dot.classList.add("live");
+if(getView()==="command"){varsBox.hidden=true;if(vedit)vedit.hidden=false;}
+el.classList.add("open");el._running=true;run.disabled=false;run.classList.remove("btn-run");run.classList.add("btn-stop");run.textContent="■";run.title="Stop running command";run.setAttribute("aria-label","Stop running command");st.textContent="Running…";st.className="status run";dot.classList.add("live");
 body.innerHTML="";const sh0=SHELLS[getShell(c.id)]||SHELLS.powershell;const lines=[sh0.pre+(c.cwd||"C:\\projects\\app")+sh0.post+rendered].concat((c.lines||[]).slice(1));let i=0;
 const step=()=>{
-if(i>=lines.length){el._running=false;st.textContent="Done · exit 0";st.className="status ok";dot.classList.remove("live");run.disabled=false;run.classList.remove("btn-stop");run.classList.add("btn-run");run.textContent="↻ Run Again";run.title="Run this command again";run.setAttribute("aria-label","Run this command again");const cur=document.createElement("span");cur.className="cursor";body.appendChild(cur);return;}
+if(i>=lines.length){el._running=false;st.textContent="Done · exit 0";st.className="status ok";dot.classList.remove("live");run.disabled=false;run.classList.remove("btn-stop");run.classList.add("btn-run");run.textContent="↻";run.title="Run this command again";run.setAttribute("aria-label","Run this command again");const cur=document.createElement("span");cur.className="cursor";body.appendChild(cur);return;}
 const raw=lines[i++];const bar=raw.indexOf("|");const cls=bar>0?raw.slice(0,bar):"";const txt=bar>0?raw.slice(bar+1):raw;
 const div=document.createElement("div");if(cls)div.className=cls;div.textContent=txt;body.appendChild(div);body.scrollTop=body.scrollHeight;
 el._runTimer=setTimeout(step,260);
 };step();
 }
 const shBtn=el.querySelector("[data-shellbtn]");
-if(shBtn)shBtn.addEventListener("click",()=>{const cur=getShell(c.id);const next=SHELL_ORDER[(SHELL_ORDER.indexOf(cur)+1)%SHELL_ORDER.length];setShell(c.id,next);const sh=SHELLS[next];const img=shBtn.querySelector("img");if(img)img.src=sh.icon;shBtn.setAttribute("aria-label","Shell: "+sh.label+" — activate to change shell");shBtn.title="Shell: "+sh.label+" (click to change)";paintPrompt(el,c.id);});
+if(shBtn)shBtn.addEventListener("click",()=>cycleShell(c.id));
 function defaultVals(){const o={};vars.forEach(v=>{o[vKey(v)]=(v.auto&&!v.default)?ccAutogen(v):ccExampleFor(v);});return o;}
 function lockedVals(){if(el._last)return el._last;const sv=savedVals();if(sv&&completeVals(sv))return sv;return defaultVals();}
 function collectFormVals(){const vals={};let bad=null;(el._getters||[]).forEach(g=>{let val="";if(g.kind==="check"||g.kind==="switch"){val=g.el.checked?g.on:"";}else if(g.kind==="radio"){const s=g.el.querySelector("input:checked");val=s?s.value:"";}else if(g.kind==="select"){val=g.el.value;}else if(g.kind==="range"){if(g.numEl&&g.numEl.value!=="")val=g.numEl.value;else val=g.el.value;}else if(g.kind==="color"){if(g.hexEl&&g.hexEl.value!=="")val=g.hexEl.value;else val=g.el.value;}else if(g.kind==="buttongroup"){val=g.el.dataset.val||"";}else if(g.kind==="multiselect"){var mboxes=g.el.querySelectorAll("input:checked"),mpick=[];for(var mi=0;mi<mboxes.length;mi++)mpick.push(mboxes[mi].value);val=mpick.join(",");}else if(g.kind==="keyvalue"){var kkey=g.keyEl.value.trim(),kvv=g.valEl.value;val=kkey!==""?kkey+"="+kvv:kvv;}else if(g.kind==="textarea"){val=g.el.value;}else{val=g.el.value.trim();}vals[vKey(g.v)]=val;if(g.kind==="check"||g.kind==="switch"||g.kind==="radio"||g.kind==="select"||g.kind==="range"||g.kind==="buttongroup"||g.kind==="color"||g.kind==="multiselect"||g.kind==="license"||g.kind==="time"||g.kind==="datetime")return;const elm=g.el;if(!val||(g.kind==="number"&&!isFinite(Number(val)))){bad=bad||g;}});return {vals:vals,bad:bad};}
@@ -368,7 +411,7 @@ refreshLockUI();
 vlock.addEventListener("change",()=>{if(vlock.checked){if(!el._getters||!el._getters.length)buildRows();const r=collectFormVals();if(r.bad){verr.textContent="Fill every value — numbers need numeric input, dates need a date.";varsBox.hidden=false;verr.hidden=false;if(r.bad.el&&r.bad.el.focus)r.bad.el.focus();vlock.checked=false;return;}verr.hidden=true;el._last=r.vals;setLock(c.id,true);refreshLockUI();}else{setLock(c.id,false);vunlock.hidden=true;if(vars.length){const sv0=savedVals();if(completeVals(sv0)){st.textContent="Saved values ready";st.classList.remove("needs");vedit.hidden=false;}else{st.textContent="Needs "+vars.length+(vars.length===1?" input":" inputs");st.classList.add("needs");vedit.hidden=true;}}}});
 vunlock.addEventListener("click",()=>{setLock(c.id,false);vunlock.hidden=true;vlock.checked=false;if(vars.length){const sv0=savedVals();if(completeVals(sv0)){st.textContent="Saved values ready";st.classList.remove("needs");vedit.hidden=false;}else{st.textContent="Needs "+vars.length+(vars.length===1?" input":" inputs");st.classList.add("needs");vedit.hidden=true;}}});
 run.addEventListener("click",()=>{
-if(el._running){clearTimeout(el._runTimer);el._running=false;const sd=document.createElement("div");sd.className="red";sd.textContent="■ stopped · exit 130 (simulated)";body.appendChild(sd);body.scrollTop=body.scrollHeight;st.textContent="Stopped";st.className="status stopped";dot.classList.remove("live");run.disabled=false;run.classList.remove("btn-stop");run.classList.add("btn-run");run.textContent="▶ Run";run.title="Run this command";run.setAttribute("aria-label","Run this command");return;}
+if(el._running){clearTimeout(el._runTimer);el._running=false;const sd=document.createElement("div");sd.className="red";sd.textContent="■ stopped · exit 130 (simulated)";body.appendChild(sd);body.scrollTop=body.scrollHeight;st.textContent="Stopped";st.className="status stopped";dot.classList.remove("live");run.disabled=false;run.classList.remove("btn-stop");run.classList.add("btn-run");run.textContent="▶";run.title="Run this command";run.setAttribute("aria-label","Run this command");return;}
 if(!vars.length){runCmd(null);return;}
 if(getLock(c.id)){if(!varsBox.hidden&&(el._getters||[]).length){const lr=collectFormVals();if(lr.bad){verr.textContent="Fill every value — numbers need numeric input, dates need a date.";verr.hidden=false;if(lr.bad.el&&lr.bad.el.focus)lr.bad.el.focus();return;}verr.hidden=true;el._last=lr.vals;}runCmd(lockedVals());return;}
 const sv=savedVals();
@@ -382,9 +425,11 @@ const vals={};let bad=null;
 if(bad){verr.textContent="Fill every value — numbers need numeric input, dates need a date.";verr.hidden=false;if(bad.el&&bad.el.focus)bad.el.focus();return;}
 verr.hidden=true;el._last=vals;
 if(askMode==="once"){setVals(c.id,vals);}
-if(getView()==="control"){varsBox.hidden=false;vedit.hidden=true;}else{varsBox.hidden=true;vedit.hidden=false;}runCmd(vals);
+if(getView()==="control"){varsBox.hidden=false;vedit.hidden=true;}else if(getView()==="tool"&&el.closest("#toolDetail")){varsBox.hidden=false;}else{varsBox.hidden=true;vedit.hidden=false;}runCmd(vals);
 });
 vedit.addEventListener("click",()=>openVars());
+const vclose=el.querySelector(".vclose");
+if(vclose)vclose.addEventListener("click",()=>{varsBox.hidden=true;if(vars.length&&getView()!=="control")vedit.hidden=false;});
 el.querySelector(".term").addEventListener("click",e=>{
 const a=e.target.dataset&&e.target.dataset.a;if(!a)return;
 if(a==="hide"){el.classList.remove("open");}
@@ -406,9 +451,31 @@ q.addEventListener("input",()=>paint(q.value));
 document.getElementById("viewCommand").addEventListener("click",()=>{setView("command");paint(q.value);});
 document.getElementById("viewControl").addEventListener("click",()=>{setView("control");paint(q.value);});
 document.getElementById("viewTool").addEventListener("click",()=>{setView("tool");paint(q.value);});
-function paintTool(rows){const tg=document.getElementById("toolGrid");if(!tg)return;tg.innerHTML="";(rows||[]).forEach(c=>{const a=document.createElement("a");a.className="tool";a.href="command.html?id="+encodeURIComponent(c.id);const vars=parseVarInstances(c.cmd||[]);const nInputs=vars.length;const sh=SHELLS[getShell(c.id)]||SHELLS.powershell;const initial=(c.name||"?").trim().charAt(0).toUpperCase()||"?";a.setAttribute("aria-label",c.name+" — open and run"+(nInputs?" with "+nInputs+(nInputs===1?" input":" inputs"):""));a.innerHTML='<span class="tool-icon"><img alt="" /></span><span class="tool-main"><strong></strong><p></p><span class="tool-meta"></span></span><span class="tool-go" aria-hidden="true">→</span>';const img=a.querySelector("img");img.src=sh.icon;a.querySelector("strong").textContent=c.name;a.querySelector("p").textContent=c.desc||"";const meta=a.querySelector(".tool-meta");const tag=document.createElement("span");tag.className="tag";tag.textContent=c.tag||"command";meta.appendChild(tag);if(nInputs){const b=document.createElement("span");b.className="vbadge";b.textContent=nInputs+(nInputs===1?" input":" inputs");meta.appendChild(b);}else{const b=document.createElement("span");b.className="vbadge";b.style.background="var(--surface)";b.style.color="var(--muted)";b.textContent="no inputs";meta.appendChild(b);}tg.appendChild(a);});if(!rows.length){tg.innerHTML='<p style="color:var(--muted)">No tools match. <a href="add.html" style="color:var(--accent)">Add a new command</a>.</p>';}}
+function paintTool(rows){const layout=document.getElementById("toolLayout");if(!layout)return;const lp=document.getElementById("toolList"),dt=document.getElementById("toolDetail");dt.innerHTML="";lp.innerHTML="";window.__toolCards=[];
+(rows||[]).forEach(function(c){const vars=parseVarInstances(c.cmd||[]);const nInputs=vars.length;const sh=SHELLS[getShell(c.id)]||SHELLS.powershell;
+const row=document.createElement("div");row.className="tool-row";row.dataset.id=c.id;
+const pick=document.createElement("button");pick.type="button";pick.className="tool-pick";pick.dataset.id=c.id;pick.setAttribute("aria-label",c.name+(nInputs?" — open with "+nInputs+(nInputs===1?" input":" inputs"):" — open"));
+const tx=document.createElement("span");tx.className="tool-pick-text";
+const nm=document.createElement("span");nm.className="tool-pick-name";nm.textContent=c.name;tx.appendChild(nm);
+const tg=document.createElement("span");tg.className="tag";tg.textContent=(c.tag||"command")+(nInputs?" · "+nInputs+(nInputs===1?" input":" inputs"):"");tx.appendChild(tg);
+pick.appendChild(tx);
+const go=document.createElement("span");go.className="tool-go";go.setAttribute("aria-hidden","true");go.textContent="→";pick.appendChild(go);
+pick.addEventListener("click",function(){toolSelId=c.id;renderToolSelection();});
+const sh2=document.createElement("button");sh2.type="button";sh2.className="tool-shell";sh2.setAttribute("data-shell-id",c.id);sh2.setAttribute("aria-label","Shell: "+sh.label+" — activate to change shell");sh2.title="Shell: "+sh.label+" (click to change)";
+const im=document.createElement("img");im.src=sh.icon;im.alt="";sh2.appendChild(im);
+sh2.addEventListener("click",function(){cycleShell(c.id);});
+row.appendChild(sh2);row.appendChild(pick);lp.appendChild(row);
+const card=list.querySelector('.cmd[data-id="'+c.id+'"]');if(card)window.__toolCards.push({id:c.id,el:card,ph:null});});
+if(!(rows||[]).length){lp.innerHTML='<p class="tool-empty">No tools match. <a href="add.html">Add a new command</a>.</p>';return;}
+if(!toolSelId||!rows.some(function(c){return c.id===toolSelId;}))toolSelId=rows[0].id;
+renderToolSelection();}
+function renderToolSelection(){const dt=document.getElementById("toolDetail");if(!dt)return;
+(window.__toolCards||[]).forEach(function(o){if(o.ph&&o.ph.parentNode){o.ph.parentNode.insertBefore(o.el,o.ph);o.ph.parentNode.removeChild(o.ph);o.ph=null;}else if(o.el.parentNode!==list)list.appendChild(o.el);});
+const found=(window.__toolCards||[]).filter(function(o){return o.id===toolSelId;})[0];
+if(found&&found.el.parentNode===list){const ph=document.createElement("span");ph.hidden=true;ph.setAttribute("data-tph",found.id);list.insertBefore(ph,found.el);found.ph=ph;dt.appendChild(found.el);const pv=found.el.querySelector(".preview");if(pv)pv.open=false;if(found.el._hasVars&&found.el._openVars)found.el._openVars(true);}
+document.querySelectorAll("#toolList .tool-row").forEach(function(r){r.classList.toggle("on",r.dataset.id===toolSelId);});}
 document.body.dataset.view=getView();
-paint();
+paint();document.body.classList.add("painted");
 </script>
 </body>
 </html>

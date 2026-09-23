@@ -41,6 +41,13 @@ h1{font-size:24px;margin:2px 0 0;letter-spacing:-.01em}
 .box{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
 .box-h{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
 .box-h .count{font-size:12px;font-weight:600;background:#fff;border:1px solid var(--border);border-radius:9999px;padding:0 10px;color:var(--muted)}
+.shell-cycle{margin-left:auto;width:32px;height:32px;flex:none;border-radius:50%;background:#fff;border:1px solid var(--border);display:inline-grid;place-items:center;cursor:pointer;padding:0}
+.shell-cycle img{width:18px;height:18px;display:block}
+.shell-cycle:hover{border-color:var(--accent)}
+.shell-cycle:focus-visible{outline:none;border-color:var(--accent);box-shadow:var(--focus-ring)}
+.shell-cycle.spin img{animation:od-shell-spin .3s cubic-bezier(.2,0,0,1)}
+@keyframes od-shell-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.shell-cycle.spin img{animation:none}}
 .box-b{padding:16px;display:flex;flex-direction:column;gap:12px}
 .cmdline{font-family:var(--font-mono);font-size:12px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:var(--radius);padding:10px 12px;white-space:pre-wrap;word-break:break-word}
 .cmdline .dim{color:#8b949e}
@@ -159,12 +166,13 @@ h1{font-size:24px;margin:2px 0 0;letter-spacing:-.01em}
 <h1 id="dname"></h1>
 <p class="lede" id="ddesc"></p>
 <div class="badges" id="dbadges"></div>
+<div class="box"><div class="box-h">Run this command <span class="count" id="rcount"></span><button class="shell-cycle" id="shellCycle" type="button" aria-label="Shell: PowerShell — activate to change shell" title="Shell: PowerShell (click to change)"><img id="shellCycleImg" src="icons/powershell.svg" alt="" width="18" height="18" /></button></div><div class="box-b"><div id="runEmpty" style="color:var(--muted);font-size:13px">This command has no inputs — it runs as written.</div><div class="vrows" id="rrows"></div><div class="verr" id="rerr" hidden></div><div class="actions"><button class="btn btn-run" id="runBtn" type="button">▶ Run</button><span class="status" id="runStatus" role="status" aria-live="polite">Ready</span></div><div class="term" id="rterm" aria-live="polite"><div class="term-bar"><span class="dot" id="rdot"></span><span>terminal — <span id="rtname"></span></span><span class="sp"></span><button type="button" data-a="copy">Copy</button><button type="button" data-a="clear">Clear</button><button type="button" data-a="hide">Hide</button></div><div class="term-body" id="rbody"><span style="color:#8b949e">Not run yet — press Run to execute.</span></div></div></div></div>
 <div class="box"><div class="box-h">Command</div><div class="box-b">
 <div class="rawline" id="draw" aria-label="Command template"></div>
 <div class="cmdline" id="dprev" aria-label="Rendered preview"></div>
 <dl class="kv" id="dfields"></dl>
 </div></div>
-<div class="box"><div class="box-h">Run this command <span class="count" id="rcount"></span></div><div class="box-b"><div id="runEmpty" style="color:var(--muted);font-size:13px">This command has no inputs — it runs as written.</div><div class="vrows" id="rrows"></div><div class="verr" id="rerr" hidden></div><div class="actions"><button class="btn btn-run" id="runBtn" type="button">▶ Run</button><span class="status" id="runStatus" role="status" aria-live="polite">Ready</span></div><div class="term" id="rterm" aria-live="polite"><div class="term-bar"><span class="dot" id="rdot"></span><span>terminal — <span id="rtname"></span></span><span class="sp"></span><button type="button" data-a="copy">Copy</button><button type="button" data-a="clear">Clear</button><button type="button" data-a="hide">Hide</button></div><div class="term-body" id="rbody"><span style="color:#8b949e">Not run yet — press Run to execute.</span></div></div></div></div>
+<!-- runner card moved above the Command box -->
 <div class="box"><div class="box-h">Command Metadata <span class="count" id="mcount"></span></div><div class="box-b"><div id="mrows" class="od-stack" style="--od-gap:8px"></div></div></div>
 <div class="actions">
 <a class="btn btn-g" id="editBtn" href="add.html">Edit</a>
@@ -429,6 +437,14 @@ if(badge){badge.textContent=isPub?"published ✓":"not published";badge.classNam
 var rows=document.getElementById("dfields");
 if(rows&&rows.children.length>=10){rows.children[9].textContent=isPub?"Yes":"No";}
 }
+var SHELLS={powershell:{label:"PowerShell",pre:"PS ",post:"> ",icon:"icons/powershell.svg"},bash:{label:"Bash",pre:"",post:" $ ",icon:"icons/bash.svg"},ubuntu:{label:"Ubuntu",pre:"",post:" $ ",icon:"icons/ubuntu.svg"}};
+var SHELL_ORDER=["powershell","bash","ubuntu"];
+function getShell(id){try{var m=JSON.parse(localStorage.getItem("cc-shells")||"{}");if(m&&SHELL_ORDER.indexOf(m[id])>=0)return m[id];}catch(e){}return "powershell";}
+function setShell(id,s){try{var m=JSON.parse(localStorage.getItem("cc-shells")||"{}");m[id]=s;localStorage.setItem("cc-shells",JSON.stringify(m));}catch(e){}}
+var cmdShell="powershell",cmdId=null;
+function paintShellUI(){var b=document.getElementById("shellCycle");if(!b)return;var sh=SHELLS[cmdShell]||SHELLS.powershell;var img=document.getElementById("shellCycleImg");if(img)img.src=sh.icon;b.setAttribute("aria-label","Shell: "+sh.label+" — activate to change shell");b.title="Shell: "+sh.label+" (click to change)";}
+function paintPromptShell(){var prev=document.getElementById("dprev");if(!prev||prev.children.length<3)return;var sh=SHELLS[cmdShell]||SHELLS.powershell;prev.children[0].textContent=sh.pre;prev.children[2].textContent=sh.post;}
+var shellCycleBtn=document.getElementById("shellCycle");if(shellCycleBtn)shellCycleBtn.addEventListener("click",function(){cmdShell=SHELL_ORDER[(SHELL_ORDER.indexOf(cmdShell)+1)%SHELL_ORDER.length];if(cmdId)setShell(cmdId,cmdShell);paintShellUI();paintPromptShell();shellCycleBtn.classList.remove("spin");void shellCycleBtn.offsetWidth;shellCycleBtn.classList.add("spin");});
 (function init(){
 var id=null;
 try{id=new URLSearchParams(location.search).get("id");}catch(e){id=null;}
@@ -439,6 +455,7 @@ box.hidden=false;
 miss.hidden=true;
 paintDetail(c);
 buildRunForm(c);
+cmdId=c.id;cmdShell=getShell(c.id);paintShellUI();paintPromptShell();
 })();
 function vKeyR(v){return (v&&(v.iid||v.key))||"";}
 function vStoredR(map,v){if(!map)return undefined;var k=vKeyR(v);if(k in map)return map[k];if(v.key in map)return map[v.key];return undefined;}
@@ -478,7 +495,7 @@ else if(v.type==="textarea"){var ta=document.createElement("textarea");ta.rows=3
 else if(v.type==="keyvalue"){var kvpre=String(pre||"");var eqi=kvpre.indexOf("=");var kvk=eqi>=0?kvpre.slice(0,eqi):"";var kvv=eqi>=0?kvpre.slice(eqi+1):kvpre;var krow=document.createElement("div");krow.className="kvrow";var ki=document.createElement("input");ki.type="text";ki.classList.add("mono");ki.value=kvk;ki.placeholder="KEY";ki.setAttribute("aria-label","Key for "+v.token);var keq=document.createElement("span");keq.textContent="=";var vi=document.createElement("input");vi.type="text";vi.classList.add("mono");vi.value=kvv;vi.placeholder="value";vi.setAttribute("aria-label",v.token);krow.appendChild(ki);krow.appendChild(keq);krow.appendChild(vi);w.appendChild(krow);getters.push({v:v,el:krow,kind:"keyvalue",keyEl:ki,valEl:vi});}
 else if(v.type==="color"){var cwrap=document.createElement("div");cwrap.className="crow";var ci=document.createElement("input");ci.type="color";ci.value=/^#[0-9a-fA-F]{6}$/.test(pre)?pre:"#1677ff";ci.setAttribute("aria-label",v.token);var hx=document.createElement("input");hx.type="text";hx.className="hex";hx.value=ci.value;hx.setAttribute("aria-label",v.token+" hex");hx.spellcheck=false;ci.addEventListener("input",function(){hx.value=ci.value;});hx.addEventListener("input",function(){if(/^#[0-9a-fA-F]{6}$/.test(hx.value))ci.value=hx.value;});cwrap.appendChild(ci);cwrap.appendChild(hx);w.appendChild(cwrap);getters.push({v:v,el:ci,kind:"color",hexEl:hx});}
 else if(v.type==="password"){var pwrow=document.createElement("span");pwrow.className="pwrow";var pw=document.createElement("input");pw.type="password";pw.value=pre;pw.setAttribute("aria-label",v.token);pw.style.minHeight="36px";var showBtn=document.createElement("button");showBtn.type="button";showBtn.className="showbtn";showBtn.textContent="Show";showBtn.addEventListener("click",function(){var show=pw.type==="password";pw.type=show?"text":"password";showBtn.textContent=show?"Hide":"Show";pw.focus();});pwrow.appendChild(pw);pwrow.appendChild(showBtn);w.appendChild(pwrow);getters.push({v:v,el:pw,kind:"password"});}
-else{var inp=document.createElement("input");if(v.type==="number")inp.type="number";else if(v.type==="date")inp.type="date";else if(v.type==="time")inp.type="time";else if(v.type==="datetime")inp.type="datetime-local";else{inp.type="text";if(v.type==="file")inp.classList.add("mono");}inp.value=pre;inp.setAttribute("aria-label",v.token);if(v.type==="file"){var isDir=(v.name==="input.dir"||v.name==="input.folder"||v.name==="input.workdir");var isMulti=(v.name==="input.files");var fr=document.createElement("div");fr.className="filerow";var pk=document.createElement("button");pk.type="button";pk.className="btn btn-g";pk.textContent=isDir?"Select Folder":"Select File";var fi=document.createElement("input");fi.type="file";fi.hidden=true;fi.setAttribute("aria-label",(isDir?"Folder":"File")+" picker for "+v.token);if(isDir){fi.setAttribute("webkitdirectory","");fi.setAttribute("directory","");}if(isMulti){fi.setAttribute("multiple","");}pk.addEventListener("click",function(){fi.click();});fi.addEventListener("change",function(){if(!fi.files||!fi.files.length)return;var pick=fi.files[0].name||"";if(isDir){var rel=fi.files[0].webkitRelativePath||pick;pick=(rel.split("/")[0]||pick)||pick;}else if(isMulti){var names=[];for(var mi=0;mi<fi.files.length;mi++){names.push(fi.files[mi].name);}pick=names.join(" ");}inp.value=pick;if(inp.classList)inp.classList.remove("bad");fi.value="";});fr.appendChild(inp);fr.appendChild(pk);fr.appendChild(fi);w.appendChild(fr);}else{w.appendChild(inp);}getters.push({v:v,el:inp,kind:v.type});}
+else{var inp=document.createElement("input");if(v.type==="number")inp.type="number";else if(v.type==="date")inp.type="date";else if(v.type==="time")inp.type="time";else if(v.type==="datetime")inp.type="datetime-local";else{inp.type="text";if(v.type==="file")inp.classList.add("mono");}inp.value=pre;inp.setAttribute("aria-label",v.token);if(v.type==="file"){var fr=document.createElement("div");fr.className="filerow";var pk=document.createElement("button");pk.type="button";pk.className="btn btn-g";pk.textContent="Select File";var fi=document.createElement("input");fi.type="file";fi.hidden=true;pk.addEventListener("click",function(){fi.click();});fi.addEventListener("change",function(){if(fi.files&&fi.files.length)inp.value=fi.files[0].name||"";fi.value="";});fr.appendChild(inp);fr.appendChild(pk);fr.appendChild(fi);w.appendChild(fr);}else{w.appendChild(inp);}getters.push({v:v,el:inp,kind:v.type});}
 rrows.appendChild(w);
 });
 var running=false,timer=null;
@@ -487,9 +504,9 @@ runBtn.addEventListener("click",function(){
 if(running){clearTimeout(timer);running=false;var sd=document.createElement("div");sd.className="red";sd.textContent="■ stopped · exit 130 (simulated)";rbody.appendChild(sd);runStatus.textContent="Stopped";runStatus.className="status stopped";rdot.classList.remove("live");runBtn.textContent="▶ Run";runBtn.classList.remove("btn-stop");runBtn.classList.add("btn-run");return;}
 var r=collect();if(r.bad){rerr.textContent="Fill every value — numbers need numeric input, dates need a date.";rerr.hidden=false;if(r.bad.el&&r.bad.el.focus)r.bad.el.focus();return;}rerr.hidden=true;
 var rendered=insts.length?renderCmdR(c.cmd,r.vals):c.cmd;
-var prev=document.getElementById("dprev");if(prev){prev.innerHTML="";var dir=c.cwd||"C:\\projects\\app";function span(cls,txt){var s=document.createElement("span");s.className=cls;s.textContent=txt;return s;}prev.appendChild(span("dim","PS "));prev.appendChild(span("pwd",dir));prev.appendChild(span("dim","> "));prev.appendChild(document.createTextNode(rendered));}
+var prev=document.getElementById("dprev");if(prev){prev.innerHTML="";var dir=c.cwd||"C:\\projects\\app";function span(cls,txt){var s=document.createElement("span");s.className=cls;s.textContent=txt;return s;}var sh0=SHELLS[cmdShell]||SHELLS.powershell;prev.appendChild(span("dim",sh0.pre));prev.appendChild(span("pwd",dir));prev.appendChild(span("dim",sh0.post));prev.appendChild(document.createTextNode(rendered));}
 rterm.classList.add("open");running=true;runBtn.textContent="■ Stop";runBtn.classList.remove("btn-run");runBtn.classList.add("btn-stop");runStatus.textContent="Running…";runStatus.className="status run";rdot.classList.add("live");
-rbody.innerHTML="";var lines=["PS "+(c.cwd||"C:\\projects\\app")+"> "+rendered].concat((c.lines||[]).slice(1));var ix=0;
+rbody.innerHTML="";var sh1=SHELLS[cmdShell]||SHELLS.powershell;var lines=[sh1.pre+(c.cwd||"C:\\projects\\app")+sh1.post+rendered].concat((c.lines||[]).slice(1));var ix=0;
 function step(){if(ix>=lines.length){running=false;runStatus.textContent="Done · exit 0";runStatus.className="status ok";rdot.classList.remove("live");runBtn.textContent="↻ Run Again";runBtn.classList.remove("btn-stop");runBtn.classList.add("btn-run");var cur=document.createElement("span");cur.className="cursor";rbody.appendChild(cur);return;}var raw=lines[ix++];var bar=raw.indexOf("|");var cls=bar>0?raw.slice(0,bar):"";var txt=bar>0?raw.slice(bar+1):raw;var div=document.createElement("div");if(cls)div.className=cls;div.textContent=txt;rbody.appendChild(div);rbody.scrollTop=rbody.scrollHeight;timer=setTimeout(step,260);}step();
 });
 rterm.addEventListener("click",function(e){var a=e.target&&e.target.dataset&&e.target.dataset.a;if(!a)return;if(a==="hide")rterm.classList.remove("open");if(a==="clear")rbody.innerHTML='<span style="color:#8b949e">Cleared.</span>';if(a==="copy"&&navigator.clipboard)navigator.clipboard.writeText(rbody.innerText);});

@@ -656,6 +656,125 @@
             height: 14px
         }
 
+        .pm-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            padding: 14px 20px 0
+        }
+
+        .pm-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start
+        }
+
+        .pm-card .pm-icon {
+            width: 44px;
+            height: 44px
+        }
+
+        .pm-card .pm-icon img {
+            width: 28px;
+            height: 28px;
+            display: block
+        }
+
+        .pm-card h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600
+        }
+
+        .pm-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            flex: 1 1 auto
+        }
+
+        .pm-card .btn-add {
+            align-self: stretch
+        }
+
+        .pm-card .ilog {
+            margin: 0;
+            width: 100%
+        }
+
+        .cli-rail .pm-img-sm,
+        .mgrpick .pm-img-sm {
+            width: 14px;
+            height: 14px;
+            display: block
+        }
+
+        .pm-card .cmdline {
+            width: 100%;
+            box-sizing: border-box
+        }
+
+        .mgr-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .mgr-cycle {
+            width: 32px;
+            height: 32px;
+            flex: none;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid var(--border);
+            display: inline-grid;
+            place-items: center;
+            cursor: pointer;
+            padding: 0
+        }
+
+        .mgr-cycle img,
+        .mgr-cycle svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+            flex: none
+        }
+
+        .mgr-cycle:hover {
+            border-color: var(--accent)
+        }
+
+        .mgr-cycle:focus-visible {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring)
+        }
+
+        .mgr-cycle.spin img {
+            animation: mgr-spin .3s cubic-bezier(.2, 0, 0, 1)
+        }
+
+        @keyframes mgr-spin {
+            from {
+                transform: rotate(0)
+            }
+
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .mgr-name {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
         .pm-title,
         .pkg-title {
             min-width: 0;
@@ -696,6 +815,53 @@
 
         .copybtn:hover {
             background: #f3f4f6
+        }
+
+        .cmd-toggle {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--muted);
+            background: transparent;
+            border: none;
+            padding: 6px 0;
+            min-height: 32px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .cmd-toggle:hover {
+            color: var(--fg);
+            text-decoration: underline;
+            text-underline-offset: 3px
+        }
+
+        .cmd-toggle svg {
+            width: 12px;
+            height: 12px;
+            flex: none;
+            transition: transform 140ms ease-out
+        }
+
+        .cmd-toggle[aria-expanded="true"] svg {
+            transform: rotate(90deg)
+        }
+
+        .cmd-toggle:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+            border-radius: 4px
+        }
+
+        .pm-card .status {
+            text-align: left;
+            width: 100%
+        }
+
+        .pkg-cmd-wrap[hidden] {
+            display: none !important
         }
 
         .gate-link {
@@ -749,6 +915,60 @@
             }
         }
 
+        /* emilkowalski-motion: one language — transform/opacity only, 160ms controls / 220ms reveals. */
+        :root {
+            --od-ease: cubic-bezier(.16, 1, .3, 1)
+        }
+
+        @keyframes od-rise {
+            from {
+                opacity: 0;
+                transform: translateY(6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes od-fade {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        .cmd,
+        .pm-card {
+            animation: od-rise 220ms var(--od-ease) both
+        }
+
+        .panel:not([hidden]) {
+            animation: od-fade 180ms var(--od-ease) both
+        }
+
+        .pkg-cmd-wrap:not([hidden]),
+        .ilog:not([hidden]) {
+            animation: od-rise 180ms var(--od-ease) both
+        }
+
+        .btn-add,
+        .hseg,
+        .cli-rail button,
+        .mgr-cycle,
+        .suggest button {
+            transition: transform 160ms var(--od-ease), background-color 160ms var(--od-ease), border-color 160ms var(--od-ease), color 160ms var(--od-ease)
+        }
+
+        .btn-add:active,
+        .mgr-cycle:active {
+            transform: scale(.97)
+        }
+
         @media (prefers-reduced-motion:reduce) {
             * {
                 animation: none !important;
@@ -769,10 +989,10 @@
             <div class="htabs" role="tablist" aria-label="Community Hub sections">
                 <button type="button" class="hseg on" role="tab" id="tab-commands" aria-controls="panel-commands"
                     aria-selected="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5 6 8l-3.5 3"/><path d="M7 11.5h6.5"/></svg><span>Commands</span></button>
-                <button type="button" class="hseg" role="tab" id="tab-managers" aria-controls="panel-managers"
-                    aria-selected="false" tabindex="-1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/></svg><span>Package managers</span></button>
                 <button type="button" class="hseg" role="tab" id="tab-packages" aria-controls="panel-packages"
                     aria-selected="false" tabindex="-1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5.5" width="12" height="6.5" rx="1"/><path d="M2 8.5h12M5 5.5V3.8h6v1.7"/></svg><span>Packages</span></button>
+                <button type="button" class="hseg" role="tab" id="tab-managers" aria-controls="panel-managers"
+                    aria-selected="false" tabindex="-1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/></svg><span>Package managers</span></button>
             </div>
         </div>
         <section class="panel" id="panel-commands" role="tabpanel" aria-labelledby="tab-commands">
@@ -794,20 +1014,6 @@
             </div>
             <div class="list" id="list"></div>
         </section>
-        <section class="panel" id="panel-managers" role="tabpanel" aria-labelledby="tab-managers" hidden>
-            <div class="palette" role="search">
-                <div class="palette-bar">
-                    <span class="mag" aria-hidden="true">⌕</span>
-                    <input id="pmq" type="search" placeholder="Search demo managers — try &quot;scoop&quot;…"
-                        aria-label="Search demo package managers" autocomplete="off" />
-                </div>
-            </div>
-            <div class="toolbar">
-                <div class="resultline" id="pmresult" role="status" aria-live="polite"></div>
-            </div>
-            <div class="list" id="pmlist"></div>
-            <p class="subnote">Demo catalog. Installing is simulated and stays in this browser. Copy any install line to run it in your own terminal.</p>
-        </section>
         <section class="panel" id="panel-packages" role="tabpanel" aria-labelledby="tab-packages" hidden>
             <div class="palette" role="search">
                 <div class="palette-bar">
@@ -826,11 +1032,15 @@
             <div class="toolbar">
                 <div class="resultline" id="pkgresult" role="status" aria-live="polite"></div>
             </div>
-            <div class="list" id="pkglist"></div>
+            <div class="pm-grid" id="pkglist"></div>
             <p class="subnote">Demo catalog. Choose a manager per package — solid dot means installed (simulated). Installing is simulated and stays in this
                 browser.</p>
         </section>
-        <p class="foot">Community demos. Installs and runs are simulated — “Add to My commands” saves a copy to My commands.
+        <section class="panel" id="panel-managers" role="tabpanel" aria-labelledby="tab-managers" hidden>
+            <div class="pm-grid" id="pmgrid"></div>
+            <p class="subnote">Demo catalog. Installing is simulated and stays in this browser.</p>
+        </section>
+        <p class="foot">Community demos. Installs and runs are simulated — “Save” saves a copy to My commands.
         </p>
     </div>
     <script>
@@ -881,7 +1091,7 @@
                 el.innerHTML = '<div class="cmd-top">'
                     + '<div class="cmd-main"><h2></h2><p></p><div class="cmdline"><span class="dim">PS </span><span class="pwd"></span><span class="dim">&gt; </span><span class="c"></span></div>'
                     + '<div class="meta"><span class="cli"></span><span class="by"></span></div></div>'
-                    + '<div class="cmd-side"><button type="button" class="btn btn-add">Add to My commands</button>'
+                    + '<div class="cmd-side"><button type="button" class="btn btn-add">Save</button>'
                     + '<div class="status" role="status"></div></div></div>';
                 hi(el.querySelector("h2"), h.name, parsed.terms);
                 hi(el.querySelector("p"), h.desc, parsed.terms);
@@ -892,8 +1102,8 @@
                 if (hv.length) {const b = document.createElement("span"); b.className = "vbadge"; b.textContent = hv.length + (hv.length === 1 ? " input" : " inputs"); el.querySelector(".meta").appendChild(b);}
                 const add = el.querySelector(".btn-add"), st = el.querySelector(".status");
                 function sync() {
-                    if (addedIds().includes(h.id)) {add.textContent = "Added ✓"; add.disabled = true;}
-                    else {add.textContent = "Add to My commands"; add.disabled = false;}
+                    if (addedIds().includes(h.id)) {add.textContent = "Saved ✓"; add.disabled = true;}
+                    else {add.textContent = "Save"; add.disabled = false;}
                     if (!st.dataset.touched) st.textContent = isInstalled(h.cli) ? "Ready to run" : "Needs " + h.cli + " to run";
                 }
                 sync();
@@ -904,13 +1114,14 @@
                         localStorage.setItem("cc-commands", JSON.stringify(cur));
                         const a = addedIds(); a.push(h.id); saveAdded(a);
                     } catch (e) { }
-                    st.dataset.touched = "1"; st.textContent = "Added to My commands ✓"; st.className = "status ok"; sync();
+                    st.dataset.touched = "1"; st.textContent = "Saved to My commands ✓"; st.className = "status ok"; sync();
                 });
+                el.style.animationDelay = Math.min(list.children.length, 7) * 35 + "ms";
                 list.appendChild(el);
             });
         }
-        /* ---- Tabs (Commands / Package Managers / Packages) ---- */
-        const TAB_IDS = ["commands", "managers", "packages"];
+        /* ---- Tabs (Commands / Packages / Package Managers) ---- */
+        const TAB_IDS = ["commands", "packages", "managers"];
         let activeTab = "commands";
         try {
             const u = new URLSearchParams(location.search).get("tab");
@@ -953,7 +1164,7 @@
         const PM_DISPLAY = {winget: "WinGet", scoop: "Scoop", choco: "Chocolatey", bun: "Bun", npm: "npm"};
         const PM_KIND_LABEL = {bundled: "Bundled", script: "Install script", runtime: "Runtime + packages"};
         const ICONS = {
-            winget: '<rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>',
+            winget: '<path d="M2.5 5 6 8l-3.5 3"/><path d="M7 11.5h6.5"/>',
             scoop: '<path d="M3 11a4.5 4.5 0 0 0 9 0Z"/><path d="M11.5 8.5 14.5 3"/><circle cx="6" cy="10" r=".7" fill="currentColor" stroke="none"/>',
             choco: '<path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/>',
             bun: '<path d="M2.5 10.5a5.5 4.6 0 0 1 11 0Z"/><path d="M2.5 10.5h11"/><circle cx="6.2" cy="8.2" r=".7" fill="currentColor" stroke="none"/><circle cx="8.6" cy="7.2" r=".7" fill="currentColor" stroke="none"/><circle cx="10.8" cy="8.2" r=".7" fill="currentColor" stroke="none"/>',
@@ -973,35 +1184,24 @@
         };
         function icon(name) {return '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + (ICONS[name] || ICONS.box) + '</svg>';}
         function pmName(id) {return PM_DISPLAY[id] || id;}
-        function pmIcon(id) {return icon(id);}
+        const PM_IMG = {winget: "icons/powershell.svg", choco: "icons/chocolatey.svg", bun: "icons/bun.svg"};
+        function pmIcon(id, px) {if (PM_IMG[id]) {const s = px || 22; return '<img class="' + (s <= 16 ? "pm-img-sm" : "pm-img") + '" src="' + PM_IMG[id] + '" width="' + s + '" height="' + s + '" alt="" />';} return icon(id);}
+        const PKG_IMG = {ffmpeg: "icons/pkg-ffmpeg.ico", libvips: "icons/pkg-libvips.ico", git: "icons/pkg-git.ico", curl: "icons/pkg-curl.svg", imagemagick: "icons/pkg-imagemagick.png", ytdlp: "icons/pkg-ytdlp.svg", jq: "icons/pkg-jq.svg", nodejs: "icons/pkg-nodejs.png", sharp: "icons/pkg-sharp.svg", docker: "icons/pkg-docker.png"};
+        function pkgIcon(id) {if (PKG_IMG[id]) {return '<img src="' + PKG_IMG[id] + '" width="24" height="24" alt="" />';} return icon("box");}
         const PKG_ICON = {ffmpeg: "video", libvips: "image", git: "branch", curl: "globe", imagemagick: "image", ytdlp: "download", jq: "json", nodejs: "js", sharp: "layers", docker: "container"};
         function pmStore() {try {return JSON.parse(localStorage.getItem("cc-pm") || "{}");} catch (e) {return {};} }
         function savePM(o) {try {localStorage.setItem("cc-pm", JSON.stringify(o));} catch (e) { } }
         function pmInstalled(id) {const s = Object.assign({}, PM_DEFAULTS, pmStore()); return !!s[id];}
-        const pmlist = document.getElementById("pmlist"), pmq = document.getElementById("pmq"), pmresult = document.getElementById("pmresult");
+                const pmgrid = document.getElementById("pmgrid");
+        const PM_CARDS = ["winget", "scoop", "choco", "bun"];
         function paintManagers() {
-            const term = String(pmq.value || "").toLowerCase().trim();
-            const rows = PMS.filter(p => !term || (p.name + " " + p.desc + " " + p.id + " " + p.by).toLowerCase().includes(term));
-            pmresult.textContent = rows.length ? rows.length + " manager" + (rows.length === 1 ? "" : "s") + (term ? (' for “' + term + '”') : "") + " · demo catalog" : "";
-            pmlist.innerHTML = "";
-            if (!rows.length) {pmlist.innerHTML = '<div class="empty">No demo managers match. Try “winget” or “npm”.<br /><button type="button" id="pmclear">Clear search</button></div>'; const c = document.getElementById("pmclear"); if (c) c.addEventListener("click", () => {pmq.value = ""; paintManagers(); pmq.focus();}); return;}
-            rows.forEach(p => {
-                const el = document.createElement("section"); el.className = "cmd";
-                el.innerHTML = '<div class="cmd-top"><div class="cmd-main"><div class="pm-head"><span class="pm-icon" aria-hidden="true"></span><div class="pm-title"><h2></h2><p></p></div></div>'
-                    + '<div class="install-line-label">Install line — simulated</div><div class="cmdline-row"><div class="cmdline"><span class="dim">PS </span><span class="pwd">C:\\projects\\app</span><span class="dim">&gt; </span><span class="c"></span></div><button type="button" class="copybtn">Copy</button></div>'
-                    + '<div class="meta"><span class="cli"></span><span class="tag"></span><span class="by"></span></div></div>'
-                    + '<div class="cmd-side"><button type="button" class="btn btn-add">Install</button><div class="status" role="status" aria-live="polite"></div></div></div>'
-                    + '<div class="ilog" hidden></div>';
-                el.querySelector(".pm-icon").innerHTML = pmIcon(p.id);
+            pmgrid.innerHTML = "";
+            PM_CARDS.map(id => PMS.find(p => p.id === id)).filter(Boolean).forEach(p => {
+                const el = document.createElement("article"); el.className = "pm-card";
+                el.innerHTML = '<span class="pm-icon" aria-hidden="true"></span><h2></h2><p></p><button type="button" class="btn btn-add">Install</button><div class="status" role="status" aria-live="polite"></div><div class="ilog" hidden></div>';
+                el.querySelector(".pm-icon").innerHTML = pmIcon(p.id, 24);
                 el.querySelector("h2").textContent = pmName(p.id);
                 el.querySelector("p").textContent = p.desc;
-                el.querySelector(".c").textContent = p.cmd;
-                el.querySelector(".cli").textContent = p.provides || p.id;
-                el.querySelector(".tag").textContent = PM_KIND_LABEL[p.kind] || p.kind;
-                el.querySelector(".by").textContent = p.by + (p.provides ? " · provides " + p.provides : "");
-                const copyBtn = el.querySelector(".copybtn");
-                copyBtn.setAttribute("aria-label", "Copy install line for " + pmName(p.id));
-                copyBtn.addEventListener("click", () => {const t = p.cmd; if (navigator.clipboard && navigator.clipboard.writeText) {navigator.clipboard.writeText(t).then(() => {copyBtn.textContent = "Copied ✓"; setTimeout(() => {copyBtn.textContent = "Copy";}, 1400);});} else {const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try {document.execCommand("copy"); copyBtn.textContent = "Copied ✓"; setTimeout(() => {copyBtn.textContent = "Copy";}, 1400);} catch (e) { } ta.remove();}});
                 const btn = el.querySelector(".btn-add"), st = el.querySelector(".status"), log = el.querySelector(".ilog");
                 function sync() {
                     if (pmInstalled(p.id)) {btn.textContent = "Installed ✓"; btn.disabled = true; btn.setAttribute("aria-label", pmName(p.id) + " installed (simulated)"); if (!st.dataset.touched) st.textContent = "Ready to use (simulated)"; st.className = "status ok";}
@@ -1017,28 +1217,26 @@
                     const clis = installedCLIs(); if (p.provides) {clis[p.provides] = true; saveCLIs(clis);}
                     st.dataset.touched = "1"; st.textContent = "Installed ✓ (simulated)"; st.className = "status ok"; sync(); paint(); paintPkgs();
                 });
-                pmlist.appendChild(el);
+                el.style.animationDelay = Math.min(pmgrid.children.length, 7) * 35 + "ms";
+                pmgrid.appendChild(el);
             });
         }
         /* ---- Packages (demo, simulated) ---- */
         const PKGS = [
             {id: "ffmpeg", name: "ffmpeg", desc: "Video converter used by the Hub demos. Provides the ffmpeg CLI.", ver: "7.1 · demo", provides: "ffmpeg", tags: "video convert", managers: {winget: "winget install --id Gyan.FFmpeg -e", scoop: "scoop install ffmpeg", choco: "choco install ffmpeg -y"}},
-            {id: "libvips", name: "libvips", desc: "Fast image pipeline (resize, thumbnails). Pairs with sharp on Node.", ver: "8.16 · demo", provides: "vips", tags: "imaging resize thumbnails", managers: {winget: "winget install --id libvips.libvips -e", scoop: "scoop install vips", choco: "choco install vips -y"}},
+            {id: "libvips", name: "libvips", desc: "Fast image pipeline (resize, thumbnails).", ver: "8.16 · demo", provides: "vips", tags: "imaging resize thumbnails", managers: {winget: "winget install --id libvips.libvips -e", scoop: "scoop install vips", choco: "choco install vips -y"}},
             {id: "git", name: "Git", desc: "Version control behind every command card here.", ver: "2.45 · demo", provides: "git", tags: "vcs", managers: {winget: "winget install --id Git.Git -e", scoop: "scoop install git", choco: "choco install git -y"}},
             {id: "curl", name: "cURL", desc: "HTTP checks for the API demo commands.", ver: "8.9 · demo", provides: "curl", tags: "network http", managers: {winget: "winget install --id cURL.cURL -e", scoop: "scoop install curl", choco: "choco install curl -y"}},
             {id: "imagemagick", name: "ImageMagick", desc: "Convert and identify stills from the media folder.", ver: "7.1 · demo", provides: "magick", tags: "imaging convert", managers: {winget: "winget install --id ImageMagick.ImageMagick -e", scoop: "scoop install imagemagick", choco: "choco install imagemagick -y"}},
             {id: "ytdlp", name: "yt-dlp", desc: "Download test clips before converting with ffmpeg.", ver: "2026.01 · demo", provides: "yt-dlp", tags: "video download", managers: {winget: "winget install --id yt-dlp.yt-dlp -e", scoop: "scoop install yt-dlp", choco: "choco install yt-dlp -y"}},
-            {id: "jq", name: "jq", desc: "Slice JSON from the curl demo commands.", ver: "1.7 · demo", provides: "jq", tags: "json cli", managers: {winget: "winget install --id jqlang.jq -e", scoop: "scoop install jq", choco: "choco install jq -y"}},
-            {id: "nodejs", name: "Node.js LTS", desc: "Ships npm. Runs the bun and npm demo commands.", ver: "22 LTS · demo", provides: "npm", tags: "js runtime", managers: {winget: "winget install --id OpenJS.NodeJS.LTS -e", scoop: "scoop install nodejs-lts", choco: "choco install nodejs-lts -y"}},
-            {id: "sharp", name: "sharp (bun)", desc: "Node image helper backed by libvips. Installed via Bun.", ver: "0.34 · demo", provides: "", tags: "imaging js libvips", managers: {bun: "bun add sharp", npm: "npm i sharp"}},
-            {id: "docker", name: "Docker Desktop", desc: "Ships containers for the preview demo command.", ver: "4.33 · demo", provides: "docker", tags: "ship containers", managers: {winget: "winget install --id Docker.DockerDesktop -e", scoop: "scoop install docker", choco: "choco install docker-desktop -y"}}
+            {id: "jq", name: "jq", desc: "Slice JSON from the curl demo commands.", ver: "1.7 · demo", provides: "jq", tags: "json cli", managers: {winget: "winget install --id jqlang.jq -e", scoop: "scoop install jq", choco: "choco install jq -y"}}
         ];
         function pkgStore() {try {return JSON.parse(localStorage.getItem("cc-pkgs") || "[]");} catch (e) {return [];} }
         function savePkgs(a) {try {localStorage.setItem("cc-pkgs", JSON.stringify(a));} catch (e) { } }
         const pkglist = document.getElementById("pkglist"), pkgq = document.getElementById("pkgq"), pkgrail = document.getElementById("pkgrail"), pkgresult = document.getElementById("pkgresult"), pkgsuggest = document.getElementById("pkgsuggest");
         let activeMgr = "All";
         function mgrList() {const s = new Set(); PKGS.forEach(p => Object.keys(p.managers).forEach(m => s.add(m))); return Array.from(s).sort();}
-        function paintPkgRail() {pkgrail.innerHTML = "";["All"].concat(mgrList()).forEach(m => {const b = document.createElement("button"); b.type = "button"; b.className = m === activeMgr ? "on" : ""; b.setAttribute("aria-pressed", m === activeMgr ? "true" : "false"); if (m === "All") {b.textContent = "All package managers";} else {b.innerHTML = ""; const dot = document.createElement("span"); dot.className = "mgr-dot"; dot.style.background = pmInstalled(m) ? "#1f883d" : ""; dot.setAttribute("aria-hidden", "true"); const ic = document.createElement("span"); ic.innerHTML = pmIcon(m); ic.style.display = "inline-flex"; ic.setAttribute("aria-hidden", "true"); const tx = document.createElement("span"); tx.textContent = pmName(m); b.appendChild(dot); b.appendChild(ic); b.appendChild(tx); b.setAttribute("aria-label", "Filter by " + pmName(m) + (pmInstalled(m) ? " (installed)" : " (not installed)"));} b.addEventListener("click", () => {activeMgr = m; paintPkgRail(); paintPkgs();}); pkgrail.appendChild(b);});}
+        function paintPkgRail() {pkgrail.innerHTML = "";["All"].concat(mgrList()).forEach(m => {const b = document.createElement("button"); b.type = "button"; b.className = m === activeMgr ? "on" : ""; b.setAttribute("aria-pressed", m === activeMgr ? "true" : "false"); if (m === "All") {b.textContent = "All package managers";} else {b.innerHTML = ""; const dot = document.createElement("span"); dot.className = "mgr-dot"; dot.style.background = pmInstalled(m) ? "#1f883d" : ""; dot.setAttribute("aria-hidden", "true"); const ic = document.createElement("span"); ic.innerHTML = pmIcon(m, 14); ic.style.display = "inline-flex"; ic.setAttribute("aria-hidden", "true"); const tx = document.createElement("span"); tx.textContent = pmName(m); b.appendChild(dot); b.appendChild(ic); b.appendChild(tx); b.setAttribute("aria-label", "Filter by " + pmName(m) + (pmInstalled(m) ? " (installed)" : " (not installed)"));} b.addEventListener("click", () => {activeMgr = m; paintPkgRail(); paintPkgs();}); pkgrail.appendChild(b);});}
         function paintPkgs() {
             const terms = String(pkgq.value || "").toLowerCase().split(/\s+/).map(s => s.trim()).filter(Boolean);
             pkgsuggest.style.display = pkgq.value.trim() === "" ? "" : "none";
@@ -1055,39 +1253,24 @@
             rows.forEach(p => {
                 const mgrKeys = Object.keys(p.managers);
                 let chosen = mgrKeys.includes(activeMgr) ? activeMgr : mgrKeys[0];
-                const el = document.createElement("section"); el.className = "cmd";
-                el.innerHTML = '<div class="cmd-top"><div class="cmd-main"><div class="pkg-head"><span class="pkg-icon" aria-hidden="true"></span><div class="pkg-title"><h2></h2><p></p></div></div>'
-                    + '<div class="install-line-label">Install line — simulated</div><div class="cmdline-row"><div class="cmdline"><span class="dim">PS </span><span class="pwd">C:\\projects\\app</span><span class="dim">&gt; </span><span class="c"></span></div><button type="button" class="copybtn">Copy</button></div>'
-                    + '<div class="mgrpick" role="group" aria-label="Choose a package manager for ' + p.name + '"></div>'
-                    + '<div class="meta"><span class="cli"></span><span class="tag"></span><span class="by"></span></div></div>'
-                    + '<div class="cmd-side"><button type="button" class="btn btn-add">Install</button><div class="status" role="status" aria-live="polite"></div></div></div>'
-                    + '<div class="ilog" hidden></div>';
-                el.querySelector(".pkg-icon").innerHTML = icon(PKG_ICON[p.id] || "box");
+                const el = document.createElement("article"); el.className = "pm-card";
+                el.innerHTML = '<span class="pm-icon" aria-hidden="true"></span><h2></h2><p></p>'
+                    + '<div class="mgr-switch"><button type="button" class="mgr-cycle" aria-label=""></button><span class="mgr-name"></span></div>'
+                    + '<button type="button" class="cmd-toggle" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span>Show install command</span></button>'
+                    + '<div class="cmdline pkg-cmd-wrap" hidden><span class="dim">PS </span><span class="pwd">C:\\projects\\app</span><span class="dim">&gt; </span><span class="c"></span></div>'
+                    + '<button type="button" class="btn btn-add">Install</button><div class="status" role="status" aria-live="polite"></div><div class="ilog" hidden></div>';
+                el.querySelector(".pm-icon").innerHTML = pkgIcon(p.id);
                 el.querySelector("h2").textContent = p.name;
-                el.querySelector("p").textContent = p.desc;
-                const cmdEl = el.querySelector(".c"), cliEl = el.querySelector(".cli"), pick = el.querySelector(".mgrpick");
-                cliEl.textContent = chosen;
-                el.querySelector(".tag").textContent = p.ver;
-                el.querySelector(".by").textContent = p.provides ? "provides " + p.provides : "demo package";
-                const copyBtn = el.querySelector(".copybtn");
-                copyBtn.setAttribute("aria-label", "Copy install line for " + p.name);
-                copyBtn.addEventListener("click", () => {const t = p.managers[chosen] || ""; if (navigator.clipboard && navigator.clipboard.writeText) {navigator.clipboard.writeText(t).then(() => {copyBtn.textContent = "Copied ✓"; setTimeout(() => {copyBtn.textContent = "Copy";}, 1400);});} else {const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try {document.execCommand("copy"); copyBtn.textContent = "Copied ✓"; setTimeout(() => {copyBtn.textContent = "Copy";}, 1400);} catch (e) { } ta.remove();}});
-                const lbl = document.createElement("span"); lbl.className = "picklbl"; lbl.textContent = "Install with:"; pick.appendChild(lbl);
-                const pickBtns = {};
-                mgrKeys.forEach(m => {
-                    const b = document.createElement("button"); b.type = "button"; b.className = m === chosen ? "on" : ""; b.setAttribute("aria-pressed", m === chosen ? "true" : "false"); b.setAttribute("aria-label", "Install " + p.name + " with " + pmName(m) + (pmInstalled(m) ? " (installed)" : " (not installed)"));
-                    const dot = document.createElement("span"); dot.className = "mgr-dot"; dot.style.background = pmInstalled(m) ? "#1f883d" : ""; dot.setAttribute("aria-hidden", "true");
-                    const ic = document.createElement("span"); ic.innerHTML = pmIcon(m); ic.style.display = "inline-flex"; ic.setAttribute("aria-hidden", "true");
-                    const tx = document.createElement("span"); tx.textContent = pmName(m);
-                    b.appendChild(dot); b.appendChild(ic); b.appendChild(tx);
-                    b.addEventListener("click", () => {chosen = m; Object.keys(pickBtns).forEach(k => {pickBtns[k].classList.toggle("on", k === chosen); pickBtns[k].setAttribute("aria-pressed", k === chosen ? "true" : "false");}); sync(false);});
-                    pick.appendChild(b); pickBtns[m] = b;
-                });
+                el.querySelector("p").textContent = p.desc + " · " + p.ver;
+                const cmdEl = el.querySelector(".c"), cyc = el.querySelector(".mgr-cycle"), mgrName = el.querySelector(".mgr-name");
+                function paintMgr() {cyc.innerHTML = pmIcon(chosen, 18); cyc.setAttribute("aria-label", "Install manager: " + pmName(chosen) + " — activate to change"); cyc.title = pmName(chosen) + " (click to change)"; mgrName.textContent = "via " + pmName(chosen); cmdEl.textContent = p.managers[chosen];}
+                paintMgr();
+                const tgl = el.querySelector(".cmd-toggle"), wrap = el.querySelector(".pkg-cmd-wrap"), tglLbl = tgl.querySelector("span");
+                tgl.addEventListener("click", () => {const open = wrap.hidden; wrap.hidden = !open; tgl.setAttribute("aria-expanded", open ? "true" : "false"); tglLbl.textContent = open ? "Hide install command" : "Show install command";});
+                cyc.addEventListener("click", () => {chosen = mgrKeys[(mgrKeys.indexOf(chosen) + 1) % mgrKeys.length]; paintMgr(); sync(false); cyc.classList.remove("spin"); void cyc.offsetWidth; cyc.classList.add("spin");});
                 const btn = el.querySelector(".btn-add"), st = el.querySelector(".status"), log = el.querySelector(".ilog");
                 function sync(touch) {
                     cmdEl.textContent = p.managers[chosen];
-                    cliEl.textContent = pmName(chosen);
-                    cliEl.title = chosen;
                     const done = installed.includes(p.id);
                     if (done) {btn.textContent = "Installed ✓"; btn.disabled = true; btn.setAttribute("aria-label", p.name + " installed (simulated)"); if (!st.dataset.touched) st.textContent = "Installed · simulated"; st.className = "status ok"; return;}
                     btn.textContent = "Install via " + pmName(chosen); btn.disabled = false;
@@ -1112,6 +1295,7 @@
                     if (p.provides) {const clis = installedCLIs(); clis[p.provides] = true; saveCLIs(clis);}
                     st.dataset.touched = "1"; st.textContent = "Installed ✓ (simulated)"; st.className = "status ok"; sync(true); paint();
                 });
+                el.style.animationDelay = Math.min(pkglist.children.length, 7) * 35 + "ms";
                 pkglist.appendChild(el);
             });
         }
@@ -1122,9 +1306,7 @@
             if (e.key === "Enter") {e.preventDefault();}
         });
         suggest.addEventListener("click", e => {const b = e.target.closest("button"); if (!b) return; q.value = b.getAttribute("data-s") || ""; paint(); q.focus();});
-        let pmdeb = null;
-        pmq.addEventListener("input", () => {clearTimeout(pmdeb); pmdeb = setTimeout(paintManagers, 120);});
-        pmq.addEventListener("keydown", e => {if (e.key === "Escape") {pmq.value = ""; paintManagers();} });
+        pkgsuggest.addEventListener("click", e => {const b = e.target.closest("button"); if (!b) return; pkgq.value = b.getAttribute("data-s") || ""; paintPkgs(); pkgq.focus();});
         let pkgdeb = null;
         pkgq.addEventListener("input", () => {clearTimeout(pkgdeb); pkgdeb = setTimeout(paintPkgs, 120);});
         pkgq.addEventListener("keydown", e => {
