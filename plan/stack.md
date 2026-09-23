@@ -8,6 +8,7 @@
 - Alpine.js (https://alpinejs.dev) for client-side interactivity
 - Alpine.js Plugins (https://github.com/alpinejs/alpine)
 - Mustache (https://mustache.github.io) for templating
+- xterm.js (https://xtermjs.org)
 
 ## Website — `website/`
 

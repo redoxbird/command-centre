@@ -2355,11 +2355,12 @@
   });
 })();
 
-/* ── ccHub / ccPublish stubs — full components land in Phase F (tasks F3/F4).
- * These exist so hub.html / publish.html mount without Alpine expression
- * errors. They render no data and submit nothing; the static skeletons stay
- * visible. The publish form's native submit is suppressed to avoid a stray
- * navigation before the real component arrives.
+/* ── ccHub (static data) / ccPublish stub.
+ * The hub renders the design's featured packages (PKGS) and all package
+ * managers (PMS) from static data with the design's localStorage simulation
+ * (cc-pm, cc-pkgs, cc-clis, cc-hub-tab). The commands panel stays empty until
+ * Phase F (hub.ts + F3 component) fills it from real data — the design's demo
+ * HUB array is deliberately NOT ported. ccPublish stays a stub (F4).
  */
 (function () {
   "use strict";
@@ -2369,13 +2370,282 @@
     window.__ccMounted[name] = true;
   }
 
-  function hubStubData() {
+  function hubStaticData() {
     return {
       ready: false,
       async init() {
+        /* ---- Tabs (Commands / Packages / Package Managers) — design verbatim ---- */
+        const TAB_IDS = ["commands", "packages", "managers"];
+        let activeTab = "commands";
+        try {
+          const u = new URLSearchParams(location.search).get("tab");
+          const s = localStorage.getItem("cc-hub-tab");
+          activeTab = TAB_IDS.includes(u) ? u : (TAB_IDS.includes(s) ? s : "commands");
+        } catch (e) { /* noop */ }
+        function setTab(name, focus) {
+          if (!TAB_IDS.includes(name)) name = "commands";
+          activeTab = name;
+          TAB_IDS.forEach(function (t) {
+            const b = document.getElementById("tab-" + t), p = document.getElementById("panel-" + t);
+            if (!b) return;
+            const on = t === name;
+            b.classList.toggle("on", on);
+            b.setAttribute("aria-selected", on ? "true" : "false");
+            if (on) { b.removeAttribute("tabindex"); } else { b.setAttribute("tabindex", "-1"); }
+            if (p) { if (on) { p.removeAttribute("hidden"); } else { p.setAttribute("hidden", ""); } }
+          });
+          try { localStorage.setItem("cc-hub-tab", name); } catch (e) { /* noop */ }
+          if (focus) document.getElementById("tab-" + name).focus();
+        }
+        TAB_IDS.forEach(function (t) {
+          const b = document.getElementById("tab-" + t);
+          if (b) b.addEventListener("click", function () { setTab(t); });
+        });
+        const htabs = document.querySelector(".htabs");
+        if (htabs) htabs.addEventListener("keydown", function (e) {
+          const i = TAB_IDS.indexOf(activeTab);
+          let n = null;
+          if (e.key === "ArrowRight") n = TAB_IDS[(i + 1) % TAB_IDS.length];
+          else if (e.key === "ArrowLeft") n = TAB_IDS[(i + TAB_IDS.length - 1) % TAB_IDS.length];
+          else if (e.key === "Home") n = TAB_IDS[0];
+          else if (e.key === "End") n = TAB_IDS[TAB_IDS.length - 1];
+          if (n) { e.preventDefault(); setTab(n, true); }
+        });
+
+        /* ---- Package managers (static data from design/hub.html) ---- */
+        const PMS = [
+          { id: "winget", name: "WinGet", kind: "bundled", by: "Microsoft · bundled with Windows 11", desc: "Windows Package Manager. Ships with Windows 11 — check it before installing anything else.", cmd: "winget --version", provides: "winget" },
+          { id: "scoop", name: "Scoop", kind: "script", by: "@scoop-installer · demo", desc: "Command-line installer for portable dev tools. Keeps shims outside Program Files.", cmd: "Set-ExecutionPolicy Bypass -Scope Process -Force; irm get.scoop.sh | iex", provides: "scoop" },
+          { id: "choco", name: "Chocolatey", kind: "script", by: "@chocolatey · demo", desc: "Machine-wide Windows packages with version pinning. Needs an elevated shell.", cmd: "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))", provides: "choco" },
+          { id: "bun", name: "Bun", kind: "runtime", by: "@oven-sh · demo", desc: "Fast JS runtime and package manager. Installs npm-compatible packages with one binary.", cmd: "powershell -c \"irm bun.sh/install.ps1 | iex\"", provides: "bun" },
+          { id: "npm", name: "npm", kind: "bundled", by: "@node-garden · demo", desc: "Ships with Node.js LTS. The default for JavaScript packages in this Hub.", cmd: "npm --version", provides: "npm" }
+        ];
+        const PM_DEFAULTS = { winget: true, scoop: false, choco: false, bun: true, npm: true };
+        const PM_DISPLAY = { winget: "WinGet", scoop: "Scoop", choco: "Chocolatey", bun: "Bun", npm: "npm" };
+        const ICONS = {
+          winget: '<path d="M2.5 5 6 8l-3.5 3"/><path d="M7 11.5h6.5"/>',
+          scoop: '<path d="M3 11a4.5 4.5 0 0 0 9 0Z"/><path d="M11.5 8.5 14.5 3"/><circle cx="6" cy="10" r=".7" fill="currentColor" stroke="none"/>',
+          choco: '<path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/>',
+          bun: '<path d="M2.5 10.5a5.5 4.6 0 0 1 11 0Z"/><path d="M2.5 10.5h11"/><circle cx="6.2" cy="8.2" r=".7" fill="currentColor" stroke="none"/><circle cx="8.6" cy="7.2" r=".7" fill="currentColor" stroke="none"/><circle cx="10.8" cy="8.2" r=".7" fill="currentColor" stroke="none"/>',
+          npm: '<rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5.5 6.5v4M5.5 6.5l2.5 2.6 2.5-2.6v4"/>',
+          box: '<path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/>'
+        };
+        function icon(name) { return '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + (ICONS[name] || ICONS.box) + '</svg>'; }
+        function pmName(id) { return PM_DISPLAY[id] || id; }
+        const PM_IMG = { winget: "icons/powershell.svg", choco: "icons/chocolatey.svg", bun: "icons/bun.svg" };
+        function pmIcon(id, px) {
+          if (PM_IMG[id]) {
+            const s = px || 22;
+            return '<img class="' + (s <= 16 ? "pm-img-sm" : "pm-img") + '" src="' + PM_IMG[id] + '" width="' + s + '" height="' + s + '" alt="" />';
+          }
+          return icon(id);
+        }
+        const PKG_IMG = { ffmpeg: "icons/pkg-ffmpeg.svg", git: "icons/pkg-git.svg", curl: "icons/pkg-curl.svg" };
+        function pkgIcon(id) {
+          if (PKG_IMG[id]) return '<img src="' + PKG_IMG[id] + '" width="24" height="24" alt="" />';
+          return icon("box");
+        }
+        function installedCLIs() { try { return JSON.parse(localStorage.getItem("cc-clis") || "{}"); } catch (e) { return {}; } }
+        function saveCLIs(o) { try { localStorage.setItem("cc-clis", JSON.stringify(o)); } catch (e) { /* noop */ } }
+        function isInstalled(cli) {
+          const s = Object.assign({ ffmpeg: false, npm: true, bun: true, git: true, docker: false, curl: true }, installedCLIs());
+          return !!s[cli];
+        }
+        function pmStore() { try { return JSON.parse(localStorage.getItem("cc-pm") || "{}"); } catch (e) { return {}; } }
+        function savePM(o) { try { localStorage.setItem("cc-pm", JSON.stringify(o)); } catch (e) { /* noop */ } }
+        function pmInstalled(id) { const s = Object.assign({}, PM_DEFAULTS, pmStore()); return !!s[id]; }
+        const pmgrid = document.getElementById("pmgrid");
+        // All five package managers (the design shows four; npm is included here).
+        const PM_CARDS = PMS.map(function (p) { return p.id; });
+        function paintManagers() {
+          if (!pmgrid) return;
+          pmgrid.innerHTML = "";
+          PM_CARDS.map(function (id) { return PMS.find(function (p) { return p.id === id; }); }).filter(Boolean).forEach(function (p) {
+            const el = document.createElement("article"); el.className = "pm-card";
+            el.innerHTML = '<span class="pm-icon" aria-hidden="true"></span><h2></h2><p></p><button type="button" class="btn btn-add">Install</button><div class="status" role="status" aria-live="polite"></div><div class="ilog" hidden></div>';
+            el.querySelector(".pm-icon").innerHTML = pmIcon(p.id, 24);
+            el.querySelector("h2").textContent = pmName(p.id);
+            el.querySelector("p").textContent = p.desc;
+            const btn = el.querySelector(".btn-add"), st = el.querySelector(".status"), log = el.querySelector(".ilog");
+            function sync() {
+              if (pmInstalled(p.id)) { btn.textContent = "Installed ✓"; btn.disabled = true; btn.setAttribute("aria-label", pmName(p.id) + " installed (simulated)"); if (!st.dataset.touched) st.textContent = "Ready to use (simulated)"; st.className = "status ok"; }
+              else { btn.textContent = "Install " + pmName(p.id); btn.disabled = false; btn.setAttribute("aria-label", "Install " + pmName(p.id) + " (simulated)"); if (!st.dataset.touched) st.textContent = "Not installed"; st.className = "status"; }
+            }
+            sync();
+            btn.addEventListener("click", function () {
+              log.hidden = false; log.innerHTML = "";
+              const l1 = document.createElement("div"); l1.innerHTML = '<span class="dim">PS C:\\projects\\app&gt; </span>'; l1.appendChild(document.createTextNode(p.cmd)); log.appendChild(l1);
+              const l2 = document.createElement("div"); l2.className = "dim"; l2.textContent = "Fetching demo installer… (simulated)"; log.appendChild(l2);
+              const l3 = document.createElement("div"); l3.className = "grn"; l3.textContent = "✓ " + p.name + " installed · exit 0 (simulated)"; log.appendChild(l3);
+              const s = Object.assign({}, PM_DEFAULTS, pmStore()); s[p.id] = true; savePM(s);
+              const clis = installedCLIs(); if (p.provides) { clis[p.provides] = true; saveCLIs(clis); }
+              st.dataset.touched = "1"; st.textContent = "Installed ✓ (simulated)"; st.className = "status ok"; sync(); paintPkgs();
+            });
+            el.style.animationDelay = Math.min(pmgrid.children.length, 7) * 35 + "ms";
+            pmgrid.appendChild(el);
+          });
+        }
+
+        /* ---- Featured packages (static data from design/hub.html) ---- */
+        const PKGS = [
+          { id: "ffmpeg", name: "ffmpeg", desc: "Video converter used by the Hub demos. Provides the ffmpeg CLI.", ver: "7.1 · demo", provides: "ffmpeg", tags: "video convert", managers: { winget: "winget install --id Gyan.FFmpeg -e", scoop: "scoop install ffmpeg", choco: "choco install ffmpeg -y" } },
+          { id: "libvips", name: "libvips", desc: "Fast image pipeline (resize, thumbnails).", ver: "8.16 · demo", provides: "vips", tags: "imaging resize thumbnails", managers: { winget: "winget install --id libvips.libvips -e", scoop: "scoop install vips", choco: "choco install vips -y" } },
+          { id: "git", name: "Git", desc: "Version control behind every command card here.", ver: "2.45 · demo", provides: "git", tags: "vcs", managers: { winget: "winget install --id Git.Git -e", scoop: "scoop install git", choco: "choco install git -y" } },
+          { id: "curl", name: "cURL", desc: "HTTP checks for the API demo commands.", ver: "8.9 · demo", provides: "curl", tags: "network http", managers: { winget: "winget install --id cURL.cURL -e", scoop: "scoop install curl", choco: "choco install curl -y" } },
+          { id: "imagemagick", name: "ImageMagick", desc: "Convert and identify stills from the media folder.", ver: "7.1 · demo", provides: "magick", tags: "imaging convert", managers: { winget: "winget install --id ImageMagick.ImageMagick -e", scoop: "scoop install imagemagick", choco: "choco install imagemagick -y" } },
+          { id: "ytdlp", name: "yt-dlp", desc: "Download test clips before converting with ffmpeg.", ver: "2026.01 · demo", provides: "yt-dlp", tags: "video download", managers: { winget: "winget install --id yt-dlp.yt-dlp -e", scoop: "scoop install yt-dlp", choco: "choco install yt-dlp -y" } },
+          { id: "jq", name: "jq", desc: "Slice JSON from the curl demo commands.", ver: "1.7 · demo", provides: "jq", tags: "json cli", managers: { winget: "winget install --id jqlang.jq -e", scoop: "scoop install jq", choco: "choco install jq -y" } }
+        ];
+        function pkgStore() { try { return JSON.parse(localStorage.getItem("cc-pkgs") || "[]"); } catch (e) { return []; } }
+        function savePkgs(a) { try { localStorage.setItem("cc-pkgs", JSON.stringify(a)); } catch (e) { /* noop */ } }
+        const pkglist = document.getElementById("pkglist"), pkgq = document.getElementById("pkgq"),
+          pkgrail = document.getElementById("pkgrail"), pkgresult = document.getElementById("pkgresult"),
+          pkgsuggest = document.getElementById("pkgsuggest");
+        let activeMgr = "All";
+        function mgrList() { const s = new Set(); PKGS.forEach(function (p) { Object.keys(p.managers).forEach(function (m) { s.add(m); }); }); return Array.from(s).sort(); }
+        function paintPkgRail() {
+          if (!pkgrail) return;
+          pkgrail.innerHTML = "";
+          ["All"].concat(mgrList()).forEach(function (m) {
+            const b = document.createElement("button"); b.type = "button";
+            b.className = m === activeMgr ? "on" : "";
+            b.setAttribute("aria-pressed", m === activeMgr ? "true" : "false");
+            if (m === "All") { b.textContent = "All package managers"; }
+            else {
+              b.innerHTML = "";
+              const dot = document.createElement("span"); dot.className = "mgr-dot";
+              dot.style.background = pmInstalled(m) ? "#1f883d" : "";
+              dot.setAttribute("aria-hidden", "true");
+              const ic = document.createElement("span"); ic.innerHTML = pmIcon(m, 14);
+              ic.style.display = "inline-flex"; ic.setAttribute("aria-hidden", "true");
+              const tx = document.createElement("span"); tx.textContent = pmName(m);
+              b.appendChild(dot); b.appendChild(ic); b.appendChild(tx);
+              b.setAttribute("aria-label", "Filter by " + pmName(m) + (pmInstalled(m) ? " (installed)" : " (not installed)"));
+            }
+            b.addEventListener("click", function () { activeMgr = m; paintPkgRail(); paintPkgs(); });
+            pkgrail.appendChild(b);
+          });
+        }
+        function paintPkgs() {
+          if (!pkglist) return;
+          const terms = String((pkgq && pkgq.value) || "").toLowerCase().split(/\s+/).map(function (s) { return s.trim(); }).filter(Boolean);
+          if (pkgsuggest) pkgsuggest.style.display = (pkgq && pkgq.value.trim() === "") ? "" : "none";
+          const rows = PKGS.filter(function (p) {
+            if (activeMgr !== "All" && !p.managers[activeMgr]) return false;
+            if (!terms.length) return true;
+            const hay = (p.name + " " + p.desc + " " + p.tags + " " + Object.keys(p.managers).join(" ")).toLowerCase();
+            return terms.every(function (t) { return hay.includes(t); });
+          });
+          if (pkgresult) pkgresult.textContent = rows.length ? rows.length + " package" + (rows.length === 1 ? "" : "s") + (activeMgr !== "All" ? (" via " + activeMgr) : "") + (terms.length ? (' for “' + terms.join(" ") + '”') : "") + " · demo catalog" : "";
+          pkglist.innerHTML = "";
+          if (!rows.length) {
+            pkglist.innerHTML = '<div class="empty">No demo packages match. Try “ffmpeg”.<br /><button type="button" id="pkgclear">Clear search</button></div>';
+            const c = document.getElementById("pkgclear");
+            if (c) c.addEventListener("click", function () { pkgq.value = ""; activeMgr = "All"; paintPkgRail(); paintPkgs(); pkgq.focus(); });
+            return;
+          }
+          const installed = pkgStore();
+          rows.forEach(function (p) {
+            const mgrKeys = Object.keys(p.managers);
+            let chosen = mgrKeys.includes(activeMgr) ? activeMgr : mgrKeys[0];
+            const el = document.createElement("article"); el.className = "pm-card";
+            el.innerHTML = '<span class="pm-icon" aria-hidden="true"></span><h2></h2><p></p>'
+              + '<div class="mgr-switch"><button type="button" class="mgr-cycle" aria-label=""></button><span class="mgr-name"></span></div>'
+              + '<button type="button" class="cmd-toggle" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span>Show install command</span></button>'
+              + '<div class="cmdline pkg-cmd-wrap" hidden><span class="dim">PS </span><span class="pwd">C:\\projects\\app</span><span class="dim">&gt; </span><span class="c"></span></div>'
+              + '<button type="button" class="btn btn-add">Install</button><div class="status" role="status" aria-live="polite"></div><div class="ilog" hidden></div>';
+            el.querySelector(".pm-icon").innerHTML = pkgIcon(p.id);
+            el.querySelector("h2").textContent = p.name;
+            el.querySelector("p").textContent = p.desc + " · " + p.ver;
+            const cmdEl = el.querySelector(".c"), cyc = el.querySelector(".mgr-cycle"), mgrName = el.querySelector(".mgr-name");
+            function paintMgr() {
+              cyc.innerHTML = pmIcon(chosen, 18);
+              cyc.setAttribute("aria-label", "Install manager: " + pmName(chosen) + " — activate to change");
+              cyc.title = pmName(chosen) + " (click to change)";
+              mgrName.textContent = "via " + pmName(chosen);
+              cmdEl.textContent = p.managers[chosen];
+            }
+            paintMgr();
+            const tgl = el.querySelector(".cmd-toggle"), wrap = el.querySelector(".pkg-cmd-wrap"), tglLbl = tgl.querySelector("span");
+            tgl.addEventListener("click", function () {
+              const open = wrap.hidden;
+              wrap.hidden = !open;
+              tgl.setAttribute("aria-expanded", open ? "true" : "false");
+              tglLbl.textContent = open ? "Hide install command" : "Show install command";
+            });
+            cyc.addEventListener("click", function () {
+              chosen = mgrKeys[(mgrKeys.indexOf(chosen) + 1) % mgrKeys.length];
+              paintMgr(); sync(false);
+              cyc.classList.remove("spin"); void cyc.offsetWidth; cyc.classList.add("spin");
+            });
+            const btn = el.querySelector(".btn-add"), st = el.querySelector(".status"), log = el.querySelector(".ilog");
+            function sync(touch) {
+              cmdEl.textContent = p.managers[chosen];
+              const done = installed.includes(p.id);
+              if (done) {
+                btn.textContent = "Installed ✓"; btn.disabled = true;
+                btn.setAttribute("aria-label", p.name + " installed (simulated)");
+                if (!st.dataset.touched) st.textContent = "Installed · simulated";
+                st.className = "status ok"; return;
+              }
+              btn.textContent = "Install via " + pmName(chosen); btn.disabled = false;
+              btn.setAttribute("aria-label", "Install " + p.name + " via " + pmName(chosen) + " (simulated)");
+              if (touch) return;
+              st.innerHTML = "";
+              if (!pmInstalled(chosen)) {
+                const s1 = document.createElement("span"); s1.textContent = "Needs " + pmName(chosen) + " — ";
+                const a = document.createElement("a"); a.href = "#"; a.className = "gate-link"; a.textContent = "Open Package Managers";
+                a.addEventListener("click", function (ev) { ev.preventDefault(); setTab("managers"); document.getElementById("tab-managers").focus(); });
+                st.appendChild(s1); st.appendChild(a); st.className = "status";
+              } else {
+                st.textContent = isInstalled(p.provides) || !p.provides ? "Ready to install via " + pmName(chosen) : "Ready via " + pmName(chosen) + " · provides " + p.provides;
+                st.className = "status";
+              }
+            }
+            sync(false);
+            btn.addEventListener("click", function () {
+              log.hidden = false; log.innerHTML = "";
+              const l1 = document.createElement("div"); l1.innerHTML = '<span class="dim">PS C:\\projects\\app&gt; </span>';
+              l1.appendChild(document.createTextNode(p.managers[chosen])); log.appendChild(l1);
+              if (!pmInstalled(chosen)) {
+                const le = document.createElement("div"); le.className = "red";
+                le.textContent = "✕ " + pmName(chosen) + " is not installed · exit 1 (simulated)"; log.appendChild(le);
+                const lh = document.createElement("div"); lh.className = "blu";
+                lh.textContent = "Install " + pmName(chosen) + " in Package Managers, then retry."; log.appendChild(lh);
+                st.dataset.touched = "1";
+                st.textContent = "Needs " + pmName(chosen) + " — install it first, then retry";
+                st.className = "status bad"; return;
+              }
+              const l2 = document.createElement("div"); l2.className = "dim";
+              l2.textContent = "Resolving demo package… (simulated)"; log.appendChild(l2);
+              const l3 = document.createElement("div"); l3.className = "grn";
+              l3.textContent = "✓ " + p.name + " installed via " + pmName(chosen) + " · exit 0 (simulated)"; log.appendChild(l3);
+              const cur = pkgStore();
+              if (!cur.includes(p.id)) { cur.push(p.id); savePkgs(cur); installed.push(p.id); }
+              if (p.provides) { const clis = installedCLIs(); clis[p.provides] = true; saveCLIs(clis); }
+              st.dataset.touched = "1"; st.textContent = "Installed ✓ (simulated)"; st.className = "status ok"; sync(true);
+            });
+            el.style.animationDelay = Math.min(pkglist.children.length, 7) * 35 + "ms";
+            pkglist.appendChild(el);
+          });
+        }
+        if (pkgsuggest) pkgsuggest.addEventListener("click", function (e) {
+          const b = e.target.closest("button"); if (!b) return;
+          pkgq.value = b.getAttribute("data-s") || ""; paintPkgs(); pkgq.focus();
+        });
+        let pkgdeb = null;
+        if (pkgq) {
+          pkgq.addEventListener("input", function () { clearTimeout(pkgdeb); pkgdeb = setTimeout(paintPkgs, 120); });
+          pkgq.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") { pkgq.value = ""; activeMgr = "All"; paintPkgRail(); paintPkgs(); }
+            if (e.key === "Enter") { e.preventDefault(); }
+          });
+        }
+        setTab(activeTab);
+        paintManagers(); paintPkgRail(); paintPkgs();
+
         this.ready = true;
         markMounted("hub");
-        console.info("Community Hub data arrives with Phase F (hub.ts + F3 component).");
       },
     };
   }
@@ -2398,14 +2668,14 @@
   }
 
   // Exposed for tests; registered on alpine:init below.
-  window.__ccHubStub = hubStubData;
+  window.__ccHubStatic = hubStaticData;
   window.__ccPublishStub = publishStubData;
 
   document.addEventListener("alpine:init", function () {
     const Alpine = window.Alpine;
     if (!Alpine || typeof Alpine.data !== "function") return;
     try {
-      Alpine.data("ccHub", hubStubData);
+      Alpine.data("ccHub", hubStaticData);
     } catch (e) {
       console.error("ccHub registration failed", e);
     }

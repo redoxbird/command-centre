@@ -47,18 +47,8 @@
             <div class="list" id="list"></div>
         </section>
         <section class="panel" id="panel-managers" role="tabpanel" aria-labelledby="tab-managers" hidden>
-            <div class="palette" role="search">
-                <div class="palette-bar">
-                    <span class="mag" aria-hidden="true">⌕</span>
-                    <input id="pmq" type="search" placeholder="Search package managers — try &quot;scoop&quot;…"
-                        aria-label="Search package managers" autocomplete="off" />
-                </div>
-            </div>
-            <div class="toolbar">
-                <div class="resultline" id="pmresult" role="status" aria-live="polite"></div>
-            </div>
-            <div class="list" id="pmlist"></div>
-            <p class="subnote">Install status is probed on this machine. Copy any install line to run it in your own terminal.</p>
+            <div class="pm-grid" id="pmgrid"></div>
+            <p class="subnote">Demo catalog. Installing is simulated and stays in this browser.</p>
         </section>
         <section class="panel" id="panel-packages" role="tabpanel" aria-labelledby="tab-packages" hidden>
             <div class="palette" role="search">
@@ -78,8 +68,9 @@
             <div class="toolbar">
                 <div class="resultline" id="pkgresult" role="status" aria-live="polite"></div>
             </div>
-            <div class="list" id="pkglist"></div>
-            <p class="subnote">Choose a manager per package — a solid dot means the probe found it installed on this machine.</p>
+            <div class="pm-grid" id="pkglist"></div>
+            <p class="subnote">Demo catalog. Choose a manager per package — solid dot means installed (simulated). Installing is simulated and stays in this
+                browser.</p>
         </section>
         <p class="foot">Community commands. “Add to My commands” saves a copy to My commands.</p>
     </div>

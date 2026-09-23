@@ -776,8 +776,43 @@ body[data-page="hub"] .mgrpick button .mgr-dot {width: 7px; height: 7px;}
   body[data-page="hub"] .cmd-side .btn {flex: 1 1 120px;}
 }
 @media(prefers-reduced-motion:reduce) {
-  body[data-page="hub"] * {animation: none !important; transition: none !important;}
+  body[data-page="hub"] * {animation:none!important;transition:none!important;}
 }
+
+/* ── hub packages + managers (ported from design/hub.html) ── */
+body[data-page="hub"] .cmd-main mark, body[data-page="hub"] .meta mark {background:#fff8c5;color:inherit;border-radius:2px;padding:0 1px;}
+body[data-page="hub"] .pm-grid {display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));padding:14px 20px 0;}
+body[data-page="hub"] .pm-card {background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
+body[data-page="hub"] .pm-card .pm-icon {width:44px;height:44px;}
+body[data-page="hub"] .pm-card .pm-icon img {width:28px;height:28px;display:block;}
+body[data-page="hub"] .pm-card h2 {margin:0;font-size:15px;font-weight:600;}
+body[data-page="hub"] .pm-card p {margin:0;color:var(--muted);font-size:13px;flex:1 1 auto;}
+body[data-page="hub"] .pm-card .btn-add {align-self:stretch;}
+body[data-page="hub"] .pm-card .ilog {margin:0;width:100%;}
+body[data-page="hub"] .pm-card .cmdline {width:100%;box-sizing:border-box;}
+body[data-page="hub"] .pm-card .status {text-align:left;width:100%;}
+body[data-page="hub"] .cli-rail .pm-img-sm {width:14px;height:14px;display:block;}
+body[data-page="hub"] .mgr-switch {display:flex;align-items:center;gap:8px;}
+body[data-page="hub"] .mgr-cycle {width:32px;height:32px;flex:none;border-radius:50%;background:#fff;border:1px solid var(--border);display:inline-grid;place-items:center;cursor:pointer;padding:0;}
+body[data-page="hub"] .mgr-cycle img, body[data-page="hub"] .mgr-cycle svg {width:18px;height:18px;display:block;flex:none;}
+body[data-page="hub"] .mgr-cycle:hover {border-color:var(--accent);}
+body[data-page="hub"] .mgr-cycle:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="hub"] .mgr-cycle.spin img {animation:mgr-spin .3s cubic-bezier(.2,0,0,1);}
+body[data-page="hub"] .mgr-name {font-size:12px;color:var(--muted);}
+body[data-page="hub"] .cmd-toggle {font-family:inherit;font-size:12px;font-weight:400;color:var(--muted);background:transparent;border:none;padding:6px 0;min-height:32px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+body[data-page="hub"] .cmd-toggle:hover {color:var(--fg);text-decoration:underline;text-underline-offset:3px;}
+body[data-page="hub"] .cmd-toggle svg {width:12px;height:12px;flex:none;transition:transform 140ms ease-out;}
+body[data-page="hub"] .cmd-toggle[aria-expanded="true"] svg {transform:rotate(90deg);}
+body[data-page="hub"] .cmd-toggle:focus-visible {outline:none;box-shadow:var(--focus-ring);border-radius:4px;}
+body[data-page="hub"] .pkg-cmd-wrap[hidden] {display:none!important;}
+@keyframes mgr-spin {from {transform:rotate(0);} to {transform:rotate(360deg);}}
+@keyframes od-rise {from {opacity:0;transform:translateY(6px);} to {opacity:1;transform:none;}}
+@keyframes od-fade {from {opacity:0;} to {opacity:1;}}
+body[data-page="hub"] .pm-card {animation:od-rise 220ms cubic-bezier(.16,1,.3,1) both;}
+body[data-page="hub"] .panel:not([hidden]) {animation:od-fade 180ms cubic-bezier(.16,1,.3,1) both;}
+body[data-page="hub"] .pkg-cmd-wrap:not([hidden]), body[data-page="hub"] .ilog:not([hidden]) {animation:od-rise 180ms cubic-bezier(.16,1,.3,1) both;}
+body[data-page="hub"] .btn-add, body[data-page="hub"] .hseg, body[data-page="hub"] .cli-rail button, body[data-page="hub"] .mgr-cycle, body[data-page="hub"] .suggest button {transition:transform 160ms cubic-bezier(.16,1,.3,1),background-color 160ms cubic-bezier(.16,1,.3,1),border-color 160ms cubic-bezier(.16,1,.3,1),color 160ms cubic-bezier(.16,1,.3,1);}
+body[data-page="hub"] .btn-add:active, body[data-page="hub"] .mgr-cycle:active {transform:scale(.97);}
 
 /* ── publish.html (body[data-page="publish"]) ── */
 @layer od-layout {
