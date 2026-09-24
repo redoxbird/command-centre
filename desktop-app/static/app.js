@@ -262,21 +262,135 @@
     }
     const card = scope.closest ? scope.closest(".cmd") : null;
     if (card) card.classList.add("open");
+    // A just-revealed panel finally has measurable dimensions — fit after
+    // layout so the terminal fills its box (K3).
+    const body = termBodyEl(scope);
+    if (body && body._xterm) {
+      const rec = body._xterm;
+      try {
+        if (window.requestAnimationFrame) window.requestAnimationFrame(() => termFit(rec));
+        else termFit(rec);
+      } catch (e) { /* noop */ }
+    }
+  }
+  /* ── xterm terminal (K2/K3): one live Terminal per .term-body ──────────
+   * Every run mounts a fresh instance (per-run, like the design's clear on
+   * run). Stream colors reuse the design palette: stdout default, stderr
+   * red, notes dim, results green/blue. Copy reads the scrollback buffer,
+   * Clear disposes back to the DOM placeholder, Hide stays pure CSS.
+   */
+  const TERM_THEME = {
+    background: "#0d1117",
+    foreground: "#e6edf3",
+    cursor: "#e6edf3",
+    cursorAccent: "#0d1117",
+    selectionBackground: "rgba(9, 105, 218, .3)",
+    black: "#0d1117",
+    red: "#ff7b72",
+    green: "#3fb950",
+    yellow: "#d29922",
+    blue: "#79c0ff",
+    magenta: "#bc8cff",
+    cyan: "#39c5cf",
+    white: "#e6edf3",
+    brightBlack: "#8b949e",
+    brightRed: "#ffa198",
+    brightGreen: "#56d364",
+    brightYellow: "#e3b341",
+    brightBlue: "#80ccff",
+    brightMagenta: "#d2a8ff",
+    brightCyan: "#76e3ea",
+    brightWhite: "#ffffff",
+  };
+  function termOptions() {
+    let blink = true;
+    try {
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) blink = false;
+    } catch (e) { /* noop */ }
+    return {
+      theme: TERM_THEME,
+      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+      fontSize: 12,
+      lineHeight: 1.6,
+      cursorBlink: blink,
+      cursorStyle: "block",
+      scrollback: 1000,
+      allowTransparency: false,
+    };
+  }
+  function termFit(rec) {
+    try {
+      if (rec && rec.fit && rec.el && rec.el.clientWidth > 0) rec.fit.fit();
+    } catch (e) { /* fit is best-effort (hidden panels measure 0) */ }
+  }
+  if (!window.__ccXtermResize) {
+    window.__ccXtermResize = true;
+    window.addEventListener("resize", () => {
+      document.querySelectorAll(".term-body").forEach((b) => termFit(b._xterm));
+    });
+  }
+  function termEnsure(body) {
+    const rec = body._xterm;
+    if (rec && rec.term) return rec.term;
+    body.innerHTML = "";
+    const host = document.createElement("div");
+    host.className = "term-x";
+    body.appendChild(host);
+    const term = new window.Terminal(termOptions());
+    let fit = null;
+    try {
+      const FitCtor = window.FitAddon && (window.FitAddon.FitAddon || window.FitAddon);
+      if (typeof FitCtor === "function") {
+        fit = new FitCtor();
+        term.loadAddon(fit);
+      }
+    } catch (e) { console.error("fit addon failed", e); }
+    term.open(host);
+    const record = { term, fit, el: host };
+    body._xterm = record;
+    termFit(record);
+    return term;
+  }
+  function termReset(body) {
+    // Fresh instance per run: dispose any previous terminal so a re-run
+    // never appends to stale scrollback.
+    if (body._xterm) {
+      try { body._xterm.term.dispose(); } catch (e) { /* noop */ }
+      body._xterm = null;
+    }
+    body.innerHTML = "";
+  }
+  function termEscape(text) {
+    return String(text == null ? "" : text).replace(/\r?\n/g, "\r\n").replace(/\r?\n$/, "") + "\r\n";
   }
   function termAppend(body, stream, text) {
-    const empty = body.querySelector(".term-empty");
-    if (empty) empty.remove();
-    const line = el("div", null, text);
-    if (stream === "stderr") line.className = "red";
-    body.appendChild(line);
-    body.scrollTop = body.scrollHeight;
+    const term = termEnsure(body);
+    if (stream === "stderr") term.write("\x1b[31m" + termEscape(text) + "\x1b[0m");
+    else term.write(termEscape(text));
   }
   function termNote(body, text) {
-    const line = el("div", "dim", text);
-    body.appendChild(line);
-    body.scrollTop = body.scrollHeight;
+    termEnsure(body).write("\x1b[90m" + termEscape(text) + "\x1b[0m");
+  }
+  function termText(body) {
+    const rec = body._xterm;
+    if (rec && rec.term && rec.term.buffer && rec.term.buffer.active) {
+      try {
+        const buf = rec.term.buffer.active;
+        const out = [];
+        for (let i = 0; i < buf.length; i++) {
+          const line = buf.getLine(i);
+          if (line) out.push(line.translateToString(true));
+        }
+        return out.join("\n").replace(/\n+$/, "");
+      } catch (e) { /* fall through to DOM text */ }
+    }
+    return body.innerText;
   }
   function termPlaceholder(body) {
+    if (body._xterm) {
+      try { body._xterm.term.dispose(); } catch (e) { /* noop */ }
+      body._xterm = null;
+    }
     body.innerHTML = "";
     const s = el("span", "term-empty", "Not run yet — press Run to execute.");
     body.appendChild(s);
@@ -288,7 +402,7 @@
       btn.addEventListener("click", () => {
         const a = btn.getAttribute("data-a");
         if (a === "copy") {
-          const txt = body.innerText;
+          const txt = termText(body);
           if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(txt).catch(console.error);
           }
@@ -667,9 +781,9 @@
     // o: {commandId, shell, cwd, line, status, body, dot, buttons, tname}
     const status = o.status, body = o.body;
     termShow(o.scope);
+    // Fresh terminal per run (K2) — a re-run never appends to stale output.
+    termReset(body);
     // Echo the resolved line so a silent command still visibly passes through.
-    const ph = body.querySelector(".term-empty");
-    if (ph) ph.remove();
     termNote(body, "$ " + o.line);
     o.buttons.forEach((b) => {
       if (!b.dataset.origText) b.dataset.origText = b.textContent;
