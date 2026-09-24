@@ -29,7 +29,7 @@ import {
 import { loadSettings, saveSettings } from "./settings.ts";
 import { AppSettingsSchema } from "./types.ts";
 import { probeInstalledShells } from "./shell.ts";
-import { cancelRun, getRunProgress, runCommand } from "./runner.ts";
+import { cancelRun, getRunProgress, runCommand, writeRunInput } from "./runner.ts";
 import { join } from "std/path";
 
 const IdArg = z.object({ id: z.string().min(1) });
@@ -293,6 +293,10 @@ export function registerBindings(win: DesktopWindow): void {
   });
   bind("cancelRun", async () => {
     await cancelRun();
+  });
+  bind("writeRunInput", async (data: unknown) => {
+    const d = z.string().min(1).max(4096).parse(data);
+    return writeRunInput(d);
   });
 
   // ── filesystem ─────────────────────────────────────────────────────────

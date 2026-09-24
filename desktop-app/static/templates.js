@@ -19,6 +19,7 @@
       '<details class="preview"><summary>Command preview <span class="live">live</span></summary>' +
       '<div class="cmdline"><span class="dim" data-pre>{{shellPre}}</span><span class="pwd">{{cwd}}</span><span class="dim" data-post>{{shellPost}}</span><span class="c"></span></div></details>' +
       '<div class="tags"><span class="tag">{{tag}}</span><span class="origin">{{origin}}</span></div>' +
+      '<div class="statechips"></div>' +
       '<div class="vars" hidden><div class="vars-h"></div><div class="vrows"></div>' +
       '<div class="verr" hidden></div>' +
       '<div class="vacts"><button class="btn btn-run vgo" type="button"><span class="ric" aria-hidden="true">▶</span>Run Command</button>' +
@@ -29,7 +30,7 @@
       '<button type="button" data-a="copy">Copy</button><button type="button" data-a="clear">Clear</button><button type="button" data-a="hide">Hide</button></div>' +
       '<div class="term-body"><span class="term-empty">Not run yet — press Run to execute.</span></div></div>' +
       "</div>" +
-      '<div class="cmd-side"><button class="btn btn-run" type="button" data-run title="Run this command" aria-label="Run this command">▶ Run</button>' +
+      '<div class="cmd-side"><button class="btn btn-run" type="button" data-run title="Run this command" aria-label="Run this command">▶</button>' +
       '<button class="linklike vunlock" type="button" hidden>Unlock Values</button>' +
       '<div class="status" role="status">Ready</div>' +
       '<button class="linklike vedit" type="button" hidden>Edit values</button></div>' +

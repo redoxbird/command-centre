@@ -1,7 +1,8 @@
 // Real shell execution — task D2 (see §8.4).
 // One run at a time. Spawns via node:child_process with windowsHide
 // (console-flash suppression — Deno.Command has no such option in 2.9.x).
-// Not a PTY: interactive prompts block; stderr is surfaced so the user sees why.
+// Not a PTY: stdin is a pipe, so line-prompted input works via writeRunInput
+// but full-screen TUIs cannot work; stderr is surfaced so the user sees why.
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { RunRequestSchema, type RunRequest } from "./types.ts";
 import { checkWslDir, resolveCwdForShell, SHELLS, shellArgv } from "./shell.ts";
@@ -173,7 +174,9 @@ export async function runCommand(req: RunRequest): Promise<RunResult> {
       child = spawn(shell.bin, shellArgv(parsed.shell, line), {
         cwd: resolved.spawnCwd,
         windowsHide: true,
-        stdio: ["ignore", "pipe", "pipe"],
+        // stdin is a pipe (not ignore) so an interactive terminal can answer
+        // prompts. No PTY: full-screen TUIs still cannot work — line input.
+        stdio: ["pipe", "pipe", "pipe"],
       });
     } catch (e) {
       run.fail(e instanceof Error ? e : new Error(String(e)));
@@ -231,9 +234,26 @@ export function getRunProgress(cursor?: number): RunProgress | null {
   return null;
 }
 
-/** Kill the process TREE (taskkill /T /F); the run settles cancelled:true. */
-export async function cancelRun(): Promise<void> {
+/**
+ * Forward terminal input to the active run's stdin (interactive prompts).
+ * Returns false when there is no active run or stdin is already closed;
+ * never throws for a dead pipe — the run's own close handler owns errors.
+ */
+export function writeRunInput(data: string): boolean {
   const run = active;
+  if (!run || run.done) return false;
+  const stdin = run.child.stdin;
+  if (!stdin || stdin.destroyed) return false;
+  try {
+    stdin.write(data);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Kill the process TREE (taskkill /T /F); the run settles cancelled:true. */
+export async function cancelRun(): Promise<void> {  const run = active;
   if (!run) return;
   run.cancelled = true;
   if (run.pid > 0) await killTree(run.pid);

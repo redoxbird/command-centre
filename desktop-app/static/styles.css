@@ -8,6 +8,9 @@
 --hover-fill:#f3f4f6;
 --signal-wash:#ddf4ff;
 }
+/* JetBrains Mono (vendored woff2, terminal only — user pick, no CDN). */
+@font-face {font-family:"JetBrains Mono";src:url("vendor/fonts/jetbrains-mono-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap;}
+@font-face {font-family:"JetBrains Mono";src:url("vendor/fonts/jetbrains-mono-700.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap;}
 @layer od-layout {
   :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) {min-width: 0;}
   .od-row-top {display:flex; align-items:flex-start; gap:var(--od-gap,8px);}
@@ -61,8 +64,12 @@ body[data-page="commands"] .tabs a.learn {margin-left:auto;font-weight:400;}
 body[data-page="commands"] .search {margin-left:auto;display:flex;gap:8px;}
 body[data-page="commands"] .search input {background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:14px;font-family:inherit;min-width:220px;outline:none;}
 body[data-page="commands"] .search input:focus {border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="commands"] .sort {display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+body[data-page="commands"] .sort select {font-family:inherit;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;outline:none;color:var(--fg);min-height:32px;cursor:pointer;}
+body[data-page="commands"] .sort select:focus {border-color:var(--accent);box-shadow:var(--focus-ring);}
 body[data-page="commands"] .view-switch {display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:9999px;padding:2px;gap:2px;}
-body[data-page="commands"] .view-switch button {font-family:inherit;font-size:14px;font-weight:500;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:9999px;padding:5px 14px;min-height:32px;cursor:pointer;line-height:1.4;}
+body[data-page="commands"] .view-switch button {font-family:inherit;font-size:12px;font-weight:500;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:9999px;padding:3px 10px;min-height:28px;cursor:pointer;line-height:1.4;display:inline-flex;align-items:center;gap:6px;}
+body[data-page="commands"] .view-switch button svg {width:12px;height:12px;flex:none;}
 body[data-page="commands"] .view-switch button:hover {color:var(--fg);}
 body[data-page="commands"] .view-switch button.on {background:#fff;color:var(--fg);border-color:var(--border);box-shadow:0 1px 0 rgba(31,35,40,.08);}
 body[data-page="commands"] .view-switch button:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
@@ -94,10 +101,20 @@ body[data-page="commands"] .btn {font-family:inherit;font-size:14px;border-radiu
 body[data-page="commands"] .btn-run {background:#1f883d;color:#fff;border-color:rgba(31,35,40,.15);font-weight:500;min-width:72px;padding:5px 12px;}
 body[data-page="commands"] .btn-run:hover {background:var(--success);}
 body[data-page="commands"] .btn-run[disabled] {opacity:.6;cursor:default;}
+body[data-page="commands"] .cmd-side .btn-run, body[data-page="commands"] .cmd-side .btn-stop {flex:none;align-self:flex-end;width:32px;height:32px;min-width:0;padding:0;border-radius:50%;font-size:13px;line-height:1;}
 body[data-page="commands"] .vgo {min-width:0;padding:4px 12px;}
 body[data-page="commands"] .vgo .ric {flex:none;font-size:12px;line-height:1;}
 body[data-page="commands"] .status.needs {color:var(--warn);}
 body[data-page="commands"] .tags button.vbadge {font:inherit;cursor:pointer;}
+body[data-page="commands"] .nchip {font-size:11px;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:9999px;padding:0 8px;white-space:nowrap;}
+body[data-page="commands"] button.nchip {font-family:inherit;cursor:pointer;}
+body[data-page="commands"] button.nchip:hover {border-color:var(--accent);color:var(--accent);}
+body[data-page="commands"] button.nchip:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="commands"] .tags [hidden] {display:none;}
+body[data-page="commands"] .statechips {display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center;}
+body[data-page="commands"] .statechips:empty {display:none;}
+body[data-page="commands"] .statechips [hidden] {display:none;}
+body[data-page="commands"] .tool-detail .statechips {display:none;}
 body[data-page="commands"] .btn-stop {background:#cf222e;color:#fff;border-color:rgba(31,35,40,.15);font-weight:500;min-width:72px;padding:5px 12px;}
 body[data-page="commands"] .btn-stop:hover {background:#a40e26;}
 body[data-page="commands"] .btn-ghost {background:var(--surface);color:var(--fg);border-color:var(--border);}
@@ -242,16 +259,15 @@ body[data-page="commands"] .statusbar .sp {flex:1;}
 body[data-page="commands"] .tool-layout {padding:12px 20px 8px;display:grid;gap:12px;grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:start;}
 body[data-page="commands"] .tool-layout[hidden] {display:none;}
 body[data-page="commands"] .tool-list {display:flex;flex-direction:column;gap:8px;min-width:0;}
-body[data-page="commands"] .tool-row {display:flex;gap:4px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px 6px 6px;}
+body[data-page="commands"] .tool-row {display:flex;gap:8px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px 6px 6px;min-height:48px;}
 body[data-page="commands"] .tool-row:hover {border-color:var(--accent);}
 body[data-page="commands"] .tool-row.on {border-color:var(--accent);box-shadow:var(--focus-ring);}
 body[data-page="commands"] .tool-pick {flex:1 1 0;min-width:0;display:flex;flex-direction:row;align-items:center;gap:8px;text-align:left;background:transparent;border:none;padding:4px;border-radius:4px;cursor:pointer;font:inherit;color:inherit;}
 body[data-page="commands"] .tool-pick:focus-visible {outline:none;box-shadow:var(--focus-ring);}
-body[data-page="commands"] .tool-pick-text {flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
-body[data-page="commands"] .tool-go {font-size:14px;color:var(--muted);flex:none;}
+body[data-page="commands"] .tool-pick-text {flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:2px;align-items:flex-start;justify-content:center;}
+body[data-page="commands"] .tool-go {font-size:14px;color:var(--muted);flex:none;align-self:center;}
 body[data-page="commands"] .tool-row:hover .tool-go, body[data-page="commands"] .tool-row.on .tool-go {color:var(--accent);}
-body[data-page="commands"] .tool-pick-name {font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
-body[data-page="commands"] .tool-pick .tag {font-size:11px;font-weight:600;background:#ddf4ff;color:var(--accent);border:1px solid var(--border-soft);border-radius:9999px;padding:0 8px;}
+body[data-page="commands"] .tool-pick-name {font-size:14px;font-weight:600;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
 body[data-page="commands"] .tool-shell {flex:none;width:36px;align-self:center;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer;padding:0;}
 body[data-page="commands"] .tool-shell img {width:20px;height:20px;display:block;}
 body[data-page="commands"] .tool-detail .cmd-icon-btn {display:none;}
@@ -260,6 +276,7 @@ body[data-page="commands"] .tool-shell:hover {background:#fff;border-color:var(-
 body[data-page="commands"] .tool-shell:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
 body[data-page="commands"] .tool-detail {min-width:0;}
 body[data-page="commands"] .tool-detail .cmd {margin:0;}
+body[data-page="commands"] .tool-detail .cmd:hover {border-color:var(--border);}
 body[data-page="commands"] .tool-detail .cmd:has(.vars:not([hidden])) .cmd-side {display:none;}
 body[data-page="commands"] .tool-detail .tags {display:none;}
 body[data-page="commands"] .tool-detail .vclose {display:none;}
@@ -292,7 +309,7 @@ body[data-page="commands"][data-view="tool"] .add-wrap {display:none;}
 @media(max-width:640px) {
   body[data-page="commands"] .cmd-top {flex-direction:column;}
   body[data-page="commands"] .cmd-side {flex-direction:row;width:100%;align-items:center;}
-  body[data-page="commands"] .cmd-side .btn-run, body[data-page="commands"] .cmd-side .btn-stop {flex:1;}
+  body[data-page="commands"] .cmd-side .btn-run, body[data-page="commands"] .cmd-side .btn-stop {flex:none;}
   body[data-page="commands"] .cmd-side .status {text-align:left;flex:1;}
   body[data-page="commands"] .search {width:100%;}
   body[data-page="commands"] .search input {flex:1;min-width:0;}
@@ -808,6 +825,9 @@ body[data-page="hub"] .pm-head, body[data-page="hub"] .pkg-head {display: flex; 
 body[data-page="hub"] .pm-icon, body[data-page="hub"] .pkg-icon {width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--fg);}
 body[data-page="hub"] .pm-icon svg, body[data-page="hub"] .pkg-icon svg, body[data-page="hub"] .cli-rail button svg {width: 18px; height: 18px; flex: none;}
 body[data-page="hub"] .cli-rail button svg {width: 14px; height: 14px;}
+body[data-page="hub"] .cmd-icon {width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--fg);}
+body[data-page="hub"] .cmd-icon svg {width: 18px; height: 18px; flex: none;}
+body[data-page="hub"] .cmd-icon img {width: 20px; height: 20px; display: block;}
 body[data-page="hub"] .pm-title, body[data-page="hub"] .pkg-title {min-width: 0; flex: 1 1 0;}
 body[data-page="hub"] .install-line-label {font-size: 11px; font-weight: 600; color: var(--muted); margin: 8px 0 4px;}
 body[data-page="hub"] .cmdline-row {display: flex; gap: 8px; align-items: stretch;}

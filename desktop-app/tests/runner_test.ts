@@ -2,7 +2,7 @@
 // Requires --allow-run (in the deno task test flags) or these fail NotCapable.
 import { assert, assertEquals, assertRejects } from "jsr:@std/assert@^1";
 import { isShellAvailable } from "../shell.ts";
-import { cancelRun, getRunProgress, runCommand } from "../runner.ts";
+import { cancelRun, getRunProgress, runCommand, writeRunInput } from "../runner.ts";
 
 async function tempCwd(): Promise<string> {
   return await Deno.makeTempDir({ prefix: "cc-run-" });
@@ -250,4 +250,33 @@ Deno.test("bash: echo + exit code (skips cleanly when unavailable)", async () =>
   } finally {
     await Deno.remove(cwd, { recursive: true }).catch(() => {});
   }
+});
+
+Deno.test("stdin answers a prompt via writeRunInput", async () => {
+  const cwd = await tempCwd();
+  const p = runCommand({
+    commandId: "sami-siru-sona",
+    shell: "powershell",
+    cwd,
+    line: "$answer = [Console]::In.ReadLine(); Write-Output \"GOT:$answer\"",
+  });
+  try {
+    // Give the child a beat to reach the read, then answer it.
+    await new Promise((r) => setTimeout(r, 1500));
+    assertEquals(writeRunInput("hello-stdin\n"), true);
+    const r = await p;
+    assertEquals(r.exitCode, 0);
+    assert(
+      r.output.some((l) => l.text.includes("GOT:hello-stdin")),
+      JSON.stringify(r.output),
+    );
+  } finally {
+    await cancelRun();
+    await p.catch(() => {});
+    await Deno.remove(cwd, { recursive: true }).catch(() => {});
+  }
+});
+
+Deno.test("writeRunInput returns false with no active run", () => {
+  assertEquals(writeRunInput("typed-nowhere\n"), false);
 });

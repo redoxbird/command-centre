@@ -275,31 +275,32 @@
   }
   /* ── xterm terminal (K2/K3): one live Terminal per .term-body ──────────
    * Every run mounts a fresh instance (per-run, like the design's clear on
-   * run). Stream colors reuse the design palette: stdout default, stderr
-   * red, notes dim, results green/blue. Copy reads the scrollback buffer,
-   * Clear disposes back to the DOM placeholder, Hide stays pure CSS.
+   * run). The palette is the GitHub Dark theme (primer/primitives functional
+   * dark ANSI set: bg #0d1117, white #e6edf3 keeps the design's text tone).
+   * Copy reads the scrollback buffer, Clear disposes back to the DOM
+   * placeholder, Hide stays pure CSS as before.
    */
   const TERM_THEME = {
     background: "#0d1117",
-    foreground: "#e6edf3",
-    cursor: "#e6edf3",
+    foreground: "#f0f6fc",
+    cursor: "#f0f6fc",
     cursorAccent: "#0d1117",
     selectionBackground: "rgba(9, 105, 218, .3)",
-    black: "#0d1117",
+    black: "#2f3742",
     red: "#ff7b72",
     green: "#3fb950",
     yellow: "#d29922",
-    blue: "#79c0ff",
-    magenta: "#bc8cff",
+    blue: "#58a6ff",
+    magenta: "#be8fff",
     cyan: "#39c5cf",
     white: "#e6edf3",
-    brightBlack: "#8b949e",
+    brightBlack: "#656c76",
     brightRed: "#ffa198",
     brightGreen: "#56d364",
     brightYellow: "#e3b341",
-    brightBlue: "#80ccff",
+    brightBlue: "#79c0ff",
     brightMagenta: "#d2a8ff",
-    brightCyan: "#76e3ea",
+    brightCyan: "#56d4dd",
     brightWhite: "#ffffff",
   };
   function termOptions() {
@@ -309,7 +310,7 @@
     } catch (e) { /* noop */ }
     return {
       theme: TERM_THEME,
-      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+      fontFamily: '"JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
       fontSize: 12,
       lineHeight: 1.6,
       cursorBlink: blink,
@@ -328,6 +329,15 @@
     window.addEventListener("resize", () => {
       document.querySelectorAll(".term-body").forEach((b) => termFit(b._xterm));
     });
+    // Cell metrics change once the webfont arrives — refit so columns stay
+    // true (JetBrains Mono is wider than the fallback stack).
+    try {
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+          document.querySelectorAll(".term-body").forEach((b) => termFit(b._xterm));
+        }).catch(() => { /* noop */ });
+      }
+    } catch (e) { /* noop */ }
   }
   function termEnsure(body) {
     const rec = body._xterm;
@@ -349,6 +359,24 @@
     const record = { term, fit, el: host };
     body._xterm = record;
     termFit(record);
+    // Interactive input: forward keystrokes to the active run's stdin.
+    // Ctrl+C cancels (tree kill); anything else goes to the run that owns
+    // this terminal. No PTY here, so the child never echoes — echo printable
+    // input locally, otherwise typing would be blind.
+    try {
+      term.onData((data) => {
+        try {
+          if (data === "\x03") {
+            B().cancelRun().catch((e) => console.error(e));
+            return;
+          }
+          if (window.__ccDirty.runActive && window.__ccActiveTerm === body) {
+            term.write(data.replace(/\r/g, "\r\n").replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, ""));
+            B().writeRunInput(data).catch((e) => console.error(e));
+          }
+        } catch (e) { console.error("terminal input failed", e); }
+      });
+    } catch (e) { console.error("terminal onData failed", e); }
     return term;
   }
   function termReset(body) {
@@ -783,11 +811,20 @@
     termShow(o.scope);
     // Fresh terminal per run (K2) — a re-run never appends to stale output.
     termReset(body);
+    window.__ccActiveTerm = body;
+    // Recently-used sort order (design markUsed): stamp every run start.
+    try {
+      const used = JSON.parse(localStorage.getItem("cc-last-used") || "{}") || {};
+      used[o.commandId] = Date.now();
+      localStorage.setItem("cc-last-used", JSON.stringify(used));
+    } catch (e) { /* private mode */ }
     // Echo the resolved line so a silent command still visibly passes through.
     termNote(body, "$ " + o.line);
     o.buttons.forEach((b) => {
       if (!b.dataset.origText) b.dataset.origText = b.textContent;
-      b.textContent = "■ Cancel";
+      // Round icon-only side buttons (design) show a bare glyph; wide
+      // buttons (panel, detail page) keep their Cancel label.
+      b.textContent = (b.closest(".cmd-side") ? "■" : "■ Cancel");
     });
     status.textContent = "Running…";
     status.className = "status run";
@@ -836,10 +873,14 @@
       if (o.dot) o.dot.classList.remove("live");
       restoreRunButtons(o.buttons);
       window.__ccDirty.runActive = false;
+      if (window.__ccActiveTerm === body) window.__ccActiveTerm = null;
       return { ok: false, error: e };
     }
     restoreRunButtons(o.buttons);
     window.__ccDirty.runActive = false;
+    if (window.__ccActiveTerm === body) window.__ccActiveTerm = null;
+    // Settled runs invite a re-run: round side buttons show ↻ (design).
+    o.buttons.forEach((b) => { if (b.closest(".cmd-side")) b.textContent = "↻"; });
     const secs = ((res.durationMs || 0) / 1000).toFixed(1);
     if (res.cancelled || cancelled) {
       status.textContent = "Cancelled";
@@ -907,8 +948,7 @@
       cmds: [],
       query: "",
       tagFilter: null,
-      sortBy: "name-asc",
-      view: "command",
+      view: "tool",
       ready: false,
 
       async init() {
@@ -916,12 +956,6 @@
         markMounted("commands");
         await CC.refreshShells();
         await CC.loadShellChoices();
-        try {
-          const s = await CC.B().loadSettings();
-          if (s && s.sortBy) this.sortBy = s.sortBy;
-        } catch (e) {
-          console.warn("loadSettings failed", e);
-        }
         try {
           const v = localStorage.getItem("cc-view");
           if (v === "command" || v === "control" || v === "tool") this.view = v;
@@ -964,10 +998,13 @@
         if (vv) vv.addEventListener("click", () => this.setView("control"));
         if (vt) vt.addEventListener("click", () => this.setView("tool"));
         const count = document.getElementById("count");
-        if (count) {
-          count.title = "Click to change sort order";
-          count.style.cursor = "pointer";
-          count.addEventListener("click", () => this.cycleSort());
+        const sortSel = document.getElementById("sort");
+        if (sortSel) {
+          sortSel.value = this.getSort();
+          sortSel.addEventListener("change", () => {
+            try { localStorage.setItem("cc-sort", sortSel.value); } catch (e) { /* noop */ }
+            this.paint();
+          });
         }
       },
 
@@ -977,15 +1014,35 @@
         this.paint();
       },
 
-      async cycleSort() {
-        this.sortBy = this.sortBy === "name-asc" ? "name-desc" : "name-asc";
+      getSort() {
         try {
-          const s = await CC.B().loadSettings();
-          await CC.B().saveSettings(Object.assign({}, s, { sortBy: this.sortBy }));
-        } catch (e) {
-          console.warn("persisting sort failed", e);
+          const v = localStorage.getItem("cc-sort");
+          if (v === "recent-added" || v === "recent-used" || v === "name") return v;
+        } catch (e) { /* private mode */ }
+        return "recent-added";
+      },
+
+      getLastUsed(id) {
+        try {
+          const m = JSON.parse(localStorage.getItem("cc-last-used") || "{}");
+          return (m && m[id]) || 0;
+        } catch (e) { return 0; }
+      },
+
+      applySort(rows) {
+        const s = this.getSort();
+        if (s === "name") {
+          return rows.slice().sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
         }
-        this.paint();
+        if (s === "recent-used") {
+          return rows.map((c, i) => ({ c, i }))
+            .sort((x, y) => (this.getLastUsed(y.c.id) - this.getLastUsed(x.c.id)) || (x.i - y.i))
+            .map((o) => o.c);
+        }
+        const customs = [], built = [];
+        rows.forEach((c) => { ((c.custom || c.fromHub) ? customs : built).push(c); });
+        customs.reverse();
+        return customs.concat(built);
       },
 
       filtered() {
@@ -999,9 +1056,7 @@
           return ((c.name || "") + " " + (c.cmd || "") + " " + (c.desc || "") + " " + (c.cwd || ""))
             .toLowerCase().includes(q);
         });
-        rows = rows.slice();
-        if (this.sortBy === "name-desc") rows.sort((a, b) => String(b.name || "").localeCompare(String(a.name || "")));
-        else rows.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+        rows = this.applySort(rows);
         return rows;
       },
 
@@ -1013,7 +1068,6 @@
           let txt = rows.length + " saved";
           if (this.tagFilter) txt += " · tag: " + this.tagFilter + " (click a tag to clear)";
           count.textContent = txt;
-          count.title = "Sort: " + (this.sortBy === "name-desc" ? "name ↓" : "name ↑") + " — click to change";
         }
         if (!list) return;
         list.innerHTML = "";
@@ -1067,10 +1121,6 @@
           nm.className = "tool-pick-name";
           nm.textContent = c.name || "?";
           tx.appendChild(nm);
-          const tg = document.createElement("span");
-          tg.className = "tag";
-          tg.textContent = ((c.tags && c.tags[0]) || c.tag || "command") + (nInputs ? " · " + nInputs + (nInputs === 1 ? " input" : " inputs") : "");
-          tx.appendChild(tg);
           pick.appendChild(tx);
           const go = document.createElement("span");
           go.className = "tool-go";
@@ -1243,17 +1293,35 @@
           });
         }
 
-        // Input-count badge → opens the variable panel.
+        // State chips → inputs panel, lock state, saved state (design syncPreRun).
         const vars = card._ccVars;
         if (vars.length) {
-          const b = document.createElement("button");
-          b.type = "button";
-          b.className = "vbadge";
-          b.textContent = vars.length + (vars.length === 1 ? " input" : " inputs");
-          b.title = "Show inputs";
-          b.setAttribute("aria-label", b.textContent + " needed — show inputs");
-          card.querySelector(".tags").appendChild(b);
-          b.addEventListener("click", () => this.openVars(card, cmd));
+          const chips = card.querySelector(".statechips");
+          const need = document.createElement("button");
+          need.type = "button";
+          need.className = "nchip";
+          need.setAttribute("data-statechip", "needs");
+          need.textContent = vars.length + (vars.length === 1 ? " input" : " inputs");
+          need.title = "Show inputs";
+          need.setAttribute("aria-label", need.textContent + " needed — show inputs");
+          need.addEventListener("click", () => this.openVars(card, cmd));
+          chips.appendChild(need);
+          const locked = document.createElement("span");
+          locked.className = "nchip";
+          locked.setAttribute("data-statechip", "locked");
+          locked.textContent = "Locked";
+          locked.hidden = true;
+          chips.appendChild(locked);
+          const saved = document.createElement("span");
+          saved.className = "nchip";
+          saved.setAttribute("data-statechip", "saved");
+          saved.textContent = "Saved values";
+          saved.hidden = true;
+          chips.appendChild(saved);
+          if (this.syncPreRun(card, cmd) === "saved") {
+            const vd = card.querySelector(".vedit");
+            if (vd) vd.hidden = false;
+          }
         }
 
         // Shell picker: cycles installed shells only, persists per command.
@@ -1301,6 +1369,7 @@
             if (!vlock.checked) {
               card._ccLocked = false;
               if (vunlock) vunlock.hidden = true;
+              this.syncPreRun(card, cmd);
               return;
             }
             if (!card._ccGetters || !card._ccGetters.length) this.openVars(card, cmd);
@@ -1325,25 +1394,49 @@
 
       async refreshSavedState(card, cmd) {
         const vars = card._ccVars || [];
+        if (cmd.askMode === "once" && vars.length) {
+          try { card._ccLastSaved = await CC.B().getValues(cmd.id); }
+          catch (e) { console.error(e); }
+        }
+        this.syncPreRun(card, cmd);
+      },
+
+      paintChips(card, state) {
+        ["needs", "locked", "saved"].forEach((k) => {
+          const n = card.querySelector('[data-statechip="' + k + '"]');
+          if (n) n.hidden = (k !== state);
+        });
+      },
+
+      syncPreRun(card, cmd) {
+        // Design syncPreRun: exactly one chip shows; the status line names
+        // the state in Tool View and stays Ready everywhere else.
+        const vars = card._ccVars || [];
         const st = card.querySelector(".status");
         const vedit = card.querySelector(".vedit");
-        if (!st) return;
-        if (!vars.length || cmd.askMode !== "once") {
-          if (!st.classList.contains("ok") && !st.classList.contains("stopped")) st.textContent = "Ready";
-          if (vedit && !vars.length) vedit.hidden = true;
-          return;
+        let state = "needs";
+        if (!vars.length) state = "none";
+        else if (card._ccLocked) state = "locked";
+        else if (cmd.askMode === "once" && this.completeVals(vars, card._ccLastSaved || null)) state = "saved";
+        this.paintChips(card, state);
+        if (vedit && !vars.length) vedit.hidden = true;
+        else if (vedit && state === "saved") vedit.hidden = false;
+        else if (vedit && state === "needs" && cmd.askMode === "once") vedit.hidden = true;
+        if (!st) return state;
+        if (this.view !== "tool") {
+          if (!st.classList.contains("ok") && !st.classList.contains("stopped")) {
+            st.textContent = "Ready";
+            st.className = "status";
+          }
+          return state;
         }
-        let sv = null;
-        try { sv = await CC.B().getValues(cmd.id); } catch (e) { console.error(e); }
-        if (this.completeVals(vars, sv)) {
-          st.textContent = "Saved values ready";
-          st.classList.remove("needs");
-          if (vedit) vedit.hidden = false;
-        } else {
+        if (state === "locked") { st.textContent = "Locked — runs without asking"; st.className = "status"; }
+        else if (state === "saved") { st.textContent = "Saved values ready"; st.classList.remove("needs"); }
+        else if (state === "needs") {
           st.textContent = "Needs " + vars.length + (vars.length === 1 ? " input" : " inputs");
           st.classList.add("needs");
-          if (vedit) vedit.hidden = true;
-        }
+        } else { st.textContent = "Ready"; st.className = "status"; }
+        return state;
       },
 
       completeVals(vars, map) {
@@ -2694,6 +2787,13 @@
           if (PKG_IMG[id]) return '<img src="' + PKG_IMG[id] + '" width="24" height="24" alt="" />';
           return icon("box");
         }
+        // Per-CLI card icons for the commands panel (wired by the F3
+        // component; static panels use pmIcon/pkgIcon above).
+        const CLI_ICON = { ffmpeg: "video", docker: "container", git: "branch", curl: "globe" };
+        function cliIcon(cli) {
+          if (PKG_IMG[cli]) return '<img src="' + PKG_IMG[cli] + '" width="20" height="20" alt="" />';
+          return icon(CLI_ICON[cli] || "box");
+        }
         function installedCLIs() { try { return JSON.parse(localStorage.getItem("cc-clis") || "{}"); } catch (e) { return {}; } }
         function saveCLIs(o) { try { localStorage.setItem("cc-clis", JSON.stringify(o)); } catch (e) { /* noop */ } }
         function isInstalled(cli) {
@@ -2748,55 +2848,29 @@
         function pkgStore() { try { return JSON.parse(localStorage.getItem("cc-pkgs") || "[]"); } catch (e) { return []; } }
         function savePkgs(a) { try { localStorage.setItem("cc-pkgs", JSON.stringify(a)); } catch (e) { /* noop */ } }
         const pkglist = document.getElementById("pkglist"), pkgq = document.getElementById("pkgq"),
-          pkgrail = document.getElementById("pkgrail"), pkgresult = document.getElementById("pkgresult"),
+          pkgresult = document.getElementById("pkgresult"),
           pkgsuggest = document.getElementById("pkgsuggest");
-        let activeMgr = "All";
-        function mgrList() { const s = new Set(); PKGS.forEach(function (p) { Object.keys(p.managers).forEach(function (m) { s.add(m); }); }); return Array.from(s).sort(); }
-        function paintPkgRail() {
-          if (!pkgrail) return;
-          pkgrail.innerHTML = "";
-          ["All"].concat(mgrList()).forEach(function (m) {
-            const b = document.createElement("button"); b.type = "button";
-            b.className = m === activeMgr ? "on" : "";
-            b.setAttribute("aria-pressed", m === activeMgr ? "true" : "false");
-            if (m === "All") { b.textContent = "All package managers"; }
-            else {
-              b.innerHTML = "";
-              const dot = document.createElement("span"); dot.className = "mgr-dot";
-              dot.style.background = pmInstalled(m) ? "#1f883d" : "";
-              dot.setAttribute("aria-hidden", "true");
-              const ic = document.createElement("span"); ic.innerHTML = pmIcon(m, 14);
-              ic.style.display = "inline-flex"; ic.setAttribute("aria-hidden", "true");
-              const tx = document.createElement("span"); tx.textContent = pmName(m);
-              b.appendChild(dot); b.appendChild(ic); b.appendChild(tx);
-              b.setAttribute("aria-label", "Filter by " + pmName(m) + (pmInstalled(m) ? " (installed)" : " (not installed)"));
-            }
-            b.addEventListener("click", function () { activeMgr = m; paintPkgRail(); paintPkgs(); });
-            pkgrail.appendChild(b);
-          });
-        }
         function paintPkgs() {
           if (!pkglist) return;
           const terms = String((pkgq && pkgq.value) || "").toLowerCase().split(/\s+/).map(function (s) { return s.trim(); }).filter(Boolean);
           if (pkgsuggest) pkgsuggest.style.display = (pkgq && pkgq.value.trim() === "") ? "" : "none";
           const rows = PKGS.filter(function (p) {
-            if (activeMgr !== "All" && !p.managers[activeMgr]) return false;
             if (!terms.length) return true;
             const hay = (p.name + " " + p.desc + " " + p.tags + " " + Object.keys(p.managers).join(" ")).toLowerCase();
             return terms.every(function (t) { return hay.includes(t); });
           });
-          if (pkgresult) pkgresult.textContent = rows.length ? rows.length + " package" + (rows.length === 1 ? "" : "s") + (activeMgr !== "All" ? (" via " + activeMgr) : "") + (terms.length ? (' for “' + terms.join(" ") + '”') : "") + " · demo catalog" : "";
+          if (pkgresult) pkgresult.textContent = rows.length ? rows.length + " package" + (rows.length === 1 ? "" : "s") + (terms.length ? (' for “' + terms.join(" ") + '”') : "") + " · demo catalog" : "";
           pkglist.innerHTML = "";
           if (!rows.length) {
             pkglist.innerHTML = '<div class="empty">No demo packages match. Try “ffmpeg”.<br /><button type="button" id="pkgclear">Clear search</button></div>';
             const c = document.getElementById("pkgclear");
-            if (c) c.addEventListener("click", function () { pkgq.value = ""; activeMgr = "All"; paintPkgRail(); paintPkgs(); pkgq.focus(); });
+            if (c) c.addEventListener("click", function () { pkgq.value = ""; paintPkgs(); pkgq.focus(); });
             return;
           }
           const installed = pkgStore();
           rows.forEach(function (p) {
             const mgrKeys = Object.keys(p.managers);
-            let chosen = mgrKeys.includes(activeMgr) ? activeMgr : mgrKeys[0];
+            let chosen = mgrKeys[0];
             const el = document.createElement("article"); el.className = "pm-card";
             el.innerHTML = '<span class="pm-icon" aria-hidden="true"></span><h2></h2><p></p>'
               + '<div class="mgr-switch"><button type="button" class="mgr-cycle" aria-label=""></button><span class="mgr-name"></span></div>'
@@ -2886,12 +2960,12 @@
         if (pkgq) {
           pkgq.addEventListener("input", function () { clearTimeout(pkgdeb); pkgdeb = setTimeout(paintPkgs, 120); });
           pkgq.addEventListener("keydown", function (e) {
-            if (e.key === "Escape") { pkgq.value = ""; activeMgr = "All"; paintPkgRail(); paintPkgs(); }
+            if (e.key === "Escape") { pkgq.value = ""; paintPkgs(); }
             if (e.key === "Enter") { e.preventDefault(); }
           });
         }
         setTab(activeTab);
-        paintManagers(); paintPkgRail(); paintPkgs();
+        paintManagers(); paintPkgs();
 
         this.ready = true;
         markMounted("hub");
