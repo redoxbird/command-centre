@@ -311,7 +311,7 @@
     return {
       theme: TERM_THEME,
       fontFamily: '"JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
-      fontSize: 12,
+      fontSize: 13,
       lineHeight: 1.6,
       cursorBlink: blink,
       cursorStyle: "block",
@@ -1006,6 +1006,25 @@
             this.paint();
           });
         }
+        // Control-view live preview (design ccRefreshPreview): any edit
+        // inside a card repaints its preview cmdline. Native events cover
+        // raw fallback rows; e:input/e:change cover e-input upgrades.
+        const list = document.getElementById("list");
+        if (list) {
+          for (const t of ["input", "change", "e:input", "e:change"]) {
+            list.addEventListener(t, (e) => {
+              const card = e.target && e.target.closest ? e.target.closest(".cmd") : null;
+              if (card) this.refreshPreview(card);
+            });
+          }
+          const obs = new MutationObserver(() => {
+            if (document.body.dataset.view !== "control") return;
+            document.querySelectorAll("#list .cmd .vars-h").forEach((vh) => {
+              if (!vh.textContent.trim()) vh.textContent = "Inputs";
+            });
+          });
+          obs.observe(list, { childList: true, subtree: true, characterData: true });
+        }
       },
 
       setView(view) {
@@ -1439,9 +1458,42 @@
         return state;
       },
 
+      refreshPreview(card) {
+        // Design ccRefreshPreview: repaint the preview cmdline from the live
+        // getter values while in Control View. Read-only collect — no
+        // validation, no error surfacing (the panel run still owns that).
+        // Input kinds mirror the design's example-fallback rule.
+        if (document.body.dataset.view !== "control") return;
+        if (!card || !card.dataset || !card.dataset.id) return;
+        const cmd = (this.cmds || []).find((c) => String(c.id) === String(card.dataset.id));
+        if (!cmd || !cmd.cmd) return;
+        const box = card.querySelector(".c");
+        if (!box) return;
+        const getters = card._ccGetters || [];
+        if (!getters.length) return;
+        const g = CC.G();
+        const NO_EXAMPLE = {
+          checkbox: 1, switch: 1, radio: 1, select: 1, range: 1,
+          buttongroup: 1, color: 1, multiselect: 1, license: 1, time: 1, datetime: 1,
+        };
+        const vals = {};
+        getters.forEach((gt) => {
+          let val = "";
+          try { val = gt.get(); } catch (e) { /* noop */ }
+          if (val == null) val = "";
+          if (typeof val !== "string") val = String(val);
+          if (!val.trim() && !NO_EXAMPLE[gt.kind]) {
+            try { val = g.exampleFor(gt.v, null); } catch (e2) { /* noop */ }
+          }
+          vals[gt.v.iid] = val;
+        });
+        try { box.textContent = g.renderCmd(cmd.cmd, vals); } catch (e) { /* noop */ }
+        const vh = card.querySelector(".vars-h");
+        if (vh && !vh.textContent.trim()) vh.textContent = "Inputs";
+      },
+
       completeVals(vars, map) {
-        if (!map) return false;
-        return vars.every((v) => {
+        if (!map) return false;        return vars.every((v) => {
           const got = (v.iid in map) ? map[v.iid] : map[v.key];
           if (got === undefined) return false;
           if (CC.ALWAYS_VALID.has(v.type)) return true;
@@ -2770,6 +2822,15 @@
           choco: '<path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/>',
           bun: '<path d="M2.5 10.5a5.5 4.6 0 0 1 11 0Z"/><path d="M2.5 10.5h11"/><circle cx="6.2" cy="8.2" r=".7" fill="currentColor" stroke="none"/><circle cx="8.6" cy="7.2" r=".7" fill="currentColor" stroke="none"/><circle cx="10.8" cy="8.2" r=".7" fill="currentColor" stroke="none"/>',
           npm: '<rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5.5 6.5v4M5.5 6.5l2.5 2.6 2.5-2.6v4"/>',
+          video: '<rect x="2" y="4" width="12" height="8" rx="1.5"/><path d="M5 4v8M11 4v8M2 7h3M2 9.7h3M11 7h3M11 9.7h3"/>',
+          image: '<rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="5.6" cy="6.4" r="1"/><path d="M2.5 11.5 7 7.6l2.4 2.4 1.9-1.9 2.2 2.4"/>',
+          branch: '<circle cx="5" cy="4" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="11" cy="8" r="1.6"/><path d="M5 5.6v4.8M5 8c0-1.2 1.2-1.6 3-1.6h1.4"/>',
+          globe: '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-3.4 3.6-3.4 8.4 0 12M8 2c3.4 3.6 3.4 8.4 0 12"/>',
+          download: '<path d="M8 2v7.5M4.6 6.8 8 10.2l3.4-3.4"/><path d="M2.5 12.5h11V14h-11Z"/>',
+          json: '<path d="M5.5 3C4 3 3 4 3 5.5v2c0 1-.5 1.5-1 2 .5.5 1 1 1 2v2c0 1.5 1 2.5 2.5 2.5"/><path d="M10.5 3c1.5 0 2.5 1 2.5 2.5v2c0 1 .5 1.5 1 2-.5.5-1 1-1 2v2c0 1.5-1 2.5-2.5 2.5"/>',
+          js: '<path d="M8 1.8 13.8 5v6L8 14.2 2.2 11V5Z"/><circle cx="8" cy="8" r="1.4"/>',
+          container: '<rect x="2" y="5.5" width="12" height="6.5" rx="1"/><path d="M2 8.5h12M5 5.5V3.8h6v1.7"/>',
+          layers: '<path d="M8 2 14 5.5 8 9 2 5.5Z"/><path d="M2.5 8.7 8 11.7l5.5-3M2.5 11.2 8 14.2l5.5-3"/>',
           box: '<path d="M8 2 14 5v6L8 14 2 11V5Z"/><path d="M2 5l6 3 6-3"/><path d="M8 8v6"/>'
         };
         function icon(name) { return '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + (ICONS[name] || ICONS.box) + '</svg>'; }
