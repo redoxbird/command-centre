@@ -5,10 +5,28 @@
 // Execution (run/getRunProgress/cancelRun) delegates to runner.ts;
 // hub/publish bodies land in Phase F (stubs here validate + report pending).
 import { z } from "zod";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import {
+  buildInstallLine,
+  buildSearchArgs,
+  buildStatusArgs,
+  buildUninstallLine,
+  isStatusHit,
+  MANAGERS,
+  parseBunInfo,
+  parseScoopSearch,
+  parseWingetSearch,
+  probeInstalledManagers,
+} from "./pkgmanagers.ts";
 import type { DesktopWindow } from "./main.ts";
-import { APP_VERSION } from "./version.ts";
-import { CommandIdSchema, HubQuerySchema, SubmitRequestSchema } from "./types.ts";
+import {
+  AppSettingsSchema,
+  CommandIdSchema,
+  HubQuerySchema,
+  PkgInstallSchema,
+  PkgSearchSchema,
+  SubmitRequestSchema,
+} from "./types.ts";
 import { openDatabase } from "./db/db.ts";
 import { appBaseDir } from "./db/db.ts";
 import {
@@ -27,9 +45,9 @@ import {
   writeExportFile,
 } from "./library.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
-import { AppSettingsSchema } from "./types.ts";
 import { probeInstalledShells } from "./shell.ts";
 import { cancelRun, getRunProgress, runCommand, writeRunInput } from "./runner.ts";
+import { APP_VERSION } from "./version.ts";
 import { join } from "std/path";
 
 const IdArg = z.object({ id: z.string().min(1) });
@@ -311,8 +329,77 @@ export function registerBindings(win: DesktopWindow): void {
     // own window entirely (probe-verified in Compressy). Fire and forget.
     spawn("explorer.exe", [p]);
   });
-
-  // ── hub / publish (Phase F bodies; validated stubs now) ────────────────
+  // ── package managers (N2; installs run through runner.ts) ───────────────
+  bind("pmList", async () => probeInstalledManagers());
+  bind("pkgSearch", async (req: unknown) => {
+    const { manager, query } = PkgSearchSchema.parse(req);
+    const info = MANAGERS[manager];
+    // where.exe resolution doubles as the installed check (same as shell.ts).
+    const probe = probeInstalledManagers().find((found) => found.id === manager);
+    if (!probe || !probe.installed || !probe.path) {
+      throw err("NotInstalled", `${info.label} is not installed`);
+    }
+    try {
+      const found = spawnSync(probe.path, buildSearchArgs(manager, query), {
+        windowsHide: true,
+        encoding: "utf8",
+        timeout: 60000,
+      });
+      if (found.error) throw found.error;
+      if (found.status !== 0) {
+        throw err("SearchFailed", `${info.label} search failed (exit ${found.status ?? "?"})`);
+      }
+      const stdout = String(found.stdout ?? "");
+      if (manager === "winget") return parseWingetSearch(stdout).slice(0, 50);
+      if (manager === "scoop") return parseScoopSearch(stdout).slice(0, 50);
+      const single = parseBunInfo(stdout);
+      return single ? [single] : [];
+    } catch (e) {
+      if (e instanceof Error && (e.name === "NotInstalled" || e.name === "SearchFailed")) throw e;
+      throw err("SearchFailed", e instanceof Error ? e.message : String(e));
+    }
+  });
+  bind("pkgInstall", async (req: unknown) => {
+    const { manager, spec } = PkgInstallSchema.parse(req);
+    return await runCommand({
+      commandId: `pkg:${manager}:${spec}`,
+      shell: "powershell",
+      cwd: Deno.cwd(),
+      line: buildInstallLine(manager, spec),
+      allowUnresolved: false,
+    });
+  });
+  bind("pkgUninstall", async (req: unknown) => {
+    const { manager, spec } = PkgInstallSchema.parse(req);
+    return await runCommand({
+      commandId: `pkg:${manager}:${spec}`,
+      shell: "powershell",
+      cwd: Deno.cwd(),
+      line: buildUninstallLine(manager, spec),
+      allowUnresolved: false,
+    });
+  });
+  bind("pkgStatus", async (req: unknown) => {
+    const { manager, spec } = PkgInstallSchema.parse(req);
+    const probe = probeInstalledManagers().find((found) => found.id === manager);
+    if (!probe || !probe.installed || !probe.path) {
+      return { installed: false, managerInstalled: false };
+    }
+    try {
+      const found = spawnSync(probe.path, buildStatusArgs(manager, spec), {
+        windowsHide: true,
+        encoding: "utf8",
+        timeout: 30000,
+      });
+      if (found.error) throw found.error;
+      return {
+        installed: isStatusHit(manager, String(found.stdout ?? ""), spec),
+        managerInstalled: true,
+      };
+    } catch {
+      return { installed: false, managerInstalled: true };
+    }
+  });
   const pending = (phase: string) => {
     throw err("NotImplemented", `${phase} lands in Phase F`);
   };

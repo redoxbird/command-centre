@@ -1,0 +1,108 @@
+[
+  {
+    "id": "ffmpeg",
+    "name": "ffmpeg",
+    "desc": "Video converter used by the Hub demos. Provides the ffmpeg CLI.",
+    "ver": "7.1",
+    "provides": "ffmpeg",
+    "tags": "video convert",
+    "managers": {
+      "winget": "winget install --id \"Gyan.FFmpeg\" -e --silent --accept-package-agreements --accept-source-agreements",
+      "scoop": "scoop install \"ffmpeg\""
+    }
+  },
+  {
+    "id": "libvips",
+    "name": "libvips",
+    "desc": "Fast image pipeline (resize, thumbnails).",
+    "ver": "8.16",
+    "provides": "vips",
+    "tags": "imaging resize thumbnails",
+    "managers": {
+      "winget": "winget install --id \"libvips.libvips\" -e --silent --accept-package-agreements --accept-source-agreements",
+      "scoop": "scoop install \"vips\""
+    }
+  },
+  {
+    "id": "git",
+    "name": "Git",
+    "desc": "Version control behind every command card here.",
+    "ver": "2.45",
+    "provides": "git",
+    "tags": "vcs",
+    "managers": {
+      "winget": "winget install --id \"Git.Git\" -e --silent --accept-package-agreements --accept-source-agreements",
+      "scoop": "scoop install \"git\""
+    }
+  },
+  {
+    "id": "curl",
+    "name": "cURL",
+    "desc": "HTTP checks for the API demo commands.",
+    "ver": "8.9",
+    "provides": "curl",
+    "tags": "network http",
+    "managers": {
+      "winget": "winget install --id \"cURL.cURL\" -e --silent --accept-package-agreements --accept-source-agreements",
+      "scoop": "scoop install \"curl\""
+    }
+  },
+  {
+    "id": "imagemagick",
+    "name": "ImageMagick",
+    "desc": "Convert and identify stills from the media folder.",
+    "ver": "7.1",
+    "provides": "magick",
+    "tags": "imaging convert",
+    "managers": {
+      "winget": "winget install --id \"ImageMagick.ImageMagick\" -e --silent --accept-package-agreements --accept-source-agreements",
+      "scoop": "scoop install \"imagemagick\""
+    }
+  },
+  {
+    "id": "ytdlp",
+    "name": "yt-dlp",
+    "desc": "Download test clips before converting with ffmpeg.",
+    "ver": "2026.01",
+    "provides": "yt-dlp",
+    "tags": "video download",
+    "managers": {
+      "winget": "winget install --id \"yt-dlp.yt-dlp\" -e --silent --accept-package-agreements --accept-source-agreements",
+      "scoop": "scoop install \"yt-dlp\""
+    }
+  },
+  {
+    "id": "jq",
+    "name": "jq",
+    "desc": "Slice JSON from the curl demo commands.",
+    "ver": "1.7",
+    "provides": "jq",
+    "tags": "json cli",
+    "managers": {
+      "winget": "winget install --id \"jqlang.jq\" -e --silent --accept-package-agreements --accept-source-agreements",
+      "scoop": "scoop install \"jq\""
+    }
+  },
+  {
+    "id": "svgo",
+    "name": "svgo",
+    "desc": "SVG optimizer used by the icon pipeline. Global JavaScript CLI installed via Bun.",
+    "ver": "3.0",
+    "provides": "svgo",
+    "tags": "svg cli javascript",
+    "managers": {
+      "bun": "bun add -g \"svgo\""
+    }
+  },
+  {
+    "id": "prettier",
+    "name": "prettier",
+    "desc": "Opinionated code formatter. Global JavaScript CLI installed via Bun.",
+    "ver": "3.3",
+    "provides": "prettier",
+    "tags": "format cli javascript",
+    "managers": {
+      "bun": "bun add -g \"prettier\""
+    }
+  }
+]

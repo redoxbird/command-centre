@@ -4,11 +4,13 @@
 // files land in design/icons/ first, then copy to static/icons/ (same flow).
 //
 // Slugs verified 2026-09-23 (200 + <svg>): powershell, bash, ubuntu,
-// chocolatey, bun, ffmpeg, git, curl, docker, npm, nodejs. Deliberately NOT
-// fetched: winget + scoop (404/403), libvips, imagemagick, ytdlp, jq (404) —
-// those keep the design's inline-SVG fallback; never substitute a wrong logo.
-// sharp resolves but cannot be confirmed as the right logo — excluded.
-import { join } from "std/path";
+// chocolatey, bun, ffmpeg, git, curl, docker, npm, nodejs. A full-registry
+// search on 2026-09-26 (7402 thesvg slugs via the git trees API) confirmed
+// no winget or scoop slug exists, so icons/winget.svg + icons/scoop.svg are
+// hand-authored from the hub ICONS paths (same 16x16 stroke language as the
+// inline fallback) and copied by hand, never fetched. Deliberately NOT
+// fetched: libvips, imagemagick, ytdlp, jq (404) — those keep the design's
+// inline-SVG fallback; never substitute a wrong logo.
 
 const CDN = "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons";
 const ICONS: Array<[slug: string, file: string]> = [

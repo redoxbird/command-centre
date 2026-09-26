@@ -868,7 +868,13 @@ body[data-page="hub"] .mgr-cycle img, body[data-page="hub"] .mgr-cycle svg {widt
 body[data-page="hub"] .mgr-cycle:hover {border-color:var(--accent);}
 body[data-page="hub"] .mgr-cycle:focus-visible {outline:none;border-color:var(--accent);box-shadow:var(--focus-ring);}
 body[data-page="hub"] .mgr-cycle.spin img {animation:mgr-spin .3s cubic-bezier(.2,0,0,1);}
-body[data-page="hub"] .mgr-name {font-size:12px;color:var(--muted);}
+body[data-page="hub"] .pkg-installbar {align-items:end;}
+body[data-page="hub"] .pkg-manager {display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted);}
+body[data-page="hub"] .pkg-manager select {font-family:inherit;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;outline:none;color:var(--fg);min-height:36px;cursor:pointer;}
+body[data-page="hub"] .pkg-manager select:focus {border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="hub"] #pkgspec {flex:2 1 220px;min-width:0;font-family:var(--font-mono);font-size:13px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;outline:none;color:var(--fg);min-height:36px;}
+body[data-page="hub"] #pkgspec:focus {border-color:var(--accent);box-shadow:var(--focus-ring);}
+body[data-page="hub"] #pkgilog {margin:12px 20px 0;}
 body[data-page="hub"] .cmd-toggle {font-family:inherit;font-size:12px;font-weight:400;color:var(--muted);background:transparent;border:none;padding:6px 0;min-height:32px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 body[data-page="hub"] .cmd-toggle:hover {color:var(--fg);text-decoration:underline;text-underline-offset:3px;}
 body[data-page="hub"] .cmd-toggle svg {width:12px;height:12px;flex:none;transition:transform 140ms ease-out;}

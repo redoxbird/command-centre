@@ -162,6 +162,22 @@ export const RunRequestSchema = z.object({
 });
 export type RunRequest = z.infer<typeof RunRequestSchema>;
 
+// ── Package managers (N1; installs execute through runner.ts) ───────────────────
+export const ManagerIdSchema = z.enum(["winget", "scoop", "bun"]);
+export type ManagerId = z.infer<typeof ManagerIdSchema>;
+
+export const PkgSearchSchema = z.object({
+  manager: ManagerIdSchema,
+  query: z.string().min(1).max(100),
+});
+export type PkgSearch = z.infer<typeof PkgSearchSchema>;
+
+export const PkgInstallSchema = z.object({
+  manager: ManagerIdSchema,
+  spec: z.string().min(1).max(200),
+});
+export type PkgInstall = z.infer<typeof PkgInstallSchema>;
+
 // ── Hub / publish query shapes (full routes land in Phase F) ────────────────
 export const HubQuerySchema = z.object({
   q: z.string().default(""),
