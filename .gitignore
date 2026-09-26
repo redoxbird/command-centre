@@ -11,6 +11,7 @@ desktop-app/dist/
 node_modules/
 desktop-app/node_modules/
 deno.lock
+cache/
 
 # ── Editor / OS ──────────────────────────────────────────────
 .vscode/

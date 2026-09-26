@@ -45,7 +45,7 @@ td.opt{width:30%}
 td.see{width:34%}
 td.use{color:var(--muted);width:36%}
 .tok{font-family:var(--font-mono);font-size:12px;font-weight:600;display:block;overflow-wrap:anywhere}
-.pill{display:inline-block;font-size:11px;font-weight:600;border-radius:9999px;padding:0 8px;margin-top:4px;border:1px solid var(--border-soft);background:var(--signal-wash);color:var(--accent)}
+.pill{display:none;font-size:11px;font-weight:600;border-radius:9999px;padding:0 8px;margin-top:4px;border:1px solid var(--border-soft);background:var(--signal-wash);color:var(--accent)}
 .demo{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .demo input[type="text"],.demo input[type="number"],.demo input[type="date"],.demo input[type="time"],.demo input[type="datetime-local"],.demo input[type="password"],.demo input[type="email"],.demo input[type="url"],.demo input[type="search"],.demo select,.demo textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;min-height:32px;max-width:190px;background:#fff;color:var(--fg)}
 .demo textarea{font-family:var(--font-mono);font-size:12px;resize:vertical;min-height:56px}
@@ -55,6 +55,24 @@ td.use{color:var(--muted);width:36%}
 .demo input[type="range"]{accent-color:var(--accent);width:130px}
 .demo .btn{font-family:inherit;font-size:12px;border:1px solid var(--border);background:var(--surface);color:var(--fg);border-radius:6px;padding:4px 10px;min-height:32px;cursor:pointer;line-height:1.4;white-space:nowrap}
 .demo .btn:hover{background:var(--hover-fill)}
+.dz-demo{display:flex;flex-direction:column;gap:8px;align-items:stretch;width:100%}
+.dz-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--border);border-radius:6px;background:var(--surface);color:var(--muted);font-size:12px;padding:8px;min-height:140px;cursor:pointer;text-align:center}
+.dz-demo:hover .dz-drop{border-color:var(--accent)}
+.dz-demo.over .dz-drop{border-color:var(--accent);border-style:solid}
+.dz-hint{display:flex;align-items:center;gap:8px}
+.dz-hint svg{width:18px;height:18px;flex:none}
+.dz-drop .dz-prev{justify-content:center;width:100%}
+.dz-demo .dz-drop .dz-prev img,.dz-demo .dz-drop .dz-prev video{flex:1 1 0;min-width:120px;height:120px;max-height:none;object-fit:cover}
+.dz-demo.filled .dz-hint{display:none}
+.dur-demo{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.demo .dur-demo input[type="text"]{flex:none}
+.dz-demo .dz-prev{display:flex;gap:6px;flex-wrap:wrap}
+.dz-demo .dz-prev:empty{display:none}
+.dz-demo .dz-prev img{width:56px;height:56px;object-fit:cover;border:1px solid var(--border);border-radius:6px;background:#fff}
+.dz-demo .dz-prev video{width:112px;max-height:72px;border:1px solid var(--border);border-radius:6px;background:#000}
+.dz-demo .doc-chip{font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:9999px;padding:2px 10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.demo .btn{display:inline-flex;align-items:center;justify-content:center;min-width:32px;padding:4px 8px}
+.demo .btn svg{width:16px;height:16px;flex:none}
 .radio-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:9999px;padding:4px 12px 4px 8px;font-size:12px;cursor:pointer;background:#fff;min-height:32px}
 .radio-pill input{accent-color:var(--accent);width:14px;height:14px;margin:0}
 .radio-pill:has(input:checked){border-color:var(--accent);box-shadow:var(--focus-ring)}
@@ -69,7 +87,16 @@ td.use{color:var(--muted);width:36%}
 .flag-check input{width:16px;height:16px;accent-color:var(--accent);margin:0}
 .flag-check code{font-family:var(--font-mono);font-size:12px}
 .use code{font-family:var(--font-mono);font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:0 4px;color:var(--fg);white-space:nowrap}
-.demo .pw{display:inline-flex;align-items:center;gap:6px}
+.demo .pw{display:flex;align-items:center;gap:6px;flex:1 1 100%;min-width:0}
+.demo .pw input{flex:1 1 0;min-width:0}
+.demo .pw .btn{margin-left:auto}
+.demo>.btn{order:2;margin-left:auto}
+.doc-row{display:flex;gap:8px;align-items:center;width:100%}
+.doc-row input{flex:1 1 0;min-width:0}
+.doc-row .btn{margin-left:auto;flex:none}
+.demo input[type="text"],.demo input[type="number"],.demo input[type="date"],.demo input[type="time"],.demo input[type="datetime-local"],.demo input[type="password"],.demo input[type="email"],.demo input[type="url"],.demo input[type="search"],.demo select,.demo textarea,.demo input[type="range"]{flex:1 1 0;min-width:0;max-width:none}
+.demo .rng input[type="number"]{flex:none;width:64px;max-width:64px}
+.demo .btn{flex:none}
 .demo .rng{display:inline-flex;align-items:center;gap:8px}
 .rval{font-family:var(--font-mono);font-size:12px;color:var(--muted);min-width:36px}
 .switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;min-height:32px}
@@ -80,16 +107,13 @@ td.use{color:var(--muted);width:36%}
 .switch input:checked + .track .knob{left:18px}
 .switch input:focus-visible + .track{border-color:var(--accent);box-shadow:var(--focus-ring)}
 .switch code{font-family:var(--font-mono);font-size:12px}
-.opt .tok-wrap{display:flex;align-items:flex-start;gap:6px}
 .opt .tok{flex:1 1 auto}
-.copy-btn{flex:none;font-family:inherit;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:6px;padding:4px 10px;min-height:32px;cursor:pointer;line-height:1.4;white-space:nowrap}
-.copy-btn:hover{background:var(--hover-fill);color:var(--fg)}
 .empty{padding:20px;text-align:center;color:var(--muted)}
 .foot{padding:12px 2px 0;color:var(--muted);font-size:12px}
 .foot a{color:var(--accent)}
 .foot code{font-family:var(--font-mono);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:0 4px;color:var(--fg)}
 a:focus-visible,input:focus-visible,select:focus-visible,button:focus-visible{outline:none;border-color:var(--accent);box-shadow:var(--focus-ring)}
-.demo .btn:focus-visible,.copy-btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.demo .btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
 @media(max-width:640px){
 thead{display:none}
 table,tbody,tr,td{display:block;width:100%}
@@ -121,12 +145,17 @@ input,select{caret-color:var(--accent)}
 </div>
 <div class="box">
 <table aria-label="All input options">
-<thead><tr><th scope="col">Option</th><th scope="col">See it</th><th scope="col">Use</th></tr></thead>
+<thead><tr><th scope="col">Input code</th><th scope="col">Description</th><th scope="col">Preview</th></tr></thead>
 <tbody id="rows">
 <tr><th class="group" colspan="3">File — pick a path</th></tr>
-<tr class="row" data-w="file" data-n="input.file file path"><td class="opt"><span class="tok">{{input.file}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><button class="btn" type="button">Browse</button><input class="mono" type="text" value="input.mp4" aria-label="input.file sample" spellcheck="false" /></span></td><td class="use">Source file to read.</td></tr>
-<tr class="row" data-w="file" data-n="input.dir directory folder path"><td class="opt"><span class="tok">{{input.dir}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><button class="btn" type="button">Browse</button><input class="mono" type="text" value="./dist" aria-label="input.dir sample" spellcheck="false" /></span></td><td class="use">Folder only.</td></tr>
-<tr class="row" data-w="file" data-n="input.files multiple files"><td class="opt"><span class="tok">{{input.files}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><button class="btn" type="button">Browse</button><input class="mono" type="text" value="input.mp4, input2.mp4" aria-label="input.files sample" spellcheck="false" /></span></td><td class="use">Files, appended one after the other.</td></tr>
+<tr class="row" data-w="file" data-n="input.file file path"><td class="opt"><span class="tok">{{input.file}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><button class="btn" type="button" aria-label="Browse files" title="Browse"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h3l1.5 2h4.5A1.5 1.5 0 0 1 14 6.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5Z"/></svg></button><input class="mono" type="text" value="input.mp4" aria-label="input.file sample" spellcheck="false" /></span></td><td class="use">Source file to read.</td></tr>
+<tr class="row" data-w="file" data-n="input.dir directory folder path"><td class="opt"><span class="tok">{{input.dir}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><button class="btn" type="button" aria-label="Browse files" title="Browse"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h3l1.5 2h4.5A1.5 1.5 0 0 1 14 6.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5Z"/></svg></button><input class="mono" type="text" value="./dist" aria-label="input.dir sample" spellcheck="false" /></span></td><td class="use">Folder only.</td></tr>
+<tr class="row" data-w="file" data-n="input.files multiple files"><td class="opt"><span class="tok">{{input.files}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><button class="btn" type="button" aria-label="Browse files" title="Browse"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h3l1.5 2h4.5A1.5 1.5 0 0 1 14 6.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5Z"/></svg></button><input class="mono" type="text" value="input.mp4, input2.mp4" aria-label="input.files sample" spellcheck="false" /></span></td><td class="use">Files, appended one after the other.</td></tr>
+<tr class="row" data-w="file" data-n="input.image single image picture photo drop preview"><td class="opt"><span class="tok">{{input.image}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><span class="dz-demo" data-kind="image" tabindex="0" aria-label="Drop an image or press Enter to browse"><span class="dz-drop"><span class="dz-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><circle cx="5.5" cy="6.5" r="1.2"/><path d="M2.5 11.5l3-3 2.5 2.5 2-2 3.5 3.5"/></svg>Drop image here or click to browse</span><input type="file" accept="image/*" hidden aria-label="input.image file picker" /><span class="dz-prev" aria-hidden="true"></span></span></span></span></td><td class="use">One image — drop it or browse, preview inline.</td></tr>
+<tr class="row" data-w="file" data-n="input.images multiple images pictures photos drop preview"><td class="opt"><span class="tok">{{input.images}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><span class="dz-demo" data-kind="images" tabindex="0" aria-label="Drop images or press Enter to browse"><span class="dz-drop"><span class="dz-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><circle cx="5.5" cy="6.5" r="1.2"/><path d="M2.5 11.5l3-3 2.5 2.5 2-2 3.5 3.5"/></svg>Drop images here or click to browse</span><input type="file" accept="image/*" multiple hidden aria-label="input.images file picker" /><span class="dz-prev" aria-hidden="true"></span></span></span></span></td><td class="use">Several images — names join with spaces, thumbnails inline.</td></tr>
+<tr class="row" data-w="file" data-n="input.video single video film clip drop preview"><td class="opt"><span class="tok">{{input.video}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><span class="dz-demo" data-kind="video" tabindex="0" aria-label="Drop a video or press Enter to browse"><span class="dz-drop"><span class="dz-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="11" height="8" rx="1.5"/><path d="M5 4v8M11 4v8M2.5 6.5H5M2.5 9.5H5M11 6.5h2.5M11 9.5h2.5"/></svg>Drop video here or click to browse</span><input type="file" accept="video/*" hidden aria-label="input.video file picker" /><span class="dz-prev" aria-hidden="true"></span></span></span></span></td><td class="use">One video — drop it or browse, playable preview.</td></tr>
+<tr class="row" data-w="file" data-n="input.videos multiple videos films clips drop preview"><td class="opt"><span class="tok">{{input.videos}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><span class="dz-demo" data-kind="videos" tabindex="0" aria-label="Drop videos or press Enter to browse"><span class="dz-drop"><span class="dz-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="11" height="8" rx="1.5"/><path d="M5 4v8M11 4v8M2.5 6.5H5M2.5 9.5H5M11 6.5h2.5M11 9.5h2.5"/></svg>Drop videos here or click to browse</span><input type="file" accept="video/*" multiple hidden aria-label="input.videos file picker" /><span class="dz-prev" aria-hidden="true"></span></span></span></span></td><td class="use">Several videos — names join with spaces, each playable.</td></tr>
+<tr class="row" data-w="file" data-n="input.document document pdf doc file drop"><td class="opt"><span class="tok">{{input.document}}</span><span class="pill">file</span></td><td class="see"><span class="demo"><span class="dz-demo" data-kind="document" tabindex="0" aria-label="Drop a document or press Enter to browse"><span class="doc-row"><input class="mono" type="text" value="report.pdf" aria-label="input.document sample" spellcheck="false" /><button class="btn" type="button" aria-label="Browse for document" title="Browse"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h3l1.5 2h4.5A1.5 1.5 0 0 1 14 6.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5Z"/></svg></button></span><input type="file" accept=".pdf,.doc,.docx,.txt,.md,.csv" hidden aria-label="input.document file picker" /><span class="dz-prev" aria-hidden="true"></span></span></span></td><td class="use">A document — drop it or browse, shown as a chip.</td></tr>
 <tr><th class="group" colspan="3">Text — short values</th></tr>
 <tr class="row" data-w="text" data-n="input.text free text default"><td class="opt"><span class="tok">{{input.text}}</span><span class="pill">text</span></td><td class="see"><span class="demo"><input type="text" value="hello" aria-label="input.text sample" /></span></td><td class="use">Any short text. Prefill with <code>{{input.text:hello}}</code>.</td></tr>
 <tr class="row" data-w="text" data-n="input.email email address"><td class="opt"><span class="tok">{{input.email}}</span><span class="pill">text</span></td><td class="see"><span class="demo"><input type="email" inputmode="email" autocomplete="email" value="you@example.com" aria-label="input.email sample" /></span></td><td class="use">Email address, validated.</td></tr>
@@ -142,8 +171,9 @@ input,select{caret-color:var(--accent)}
 <tr class="row" data-w="date" data-n="input.date calendar date since alias"><td class="opt"><span class="tok">{{input.date:2026-01-15}}</span><span class="pill">date</span></td><td class="see"><span class="demo"><input type="date" value="2026-01-15" aria-label="input.date sample" /></span></td><td class="use">Calendar day. <code>{{input.since}}</code> is an alias.</td></tr>
 <tr class="row" data-w="date" data-n="input.time clock time hour minute"><td class="opt"><span class="tok">{{input.time}}</span><span class="pill">time</span></td><td class="see"><span class="demo"><input type="time" value="12:30" aria-label="input.time sample" /></span></td><td class="use">Clock time. <code>{{input.hour}}</code> / <code>{{input.minute}}</code> / <code>{{input.second}}</code> are retired here.</td></tr>
 <tr class="row" data-w="date" data-n="input.datetime date time local"><td class="opt"><span class="tok">{{input.datetime}}</span><span class="pill">datetime</span></td><td class="see"><span class="demo"><input type="datetime-local" value="2026-09-12T12:30" aria-label="input.datetime sample" /></span></td><td class="use">Day plus time, one control.</td></tr>
-<tr class="row" data-w="date" data-n="input.color color swatch hex"><td class="opt"><span class="tok">{{input.color:#1677ff}}</span><span class="pill">color</span></td><td class="see"><span class="demo"><input type="color" value="#1677ff" aria-label="input.color sample" /><input class="mono hex" type="text" value="#1677ff" aria-label="input.color hex sample" spellcheck="false" /></span></td><td class="use">Brand color.</td></tr>
-<tr class="row" data-w="date" data-n="input.password masked secret"><td class="opt"><span class="tok">{{input.password}}</span><span class="pill">secret</span></td><td class="see"><span class="demo"><span class="pw"><input type="password" value="s3cr3t" autocomplete="new-password" spellcheck="false" aria-label="input.password sample" /><button class="btn" type="button">Show</button></span></span></td><td class="use">Hidden secret.</td></tr>
+<tr class="row" data-w="date" data-n="input.duration duration length ffmpeg time"><td class="opt"><span class="tok">{{input.duration}}</span><span class="pill">duration</span></td><td class="see"><span class="demo"><span class="dur-demo"><input type="range" min="0" max="3600" step="1" value="80" aria-label="input.duration seconds sample" /><input class="mono" type="text" value="00:01:20" style="width:92px" aria-label="input.duration HH:MM:SS sample" spellcheck="false" /></span></span></td><td class="use">Slide seconds — reads out as <code>HH:MM:SS</code> for <code>ffmpeg -t</code> / <code>-ss</code>.</td></tr>
+<tr class="row" data-w="date" data-n="input.color color swatch hex"><td class="opt"><span class="tok">{{input.color:#1677ff}}</span><span class="pill">color</span></td><td class="see"><span class="demo"><input class="mono hex" type="text" value="#1677ff" aria-label="input.color hex sample" spellcheck="false" /><input type="color" value="#1677ff" aria-label="input.color sample" /></span></td><td class="use">Brand color.</td></tr>
+<tr class="row" data-w="date" data-n="input.password masked secret"><td class="opt"><span class="tok">{{input.password}}</span><span class="pill">secret</span></td><td class="see"><span class="demo"><span class="pw"><input type="password" value="s3cr3t" autocomplete="new-password" spellcheck="false" aria-label="input.password sample" /><button class="btn" type="button" aria-label="Show password" title="Show password"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8s2.4-4.5 6-4.5S14 8 14 8s-2.4 4.5-6 4.5S2 8 2 8Z"/><circle cx="8" cy="8" r="1.8"/></svg></button></span></span></td><td class="use">Hidden secret.</td></tr>
 <tr><th class="group" colspan="3">Choice — select, radio, buttongroup, multiselect, license</th></tr>
 <tr class="row" data-w="choice" data-n="input.select choice list dropdown"><td class="opt"><span class="tok">{{input.select:zip,tar.gz}}</span><span class="pill">select</span></td><td class="see"><span class="demo"><select aria-label="input.select sample"><option>zip</option><option>tar.gz</option></select></span></td><td class="use">Pick one from a dropdown. Default with <code>{{input.select:zip,tar.gz=zip}}</code>.</td></tr>
 <tr class="row" data-w="choice" data-n="input.radio single choice radios"><td class="opt"><span class="tok">{{input.radio:yes,no}}</span><span class="pill">radio</span></td><td class="see"><span class="demo" role="radiogroup" aria-label="input.radio sample"><label class="radio-pill"><input type="radio" name="demo-radio" value="yes" checked />yes</label><label class="radio-pill"><input type="radio" name="demo-radio" value="no" />no</label></span></td><td class="use">One of a few, as radios. Same inline options as select.</td></tr>
@@ -200,18 +230,6 @@ seen[base]=(seen[base]||0)+1;
 var id=base+"-"+seen[base];
 var focus=row.querySelector(".see input, .see select, .see button");
 if(focus&&!focus.id)focus.id=id;
-if(tokEl&&!tokEl.parentElement.classList.contains("tok-wrap")){
-var wrap=document.createElement("span");wrap.className="tok-wrap";
-tokEl.replaceWith(wrap);wrap.appendChild(tokEl);
-var b=document.createElement("button");b.type="button";b.className="copy-btn";b.textContent="Copy";b.setAttribute("aria-label","Copy "+tok.trim());
-b.addEventListener("click",function(){
-var text=tokEl.textContent;
-function done(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy";},1200);}
-if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,done);}
-else{var ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}ta.remove();done();}
-});
-wrap.appendChild(b);
-}
 });
 document.querySelectorAll('.see .seg-group').forEach(function(g){
 g.addEventListener("click",function(e){
@@ -239,36 +257,32 @@ var pw=wrap.querySelector('input[type="password"]'),t=wrap.querySelector("button
 if(!pw||!t)return;
 t.addEventListener("click",function(){
 var show=pw.type==="password";pw.type=show?"text":"password";
-t.textContent=show?"Hide":"Show";pw.focus();
+t.innerHTML=show?'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 2.5l11 11"/><path d="M8 3.5c2.9 0 5.2 2.6 6 4.5-.4.9-1.3 2-2.6 2.8M5.6 5.6C4 6.3 2.8 7.2 2 8c.8 1.9 3.1 4.5 6 4.5.7 0 1.4-.1 2-.4"/><circle cx="8" cy="8" r="1.8"/></svg>':'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8s2.4-4.5 6-4.5S14 8 14 8s-2.4 4.5-6 4.5S2 8 2 8Z"/><circle cx="8" cy="8" r="1.8"/></svg>';
+t.setAttribute("aria-label",(show?"Hide":"Show")+" password");t.title=show?"Hide password":"Show password";pw.focus();
 });
 });
-document.querySelectorAll('#rows tr.row[data-w="file"]').forEach(function(row){
-var tokEl=row.querySelector(".tok");
-var tok=tokEl?tokEl.textContent:"";
-var kind="file";
-if(tok.indexOf("{{input.dir}}")>=0)kind="dir";
-else if(tok.indexOf("{{input.files}}")>=0)kind="multi";
-var btn=row.querySelector(".see .btn");
-var field=row.querySelector('.see input[type="text"]');
-if(!btn||!field)return;
-var browseLabel=kind==="dir"?"Browse for folder":(kind==="multi"?"Browse for files":"Browse for file");
-btn.setAttribute("aria-label",browseLabel);
-var fi=document.createElement("input");
-fi.type="file";fi.hidden=true;
-fi.setAttribute("aria-label",browseLabel+" picker");
-if(kind==="dir"){fi.setAttribute("webkitdirectory","");fi.setAttribute("directory","");}
-if(kind==="multi"){fi.setAttribute("multiple","");}
-btn.parentElement.appendChild(fi);
-btn.addEventListener("click",function(){fi.click();});
-fi.addEventListener("change",function(){
-if(!fi.files||!fi.files.length)return;
-var pick=fi.files[0].name||"";
-if(kind==="dir"){var rel=fi.files[0].webkitRelativePath||pick;pick=(rel.split("/")[0]||pick)||pick;}
-else if(kind==="multi"){var names=[];for(var i=0;i<fi.files.length;i++){names.push(fi.files[i].name);}pick=names.join(" ");}
-field.value=pick;
-fi.value="";
+document.querySelectorAll(".dz-demo").forEach(function(z){
+var kind=z.getAttribute("data-kind")||"image";
+var multi=(kind==="images"||kind==="videos");
+var base=kind==="images"?"image":(kind==="videos"?"video":kind);
+var inp=z.querySelector('input[type="text"]'),fi=z.querySelector('input[type="file"]'),pv=z.querySelector(".dz-prev");
+function show(files){if(!pv)return;pv.innerHTML="";z.classList.toggle("filled",!!(files&&files.length));for(var i=0;i<files.length;i++){if(!multi&&i>0)break;var f=files[i],url=null;try{url=URL.createObjectURL(f);}catch(e){url=null;}var nm=(f&&f.name)||"";if(base==="image"&&url){var im=document.createElement("img");im.src=url;im.alt="";im.title=nm;pv.appendChild(im);}else if(base==="video"&&url){var vd=document.createElement("video");vd.src=url;vd.muted=true;vd.preload="metadata";vd.controls=true;vd.title=nm;pv.appendChild(vd);}else{var ch=document.createElement("span");ch.className="doc-chip";ch.textContent=nm||"file";ch.title=nm;pv.appendChild(ch);}}}
+function take(files){if(!files||!files.length)return;var names=[];for(var i=0;i<files.length;i++){names.push(files[i].name||"");if(!multi)break;}if(inp)inp.value=names.join(" ");show(files);try{fi.value="";}catch(e){}}
+z.addEventListener("click",function(e){if(e.target&&e.target.tagName==="INPUT"&&e.target.type==="text")return;if(fi)fi.click();});
+z.addEventListener("keydown",function(e){if((e.key==="Enter"||e.key===" ")&&e.target===z){e.preventDefault();if(fi)fi.click();}});
+if(fi)fi.addEventListener("change",function(){take(fi.files);});
+z.addEventListener("dragover",function(e){e.preventDefault();z.classList.add("over");});
+z.addEventListener("dragleave",function(){z.classList.remove("over");});
+z.addEventListener("drop",function(e){e.preventDefault();z.classList.remove("over");take(e.dataTransfer&&e.dataTransfer.files);});
 });
+document.querySelectorAll(".dur-demo").forEach(function(z){
+var rg=z.querySelector('input[type="range"]'),tin=z.querySelector('input[type="text"]');
+function fmt(s){s=Math.max(0,Math.floor(+s||0));var h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h<10?"0"+h:""+h)+":"+(m<10?"0"+m:""+m)+":"+(x<10?"0"+x:""+x);}
+function toSec(t){t=String(t||"").trim();if(/^\d+(\.\d+)?$/.test(t))return Math.max(0,Math.floor(+t));var m=t.match(/^(?:(\d+):)?([0-5]?\d):([0-5]\d)$/);if(!m)return null;return (+m[1]||0)*3600+(+m[2])*60+(+m[3]);}
+if(rg)rg.addEventListener("input",function(){var s=Math.max(0,Math.floor(+rg.value||0));if(tin)tin.value=fmt(s);});
+if(tin)tin.addEventListener("input",function(){var t=tin.value.trim();if(t==="")return;var s=toSec(t);if(s!=null&&rg)rg.value=Math.min(3600,s);});
 });
+document.querySelectorAll("#rows tr.row").forEach(function(tr){if(tr.children.length===3)tr.appendChild(tr.children[1]);});
 })();
 </script>
 </body>

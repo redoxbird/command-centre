@@ -1210,7 +1210,7 @@
         function pmName(id) {return PM_DISPLAY[id] || id;}
         const PM_IMG = {winget: "icons/powershell.svg", choco: "icons/chocolatey.svg", bun: "icons/bun.svg"};
         function pmIcon(id, px) {if (PM_IMG[id]) {const s = px || 22; return '<img class="' + (s <= 16 ? "pm-img-sm" : "pm-img") + '" src="' + PM_IMG[id] + '" width="' + s + '" height="' + s + '" alt="" />';} return icon(id);}
-        const PKG_IMG = {ffmpeg: "icons/pkg-ffmpeg.svg", git: "icons/pkg-git.svg", curl: "icons/pkg-curl.svg", nodejs: "icons/pkg-nodejs.png", sharp: "icons/pkg-sharp.svg", docker: "icons/pkg-docker.png"};
+        const PKG_IMG = {ffmpeg: "icons/pkg-ffmpeg.ico", libvips: "icons/pkg-libvips.ico", git: "icons/pkg-git.ico", curl: "icons/pkg-curl.svg", imagemagick: "icons/pkg-imagemagick.png", ytdlp: "icons/pkg-ytdlp.svg", jq: "icons/pkg-jq.svg", nodejs: "icons/pkg-nodejs.png", sharp: "icons/pkg-sharp.svg", docker: "icons/pkg-docker.png"};
         function pkgIcon(id) {if (PKG_IMG[id]) {return '<img src="' + PKG_IMG[id] + '" width="24" height="24" alt="" />';} return icon("box");}
         const CLI_ICON = {ffmpeg: "video", docker: "container", npm: "npm", git: "branch", bun: "bun", curl: "globe"};
         function cliIcon(cli) {if (PKG_IMG[cli]) {return '<img src="' + PKG_IMG[cli] + '" width="20" height="20" alt="" />';} return icon(CLI_ICON[cli] || "box");}
