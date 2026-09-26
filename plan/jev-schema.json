@@ -1,0 +1,37 @@
+{
+  "model": "typesafe/jev-1.13",
+  "state": "curl -L -o \"{{input.text:output.zip}}\" \"{{input.url}}\"",
+  "questions": {
+    "category": {
+      "type": "choice",
+      "instructions": "which category does this command belong to?",
+      "criteria": {
+        "video_tools": null,
+        "audio_tools": null,
+        "document_tools": null,
+        "developer_tools": null,
+        "other": null
+      }
+    },
+    "operation": {
+      "type": "choice",
+      "instructions": "what operation should be performed?",
+      "criteria": {
+        "download": null,
+        "upload": null,
+        "convert": null,
+        "other": null
+      }
+    },
+    "risks": {
+      "type": "choice",
+      "instructions": "what are the risks associated with this operation?",
+      "criteria": {
+        "safe": null,
+        "caution": null,
+        "dangerous": null,
+        "unknown": null
+      }
+    }
+  }
+}
