@@ -22,7 +22,8 @@
     "build:installer": "deno task build:dir && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-installer.ps1",
     "test": "deno test --allow-read --allow-write --allow-env --allow-run --allow-ffi --no-check",
     "release": "deno run --allow-read --allow-write --allow-env --allow-net --allow-sys scripts/release.ts",
-    "db:migrate": "deno run --allow-read --allow-write --allow-env --allow-ffi db/migrate.ts"
+    "db:migrate": "deno run --allow-read --allow-write --allow-env --allow-ffi db/migrate.ts",
+    "classify": "deno run --allow-read --allow-env --allow-net scripts/classify.ts"
   },
   "desktop": {
     "app": {

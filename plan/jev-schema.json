@@ -7,37 +7,65 @@
     "tag": "video",
     "cli": "ffmpeg",
     "cwd": "C:\\projects\\media",
-    "by": "@media-tools",
-    "adds": 2100
+    "by": "@media-tools"
   },
   "questions": {
     "category": {
       "type": "choice",
-      "instructions": "Which category best describes this hub command? Judge from state.cmd (the raw command text); state.tag and state.cli are hints only. Renders into the Details Category row, the Safety Category row, and the tag badge.",
+      "instructions": "Which category best describes this hub command? Judge from state.cmd (the raw command text); state.tag and state.cli are hints only. This is a casual-user tool that replaces online converters, compressors, PDF tools, and media utilities with offline shell commands — prefer a media/file category over a developer one when both fit. Renders into the Details Category row, the Safety Category row, and the tag badge.",
       "criteria": {
-        "video_media": "Transforms media (ffmpeg or similar): transcode, compress, extract still frames or posters, convert images; reads media inputs and writes media files",
-        "developer_workflow": "Runs project scripts or package tasks (bun run, npm run, build, test, lint, dev server); effects depend on the named script",
-        "version_control": "Inspects or mutates git history or branches (log, branch delete, merge helpers); operates on a repository",
-        "network_io": "Sends HTTP requests (curl GET fetch or POST deploy hook); output is a response plus possible server-side effects",
-        "security_audit": "Audits dependencies for vulnerabilities (npm audit); fix mode can rewrite lockfiles",
-        "container_ops": "Builds container images or starts containers (docker build, docker run); changes local container state",
+        "video_tools": "Everyday video jobs: change format or codec, shrink file size or quality, cut or trim clips, join clips, resize resolution, pull out the audio track, grab thumbnails or make GIFs; reads video and writes video, audio, or image files",
+        "audio_tools": "Everyday audio jobs: change format (mp3, wav, flac, ogg), shrink bitrate, cut or trim, join tracks, normalize or change volume; reads audio (or video, when extracting) and writes audio files",
+        "image_tools": "Still-image jobs: change format (jpg, png, webp, avif), resize dimensions, shrink quality or file size, make thumbnails; reads images and writes images",
+        "pdf_tools": "PDF jobs: join PDFs, split out pages, shrink PDF size, turn PDF pages into images, build a PDF from images or documents; reads or writes .pdf files",
+        "document_tools": "Non-PDF office and text conversion (docx, txt, md, csv and similar) via converters such as pandoc or LibreOffice; writes documents that are not PDFs",
+        "archive_tools": "Pack files into zip, 7z, or tar archives, unpack them, or list their contents",
+        "file_organizers": "Tidy files without converting anything: batch rename, move or sort into folders, find duplicates; operates on file names and folder trees",
+        "download_tools": "Save a remote file to a local copy (curl or similar downloading into a file); the output is a local file, not terminal text",
+        "developer_tools": "Project script workflows (bun run, npm run, build, test, lint, dev server); effects depend on the named script — legacy hub entries",
+        "network_io": "Sends HTTP requests and prints the response as terminal text (curl GET fetch or POST deploy hook); writes no local file — legacy hub entries",
         "other": "Does not fit any category above"
       }
     },
     "operation": {
       "type": "choice",
-      "instructions": "What single operation does the command perform? Pick the closest match from the observable command text. Renders into the Safety Operation row with an estimated pill.",
+      "instructions": "What single operation does the command perform? Pick the closest match from the observable command text. Tiebreaks: shrinking size or quality beats format change (compress over convert); saving to a local file beats printing (download over fetch); building a PDF beats converting images (pdf_create over image ops). Renders into the Safety Operation row with an estimated pill.",
       "criteria": {
+        "video_convert_format": "Changes video container or codec (for example mkv to mp4, H.265 to H.264); the format change is the point, not shrinking",
+        "video_compress": "Shrinks a video file or lowers its quality (crf, preset, bitrate reduction); size reduction is the point",
+        "video_trim": "Cuts a time range out of a video (start time plus duration); outputs a shorter clip",
+        "video_merge": "Joins two or more clips into one (concat); the inputs are multiple videos",
+        "video_resize": "Changes frame dimensions or resolution (scale); the picture size changes while the container stays",
+        "video_extract_audio": "Pulls the audio track out of a video into an audio-only file",
+        "video_to_gif": "Makes an animated GIF from a video clip; the output is a .gif",
+        "frame_extract": "Grabs a single still frame from a video (ffmpeg with -vframes 1); the output is a poster image",
+        "audio_convert_format": "Changes audio container or codec (wav to mp3, flac to ogg); the format change is the point",
+        "audio_compress": "Lowers audio bitrate or file size; size reduction is the point",
+        "audio_trim": "Cuts a time range out of audio; outputs a shorter track",
+        "audio_merge": "Joins two or more audio tracks into one (concat)",
+        "audio_normalize": "Adjusts loudness or volume (loudnorm, volume filter); the level change is the point",
+        "image_convert_format": "Changes still-image format (jpg, png, webp, avif); the format change is the point",
+        "image_resize": "Changes image dimensions or makes thumbnails (scale, resize); the picture size changes",
+        "image_compress": "Lowers image quality or file size; size reduction is the point",
+        "pdf_merge": "Joins multiple PDFs into one document",
+        "pdf_split": "Extracts pages or page ranges out of a PDF into new files",
+        "pdf_compress": "Shrinks a PDF file (downsample, recompress); size reduction is the point",
+        "pdf_to_images": "Renders PDF pages out as image files (png, jpg)",
+        "pdf_create": "Builds a PDF from images or documents; the output is a .pdf",
+        "doc_convert": "Converts office or text documents to another non-PDF format (docx, txt, md, csv); the output is not a PDF",
+        "archive_create": "Packs files or folders into a zip, 7z, or tar archive; the output is an archive",
+        "archive_extract": "Unpacks an archive or lists its contents; the input is an archive",
+        "file_batch_rename": "Renames many files by pattern in place; names change while locations do not",
+        "file_organize_move": "Moves or sorts files into folders, or reports duplicates; locations change while content does not",
+        "file_download": "Saves a remote URL to a local file (curl with -o or -O, download to a path); the output is a local copy",
+        "file_info_read": "Only inspects files (probe, info, list, metadata); prints facts and writes nothing",
         "security_audit": "Runs npm audit over installed packages, with or without fix",
-        "media_transcode": "Re-encodes video with a picked codec and quality level (ffmpeg with -crf or a codec flag)",
-        "frame_extract": "Grabs a single still frame from a video (ffmpeg with -vframes 1)",
-        "media_convert_generic": "Transforms media with ffmpeg but matches none of the specific media patterns above",
         "container_build": "Builds a container image from the working directory (docker build)",
         "container_run": "Starts a container from an image (docker run)",
         "history_read": "Only reads commit history (git log); changes nothing",
         "branch_delete": "Deletes local branches already merged into main (git branch -d, possibly via xargs)",
-        "network_post": "Sends an HTTP POST that can trigger side effects server-side (curl with -X POST)",
-        "network_get": "Sends an HTTP GET and prints the response (plain curl fetch)",
+        "network_post": "Sends an HTTP POST that can trigger side effects server-side (curl with -X POST); prints the response",
+        "network_get": "Sends an HTTP GET and prints the response to terminal text; saves no file (a download to a file is file_download instead)",
         "script_run": "Runs a project script (bun run or npm run); effects depend on that script",
         "other_general": "A general task matching none of the operations above; falls back to the hub category"
       }
@@ -46,20 +74,22 @@
       "type": "choice",
       "instructions": "What does running the command with example values produce? Look for output files, destinations, or response patterns in state.cmd. Renders into the Safety Produces row with an estimated pill.",
       "criteria": {
-        "video_file": "Writes an encoded video container (.mp4, .mkv, .mov)",
-        "image_file": "Extracts a still frame to an image file (-vframes 1, poster output)",
-        "output_file": "References an output file or destination that is created or overwritten (input.output, -o flag, shell redirect)",
-        "container_image": "Builds a tagged container image (docker build)",
-        "remote_effects_with_response": "POST changes server state and returns a response",
+        "video_file": "Writes an encoded video container (.mp4, .mkv, .mov) or a .gif",
+        "audio_file": "Writes an audio file (.mp3, .wav, .flac, .ogg)",
+        "image_file": "Writes still images (converted, resized, thumbnails, or frames extracted from video or PDF)",
+        "pdf_file": "Writes a PDF document (.pdf): merged, split, compressed, or newly built",
+        "document_file": "Writes a non-PDF document (docx, txt, md, csv)",
+        "archive_file": "Writes an archive (.zip, .7z, .tar)",
+        "downloaded_file": "Saves a remote URL to a local file copy",
+        "modified_file": "Writes or modifies a file in place",
         "stdout_response_only": "GET prints the response without writing files",
-        "readonly_terminal_output": "Prints history or findings; writes nothing (git log without delete, audit without fix)",
-        "dependency_rewrite": "Audit in fix mode can rewrite dependencies and lockfiles",
+        "readonly_terminal_output": "Prints history, findings, or file facts; writes nothing (git log without delete, audit without fix, probe or info commands)",
         "unknown": "No output file, destination, or response pattern detected in the command text"
       }
     },
     "risk": {
       "type": "score",
-      "instructions": "How destructive is this command if run with example values? Return the severity level. Renders into the Safety How destructive row as a Low/Medium/High pill plus reasons.",
+      "instructions": "How destructive is this command if run with example values? Return the severity level. Casual converter and compressor commands are usually Low unless they auto-confirm overwrites. Renders into the Safety How destructive row as a Low/Medium/High pill plus reasons.",
       "criteria": [
         "Low: read-only, or writes only new output files; deletes nothing and confirms nothing automatically",
         "Medium: auto-confirms overwrites (-y, --force), triggers remote side effects (POST), builds or starts containers, or rewrites dependencies (audit fix)",
@@ -70,8 +100,8 @@
       "type": "noul",
       "instructions": "Does the command write or change files, images, containers, lockfiles, or remote state? Renders into the Safety Mutates files Yes/No row.",
       "criteria": {
-        "true": "Writes or changes files, images, containers, lockfiles, or remote state (output refs, -o, docker build/run, -vframes, movflags, crf, POST, audit fix, branch -d)",
-        "false": "Read-only; writes nothing (history inspection, plain GET, audit without fix)"
+        "true": "Writes or changes media, PDFs, documents, archives, containers, lockfiles, renames or moves files, saves downloads, or changes remote state (output refs, -o, docker build/run, -vframes, movflags, crf, POST, audit fix, branch -d)",
+        "false": "Read-only; writes nothing (history inspection, plain GET, audit without fix, probe or info commands)"
       }
     },
     "deletes_data": {
@@ -86,7 +116,7 @@
       "type": "noul",
       "instructions": "Could existing files be replaced without asking? Renders into the Safety Overwrites files Yes/No row.",
       "criteria": {
-        "true": "Possible: auto-confirm flags (-y, --force), media output extensions, output refs, -o, shell redirect, POST, or audit fix",
+        "true": "Possible: auto-confirm flags (-y, --force), media, PDF, or archive output extensions, output refs, -o, shell redirect, POST, or audit fix",
         "false": "No overwrite detected in the command text"
       }
     }
