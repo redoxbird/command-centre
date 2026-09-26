@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hub command — Command Center</title>
+<style>
+@layer od-layout {
+:where(.od-stack,.od-row) > :where(*){min-width:0}
+.od-stack{display:flex;flex-direction:column;gap:var(--od-gap,8px)}
+.od-row{display:flex;align-items:center;gap:var(--od-gap,8px)}
+.od-fill{flex:1 1 0;min-width:0}.od-fixed{flex:none}
+}
+:root{
+--bg:#ffffff;--surface:#f6f8fa;--fg:#1f2328;--muted:#656d76;
+--border:#d0d7de;--border-soft:#d8dee4;--accent:#0969da;--accent-hover:#0550ae;
+--success:#1a7f37;--danger:#cf222e;--warn:#9a6700;
+--font-body:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+--font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+--radius:6px;--focus-ring:0 0 0 3px rgba(9,105,218,.3);
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:#e9edf1;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;min-height:100vh;display:flex;justify-content:center;padding:0}
+.app-window{width:100%;background:var(--bg);border:none;border-radius:0;overflow:hidden;box-shadow:none}
+.tabs{display:flex;gap:4px;padding:12px 20px 0}
+.tabs a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:var(--radius)}
+.tabs a:hover{background:var(--surface);color:var(--fg)}
+.tabs a:not(.on){border:1px solid transparent}
+.tabs a.learn{margin-left:auto;font-weight:400}
+.main{padding:8px 20px 22px;display:flex;flex-direction:column;gap:12px}
+.backlink{font-size:13px;color:var(--accent);text-decoration:none;align-self:flex-start}
+.backlink:hover{text-decoration:underline}
+h1{font-size:24px;margin:2px 0 0;letter-spacing:-.01em}
+.lede{color:var(--muted);margin:0;max-width:70ch}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:12px;border-radius:9999px;padding:0 8px;border:1px solid var(--border-soft)}
+.badge-tag{background:#ddf4ff;color:var(--accent)}
+.badge-cli{background:var(--surface);color:var(--fg)}
+.badge-by{background:#fff;color:var(--muted)}
+.badge-adds{background:#dafbe1;color:var(--success);border-color:#a9d3ab}
+.badge-inputs{background:#fff8c5;color:var(--warn)}
+.box{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
+.box-h{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.box-h .count{font-size:12px;font-weight:600;background:#fff;border:1px solid var(--border);border-radius:9999px;padding:0 10px;color:var(--muted)}
+.box-h .copy{margin-left:auto;font-family:inherit;font-size:12px;font-weight:400;border:1px solid var(--border);background:#fff;color:var(--fg);border-radius:var(--radius);padding:3px 10px;min-height:28px;cursor:pointer}
+.box-h .copy:hover{background:#f3f4f6}
+.box-b{padding:16px;display:flex;flex-direction:column;gap:12px}
+.rawline{font-family:var(--font-mono);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;white-space:pre-wrap;word-break:break-word;color:var(--fg)}
+.cmdline{font-family:var(--font-mono);font-size:12px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:var(--radius);padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+.cmdline .dim{color:#8b949e}
+.cmdline .pwd{color:#3fb950;font-weight:600}
+.cmdline .ex{color:#79c0ff;background:rgba(56,139,253,.15);border:1px solid rgba(56,139,253,.4);border-radius:4px;padding:0 4px}
+.kv{display:grid;grid-template-columns:180px minmax(0,1fr);gap:6px 12px;font-size:13px;margin:0}
+.kv dt{color:var(--muted);font-weight:600}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.kv dd.mono{font-family:var(--font-mono);font-size:12px}
+.pill{display:inline-block;font-size:11px;font-weight:600;border-radius:9999px;padding:0 8px;border:1px solid var(--border-soft)}
+.pill-blue{background:#ddf4ff;color:var(--accent)}
+.pill-green{background:#dafbe1;color:var(--success);border-color:#a9d3ab}
+.pill-amber{background:#fff8c5;color:var(--warn)}
+.pill-gray{background:var(--surface);color:var(--muted)}
+.pill-red{background:#ffebe9;color:var(--danger);border-color:#ffc1c0}
+.safenote{font-size:12px;color:var(--muted);margin:0}
+.mrow{border:1px solid var(--border-soft);border-radius:var(--radius);padding:10px 12px;display:grid;gap:8px;background:#fff}
+.vmeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px}
+.vpill{font-family:var(--font-body);font-size:11px;font-weight:600;background:#ddf4ff;border:1px solid var(--border-soft);color:var(--accent);border-radius:9999px;padding:0 8px}
+.vex{color:var(--success);background:#dafbe1;border:1px solid #a9d3ab;border-radius:4px;padding:0 6px;font-weight:600}
+.mlabel{font-size:13px}
+.mlabel strong{display:block;font-size:13px}
+.mlabel span{display:block;color:var(--muted);font-size:12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-family:inherit;font-size:14px;border-radius:var(--radius);padding:6px 18px;cursor:pointer;border:1px solid transparent;min-height:36px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.btn-p{background:#1f883d;color:#fff;border-color:rgba(31,35,40,.15);font-weight:500}
+.btn-p:hover{background:var(--success)}
+.btn-p[disabled]{opacity:.6;cursor:default}
+.btn-g{background:var(--surface);color:var(--fg);border-color:var(--border)}
+.btn-g:hover{background:#f3f4f6}
+.btn-g[disabled]{opacity:.6;cursor:default}
+.btn:focus-visible,a:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.status{font-size:12px;color:var(--muted)}
+.status.ok{color:var(--success)}
+.empty{border:1px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);background:#fff}
+.empty a{color:var(--accent)}
+[hidden]{display:none!important}
+@media(max-width:640px){.kv{grid-template-columns:1fr}.actions .btn{flex:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app-window">
+<nav class="tabs" aria-label="Primary"><a href="index.html">My commands</a><a href="hub.html">Community Hub</a><a class="learn" href="learn.html">Learn</a></nav>
+<div class="main">
+<a class="backlink" href="hub.html">← Community Hub</a>
+<div id="missing" class="empty" hidden>No hub command found for this link.<br /><a href="hub.html">Back to Community Hub</a></div>
+<div id="detail" class="od-stack" style="--od-gap:12px" hidden>
+<h1 id="hcName"></h1>
+<p class="lede" id="hcDesc"></p>
+<div class="badges" id="hcBadges"></div>
+<div class="actions">
+<button class="btn btn-p" id="saveBtn" type="button">Save command</button>
+<button class="btn btn-g" id="installBtn" type="button">Install package</button>
+<span class="status" id="hcStatus" role="status" aria-live="polite"></span>
+</div>
+<div class="box"><div class="box-h">Raw command<button class="copy" id="copyRaw" type="button">Copy</button></div><div class="box-b"><div class="rawline" id="hcRaw"></div></div></div>
+<div class="box"><div class="box-h">Preview with example values<button class="copy" id="copyPrev" type="button">Copy</button></div><div class="box-b"><div class="cmdline" id="hcPrev"></div></div></div>
+<div class="box"><div class="box-h">Details</div><div class="box-b"><dl class="kv" id="hcFields"></dl></div></div>
+<div class="box"><div class="box-h">Safety and file impact <span class="count">estimated</span></div><div class="box-b"><dl class="kv" id="hcSafety"></dl><p class="safenote">Safety answers are estimated from the command text, not author metadata. Read the raw command before saving.</p></div></div>
+<div class="box"><div class="box-h">Inputs <span class="count" id="hcInputsCount"></span></div><div class="box-b"><div id="hcInputs" class="od-stack" style="--od-gap:8px"></div></div></div>
+</div>
+</div>
+</div>
+<script>
+var HUB=[
+{id:"h1",cli:"ffmpeg",name:"Convert video to MP4 (H.264)",desc:"Picked codec and quality with fast-start for streaming.",cmd:"ffmpeg -i {{input.file}} -c:v {{input.vcodec:libx264,libx265,vp9,av1=libx264}} -crf {{input.range:18-28=23}} {{input.checkbox:-movflags +faststart}} output.{{input.extension:mp4,mkv,mov=mp4}}",tag:"video",cwd:"C:\\projects\\media",by:"@media-tools · 2.1k adds",adds:2100},
+{id:"h2",cli:"docker",name:"Ship a production preview",desc:"Build and run the app container on your port.",cmd:"docker build -t {{input.text:app}}:preview . && docker run {{input.checkbox:--rm}} -p {{input.port:8080}}:80 {{input.text:app}}",tag:"ship",cwd:"C:\\projects\\shop-app",by:"@ship-it · 740 adds",adds:740},
+{id:"h3",cli:"npm",name:"Audit and fix vulnerabilities",desc:"Audit with a picked command and omitted scope.",cmd:"npm audit {{input.select:fix,signatures=fix}} --omit={{input.select:dev,optional,peer=dev}}",tag:"security",cwd:"C:\\projects\\shop-app",by:"@node-garden · 3.8k adds",adds:3800},
+{id:"h4",cli:"git",name:"Squash-merge helper log",desc:"Readable graph of recent commits from a date.",cmd:"git log --graph --since={{input.date:2026-01-15}} --pretty={{input.logformat:oneline,short,full=oneline}} -{{input.count:12}}",tag:"git",cwd:"C:\\projects\\shop-app",by:"@git-wizards · 5.2k adds",adds:5200},
+{id:"h5",cli:"bun",name:"Run with live reload",desc:"Start the script on your port, optionally watching.",cmd:"bun run {{input.script:dev}} -- --port={{input.port:3000}} {{input.checkbox:--watch}}",tag:"setup",cwd:"C:\\projects\\shop-app",by:"@bun-fans · 986 adds",adds:986},
+{id:"h6",cli:"npm",name:"Run script with mode",desc:"Run a package script in a picked mode.",cmd:"npm run {{input.select:dev,build,test,lint}} -- --mode={{input.radio:development,production=production}} {{input.checkbox:--dry-run=off}}",tag:"develop",cwd:"C:\\projects\\shop-app",by:"@node-garden · 1.1k adds",adds:1100},
+{id:"h7",cli:"curl",name:"Fetch a JSON API fast",desc:"GET with headers and retry for quick checks.",cmd:"curl -sS --retry {{input.count:3}} -H {{input.header:Authorization: Bearer TOKEN}} {{input.url:https://example.com}}",tag:"network",cwd:"C:\\projects\\shop-app",by:"@http-fans · 1.9k adds",adds:1900},
+{id:"h8",cli:"git",name:"Clean up merged branches",desc:"Delete branches already merged into main.",cmd:"git branch --merged {{input.branch:main}} | grep -v {{input.branch:main}} | xargs git branch -d",tag:"git",cwd:"C:\\projects\\shop-app",by:"@git-wizards · 2.4k adds",adds:2400},
+{id:"h9",cli:"ffmpeg",name:"Pull a poster frame",desc:"Grab one still for thumbnails and previews.",cmd:"ffmpeg -ss {{input.seek:00:00:10}} -i {{input.file}} -vframes 1 {{input.poster:poster.jpg}}",tag:"video",cwd:"C:\\projects\\media",by:"@media-tools · 980 adds",adds:980},
+{id:"h10",cli:"curl",name:"Post a deploy hook",desc:"Trigger a rebuild with a token header.",cmd:"curl -X POST -H {{input.header:Authorization: Bearer TOKEN}} {{input.url:https://example.com}}",tag:"ship",cwd:"C:\\projects\\shop-app",by:"@ship-it · 640 adds",adds:640}
+];
+var TYPE_OF={file:"file",dir:"file",files:"file",image:"file",images:"file",video:"file",videos:"file",document:"file",subtitle:"file",poster:"file",thumbnail:"file",path:"file",folder:"file",output:"file",text:"text",email:"text",url:"text",search:"text",uuid:"text",script:"text",branch:"text",header:"text",seek:"text",number:"number",port:"number",count:"number",quantity:"number",bitrate:"number",fps:"number",date:"date",color:"color",password:"password",select:"select",radio:"radio",buttongroup:"select",country:"select",timezone:"select",range:"range",checkbox:"checkbox",switch:"checkbox",time:"text",datetime:"text",textarea:"text",keyvalue:"text",logformat:"text",multiselect:"text",license:"text"};
+function parseToken(inner){inner=String(inner||"").trim();var m=inner.match(/^input\.([a-z0-9]+)(\.autogenerate)?(?::([\s\S]*))?$/);if(!m)return null;var base="input."+m[1];var raw=(m[3]!=null?m[3]:"").trim();if(raw.toLowerCase()==="autogenerate")raw="";var type=TYPE_OF[m[1]]||"text";var opts=null,def="";if(type==="select"||type==="radio"){var dm=raw.match(/^(.*)=\s*([^=,]+?)\s*$/);if(dm&&dm[1].trim()!==""){opts=dm[1].split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});def=dm[2].trim();}else if(raw!==""){opts=raw.split(",").map(function(s){return s.trim();}).filter(function(s){return s!=="";});}}else if(raw!==""&&raw.indexOf(",")<0&&raw.indexOf(" ")<0&&raw.indexOf(":")<0&&raw.indexOf("=")<0){def=raw;}else if(type==="range"||type==="number"||type==="checkbox"||type==="text"||type==="file"){if(raw!==""&&raw.indexOf(",")<0)def=raw;}return {token:"{{"+inner+"}}",key:base,name:base,type:type,params:raw,optionsArr:opts,default:def,auto:!!m[2]};}
+function parseVars(t){var out=[],seen={},re=/\{\{\s*([^{}]*?)\s*\}\}/g,m;while((m=re.exec(String(t||"")))){var p=parseToken(m[1]);if(p&&!seen[p.token]){seen[p.token]=1;out.push(p);}}return out;}
+function exampleFor(v){if(v.default!=="")return v.default;var n=v.name,w=v.type;if(w==="select"||w==="radio")return (v.optionsArr&&v.optionsArr[0])||"opt";if(w==="range"){var rm=(v.params||"").match(/(-?\d+)\s*-\s*(-?\d+)/);if(rm)return String(Math.round((+rm[1]+ +rm[2])/2));return "50";}if(w==="checkbox")return v.params||"--flag";if(w==="color")return "#1677ff";if(w==="date")return "2026-09-12";if(w==="password")return "s3cr3t";var FM={"input.file":"input.mp4","input.poster":"poster.jpg","input.thumbnail":"thumb.jpg"};if(FM[n])return FM[n];if(w==="file")return "input.mp4";var NM={"input.port":"8080","input.count":"3"};if(NM[n])return NM[n];if(w==="number")return "42";var TM={"input.header":"Authorization: Bearer TOKEN","input.url":"https://example.com","input.branch":"main","input.text":"hello","input.script":"dev"};if(TM[n])return TM[n];return "hello";}
+function el(tag,cls,text){var d=document.createElement(tag);if(cls)d.className=cls;if(text!=null)d.textContent=text;return d;}
+function badge(text,cls){return el("span","badge "+cls,text);}
+function fieldRow(term,val,mono){return [el("dt",null,term),el("dd",mono?"mono":null,val===""?"—":val)];}
+function pill(text,tone){return el("span","pill pill-"+tone,text);}
+function addedIds(){try{return JSON.parse(localStorage.getItem("cc-added")||"[]");}catch(e){return [];}}
+function saveAdded(a){try{localStorage.setItem("cc-added",JSON.stringify(a));}catch(e){}}
+function isInstalled(cli){try{var s=JSON.parse(localStorage.getItem("cc-clis")||"{}");var d={ffmpeg:false,npm:true,bun:true,git:true,docker:false,curl:true};for(var k in d){if(!(k in s))s[k]=d[k];}return !!s[cli];}catch(e){return false;}}
+function analyze(h,insts){
+var cmd=String(h.cmd||""),tag=h.tag||"command",cli=h.cli||"";
+var operation="general "+tag+" task",opWhy="Falls back to the hub category.";
+if(/npm audit/.test(cmd)){operation="security audit";opWhy="Runs npm audit over installed packages.";}
+else if(/ffmpeg[\s\S]*(-crf|libx26|libx265|vp9|av1)/){operation="conversion + compression";opWhy="Re-encodes video with a picked codec and quality level.";}
+else if(/^ffmpeg/.test(cmd)&&/-vframes 1/.test(cmd)){operation="frame extraction";opWhy="Grabs a single still frame from a video.";}
+else if(/^ffmpeg/.test(cmd)){operation="media conversion";opWhy="Transforms media with ffmpeg.";}
+else if(/docker build/.test(cmd)){operation="container build";opWhy="Builds a container image from the working directory.";}
+else if(/docker run/.test(cmd)){operation="container run";opWhy="Starts a container from an image.";}
+else if(/git log/.test(cmd)){operation="history inspection (read-only)";opWhy="Only reads commit history; changes nothing.";}
+else if(/git branch[\s\S]*-d/.test(cmd)){operation="branch deletion";opWhy="Deletes local branches already merged into main.";}
+else if(/curl[\s\S]*-X POST/.test(cmd)){operation="network write (POST)";opWhy="Sends an HTTP POST that can trigger side effects server-side.";}
+else if(/^curl/.test(cmd)){operation="network fetch (read)";opWhy="Sends an HTTP GET and prints the response.";}
+else if(/bun run|npm run/.test(cmd)){operation="script execution";opWhy="Runs a project script; effects depend on that script.";}
+var HUMAN={file:"file",video:"video",image:"image",document:"document",directory:"directory",url:"URL",date:"date",number:"number",choice:"choice",text:"text"};
+function inputKind(v){var n=v.name;if(n==="input.file")return (/mp4|mov|mkv|avi|webm/i.test(v.params||"")||/video/i.test(cmd))?"video":"file";if(n==="input.video"||n==="input.videos")return "video";if(n==="input.image"||n==="input.images"||n==="input.poster"||n==="input.thumbnail")return "image";if(n==="input.document")return "document";if(n==="input.dir"||n==="input.folder"||n==="input.path")return "directory";if(n==="input.url")return "url";if(n==="input.date"||n==="input.since")return "date";if(n==="input.port"||n==="input.number"||n==="input.count"||n==="input.quantity"||n==="input.range"||n==="input.bitrate"||n==="input.fps")return "number";if(v.type==="select"||v.type==="radio")return "choice";return "text";}
+var kinds=[],seen={};insts.forEach(function(v){var k=inputKind(v);if(!seen[k]){seen[k]=1;kinds.push(HUMAN[k]||k);}});
+var inputs=kinds.length?kinds.join(", "):"none — runs as written";
+var output="unknown — check the preview",outWhy="No output file or destination detected in the command text.";
+if(/input\.output|output\.\{\{|-o\s|>\s*\S/.test(cmd)){output="file (new or overwritten)";outWhy="References an output file in the command text.";}
+else if(/input\.poster|-vframes 1/.test(cmd)){output="image file";outWhy="Extracts a still frame to an image file.";}
+else if(/output\.{{|\.mp4|\.mkv|\.mov/.test(cmd)){output="video file";outWhy="Writes an encoded video container.";}
+else if(/docker build/.test(cmd)){output="container image";outWhy="Builds a tagged container image.";}
+else if(/^curl[\s\S]*-X POST/.test(cmd)){output="network side effects + response";outWhy="POST can change server state and returns a response.";}
+else if(/^curl/.test(cmd)){output="network response (stdout)";outWhy="GET prints the response without writing files.";}
+else if(/git log/.test(cmd)){output="terminal output (read-only)";outWhy="Prints history; writes nothing.";}
+else if(/npm audit/.test(cmd)){output="audit report (may rewrite lockfile with fix)";outWhy="Audit prints findings; the fix option can rewrite dependencies.";}
+var level="Low",tone="green",reasons=[];
+if(/rm\s+(-rf?\s+|--recursive|--force)|xargs[\s\S]*branch -d/.test(cmd)){level="High";tone="red";reasons.push("deletes data (files or branches)");}
+if(/\s-y(\s|$)|--force/.test(cmd)){if(level!=="High"){level="Medium";tone="amber";}reasons.push("auto-confirms overwrites");}
+if(/-X POST/.test(cmd)){if(level==="Low"){level="Medium";tone="amber";}reasons.push("triggers remote side effects");}
+if(/docker (build|run)/.test(cmd)){if(level==="Low"){level="Medium";tone="amber";}reasons.push("builds or starts containers on this machine");}
+if(/npm audit fix/.test(cmd)){if(level==="Low"){level="Medium";tone="amber";}reasons.push("fix mode can rewrite dependencies");}
+if(!reasons.length)reasons.push("read-only or writes only new output files");
+var mutates=/output|input\.output|-o\s|docker (build|run)|-vframes|movflags|crf|POST|audit fix|branch -d/.test(cmd);
+var deletes=/\brm\b|branch -d|xargs[\s\S]*-d|delete/i.test(cmd);
+var overwrites=/\s-y(\s|$)|\.mp4|\.mkv|\.mov|\.jpg|input\.output|-o\s|>|--force|POST|audit fix/.test(cmd);
+return {category:tag,operation:operation,opWhy:opWhy,inputs:inputs,output:output,outWhy:outWhy,level:level,tone:tone,reasons:reasons.join("; "),mutates:mutates,deletes:deletes,overwrites:overwrites};
+}
+function paint(h){
+document.title=h.name+" — Community Hub";
+document.getElementById("hcName").textContent=h.name;
+document.getElementById("hcDesc").textContent=h.desc||"";
+var badges=document.getElementById("hcBadges");badges.innerHTML="";
+badges.appendChild(badge(h.cli||"command","badge-cli"));
+badges.appendChild(badge(h.tag||"command","badge-tag"));
+badges.appendChild(badge(h.by||"community","badge-by"));
+badges.appendChild(badge((h.adds||0).toLocaleString("en-US")+" adds","badge-adds"));
+var insts=parseVars(h.cmd||"");
+badges.appendChild(badge(insts.length?(insts.length+(insts.length===1?" input":" inputs")):"no inputs","badge-inputs"));
+document.getElementById("hcRaw").textContent=h.cmd||"";
+var prev=document.getElementById("hcPrev");prev.innerHTML="";
+var dir=h.cwd||"C:\\projects\\app";
+prev.appendChild(el("span","dim","PS "));
+prev.appendChild(el("span","pwd",dir));
+prev.appendChild(el("span","dim","> "));
+var counts={},re=/\{\{\s*([^{}]*?)\s*\}\}/g,last=0,m,src=String(h.cmd||"");
+while((m=re.exec(src))){if(m.index>last)prev.appendChild(document.createTextNode(src.slice(last,m.index)));var p=parseToken(m[1]);if(p){var chip=el("span","ex",exampleFor(p));chip.title=p.token+" = "+chip.textContent;prev.appendChild(chip);}else{prev.appendChild(document.createTextNode(m[0]));}last=m.index+m[0].length;}
+if(last<src.length)prev.appendChild(document.createTextNode(src.slice(last)));
+var fields=document.getElementById("hcFields");fields.innerHTML="";
+fieldRow("Command ID",String(h.id),true).forEach(function(n){fields.appendChild(n);});
+fieldRow("Description",h.desc||"—",false).forEach(function(n){fields.appendChild(n);});
+fieldRow("Category",h.tag||"—",false).forEach(function(n){fields.appendChild(n);});
+fieldRow("Working directory",dir,true).forEach(function(n){fields.appendChild(n);});
+fieldRow("Required tool",h.cli||"—",false).forEach(function(n){fields.appendChild(n);});
+fieldRow("Author",h.by||"—",false).forEach(function(n){fields.appendChild(n);});
+fieldRow("Adds",(h.adds||0).toLocaleString("en-US"),false).forEach(function(n){fields.appendChild(n);});
+fieldRow("Inputs",insts.length?insts.map(function(v){return v.token;}).join("  "):"none",true).forEach(function(n){fields.appendChild(n);});
+fieldRow("Source","Community Hub demo catalog",false).forEach(function(n){fields.appendChild(n);});
+var a=analyze(h,insts);
+var safety=document.getElementById("hcSafety");safety.innerHTML="";
+function srow(term,valEl){safety.appendChild(el("dt",null,term));var dd=el("dd",null,"");dd.appendChild(valEl);safety.appendChild(dd);}
+srow("Category",el("span",null,a.category));
+var opWrap=el("span",null,a.operation+" ");opWrap.appendChild(pill("estimated","gray"));opWrap.appendChild(document.createTextNode(" — "+a.opWhy));srow("Operation",opWrap);
+srow("Needs inputs",el("span",null,a.inputs));
+var outWrap=el("span",null,a.output+" ");outWrap.appendChild(pill("estimated","gray"));outWrap.appendChild(document.createTextNode(" — "+a.outWhy));srow("Produces",outWrap);
+var lvWrap=el("span",null,"");lvWrap.appendChild(pill(a.level+" risk",a.tone));lvWrap.appendChild(document.createTextNode(" — "+a.reasons));srow("How destructive",lvWrap);
+function yn(v){var s=el("span",null,"");s.appendChild(pill(v?"Yes":"No",v?"amber":"green"));return s;}
+var mut=yn(a.mutates);mut.appendChild(document.createTextNode(a.mutates?" — writes or changes files, images, or containers.":" — read-only; writes nothing."));srow("Mutates files",mut);
+var del=yn(a.deletes);del.appendChild(document.createTextNode(a.deletes?" — deletes branches or files matched by the command.":" — deletes nothing."));srow("Deletes files",del);
+var ovr=yn(a.overwrites);ovr.appendChild(document.createTextNode(a.overwrites?" — possible: existing files may be replaced without asking.":" — no overwrite detected."));srow("Overwrites files",ovr);
+var box=document.getElementById("hcInputs"),list=box;list.innerHTML="";
+document.getElementById("hcInputsCount").textContent=insts.length?(insts.length+(insts.length===1?" input":" inputs")):"no inputs";
+if(!insts.length){var none=el("p",null,"This command has no {{input.*}} variables — it runs as written.");none.style.color="var(--muted)";list.appendChild(none);}
+insts.forEach(function(v){var row=el("div","mrow");var top=el("div","vmeta");top.appendChild(el("span",null,v.token));top.appendChild(el("span","vpill",v.type));top.appendChild(el("span","vex","→ "+exampleFor(v)));row.appendChild(top);var lab=el("div","mlabel");lab.appendChild(el("strong",null,v.name.replace(/^input\./,"")));lab.appendChild(el("span",null,v.params||"No preset options."));row.appendChild(lab);list.appendChild(row);});
+var saveBtn=document.getElementById("saveBtn"),st=document.getElementById("hcStatus");
+function syncSave(){if(addedIds().indexOf(h.id)>=0){saveBtn.textContent="Saved ✓";saveBtn.disabled=true;}else{saveBtn.textContent="Save command";saveBtn.disabled=false;}}
+syncSave();
+saveBtn.onclick=function(){
+try{var cur=JSON.parse(localStorage.getItem("cc-commands")||"[]");cur.push({id:"hub-"+h.id+"-"+Date.now(),custom:true,fromHub:h.id,name:h.name,cmd:h.cmd,vars:parseVars(h.cmd),askMode:"every",desc:h.desc+" (from Community Hub by "+h.by+")",tag:h.tag,cwd:h.cwd,lines:["PS "+h.cwd+"> "+h.cmd,"dim|ran via Community Hub demo runner…","grn|✓ done · exit 0 (simulated)"]});localStorage.setItem("cc-commands",JSON.stringify(cur));var a=addedIds();a.push(h.id);saveAdded(a);}catch(e){}
+st.textContent="Saved to My commands ✓";st.className="status ok";syncSave();};
+var installBtn=document.getElementById("installBtn");
+function syncInstall(){if(isInstalled(h.cli)){installBtn.textContent="Installed ✓";installBtn.disabled=true;}else{installBtn.textContent="Install "+h.cli;installBtn.disabled=false;}}
+syncInstall();
+installBtn.onclick=function(){try{var s=JSON.parse(localStorage.getItem("cc-clis")||"{}");s[h.cli]=true;localStorage.setItem("cc-clis",JSON.stringify(s));}catch(e){}st.textContent=h.cli+" marked installed (simulated) ✓";st.className="status ok";syncInstall();};
+function copyText(t,btn){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);});}}
+document.getElementById("copyRaw").onclick=function(){copyText(h.cmd||"",this);};
+document.getElementById("copyPrev").onclick=function(){copyText(document.getElementById("hcPrev").innerText||"",this);};
+}
+(function init(){
+var id=null;try{id=new URLSearchParams(location.search).get("id");}catch(e){id=null;}
+var h=null;for(var i=0;i<HUB.length;i++){if(String(HUB[i].id)===String(id)){h=HUB[i];break;}}
+if(!h){h=HUB[0];}
+document.getElementById("missing").hidden=true;
+document.getElementById("detail").hidden=false;paint(h);
+})();
+</script>
+</body>
+</html>

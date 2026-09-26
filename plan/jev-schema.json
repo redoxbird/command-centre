@@ -1,36 +1,93 @@
 {
   "model": "typesafe/jev-1.13",
-  "state": "curl -L -o \"{{input.text:output.zip}}\" \"{{input.url}}\"",
+  "state": {
+    "cmd": "ffmpeg -i {{input.file}} -c:v {{input.vcodec:libx264,libx265,vp9,av1=libx264}} -crf {{input.range:18-28=23}} {{input.checkbox:-movflags +faststart}} output.{{input.extension:mp4,mkv,mov=mp4}}",
+    "name": "Convert video to MP4 (H.264)",
+    "description": "Picked codec and quality with fast-start for streaming.",
+    "tag": "video",
+    "cli": "ffmpeg",
+    "cwd": "C:\\projects\\media",
+    "by": "@media-tools",
+    "adds": 2100
+  },
   "questions": {
     "category": {
       "type": "choice",
-      "instructions": "which category does this command belong to?",
+      "instructions": "Which category best describes this hub command? Judge from state.cmd (the raw command text); state.tag and state.cli are hints only. Renders into the Details Category row, the Safety Category row, and the tag badge.",
       "criteria": {
-        "video_tools": null,
-        "audio_tools": null,
-        "document_tools": null,
-        "developer_tools": null,
-        "other": null
+        "video_media": "Transforms media (ffmpeg or similar): transcode, compress, extract still frames or posters, convert images; reads media inputs and writes media files",
+        "developer_workflow": "Runs project scripts or package tasks (bun run, npm run, build, test, lint, dev server); effects depend on the named script",
+        "version_control": "Inspects or mutates git history or branches (log, branch delete, merge helpers); operates on a repository",
+        "network_io": "Sends HTTP requests (curl GET fetch or POST deploy hook); output is a response plus possible server-side effects",
+        "security_audit": "Audits dependencies for vulnerabilities (npm audit); fix mode can rewrite lockfiles",
+        "container_ops": "Builds container images or starts containers (docker build, docker run); changes local container state",
+        "other": "Does not fit any category above"
       }
     },
     "operation": {
       "type": "choice",
-      "instructions": "what operation should be performed?",
+      "instructions": "What single operation does the command perform? Pick the closest match from the observable command text. Renders into the Safety Operation row with an estimated pill.",
       "criteria": {
-        "download": null,
-        "upload": null,
-        "convert": null,
-        "other": null
+        "security_audit": "Runs npm audit over installed packages, with or without fix",
+        "media_transcode": "Re-encodes video with a picked codec and quality level (ffmpeg with -crf or a codec flag)",
+        "frame_extract": "Grabs a single still frame from a video (ffmpeg with -vframes 1)",
+        "media_convert_generic": "Transforms media with ffmpeg but matches none of the specific media patterns above",
+        "container_build": "Builds a container image from the working directory (docker build)",
+        "container_run": "Starts a container from an image (docker run)",
+        "history_read": "Only reads commit history (git log); changes nothing",
+        "branch_delete": "Deletes local branches already merged into main (git branch -d, possibly via xargs)",
+        "network_post": "Sends an HTTP POST that can trigger side effects server-side (curl with -X POST)",
+        "network_get": "Sends an HTTP GET and prints the response (plain curl fetch)",
+        "script_run": "Runs a project script (bun run or npm run); effects depend on that script",
+        "other_general": "A general task matching none of the operations above; falls back to the hub category"
       }
     },
-    "risks": {
+    "produces": {
       "type": "choice",
-      "instructions": "what are the risks associated with this operation?",
+      "instructions": "What does running the command with example values produce? Look for output files, destinations, or response patterns in state.cmd. Renders into the Safety Produces row with an estimated pill.",
       "criteria": {
-        "safe": null,
-        "caution": null,
-        "dangerous": null,
-        "unknown": null
+        "video_file": "Writes an encoded video container (.mp4, .mkv, .mov)",
+        "image_file": "Extracts a still frame to an image file (-vframes 1, poster output)",
+        "output_file": "References an output file or destination that is created or overwritten (input.output, -o flag, shell redirect)",
+        "container_image": "Builds a tagged container image (docker build)",
+        "remote_effects_with_response": "POST changes server state and returns a response",
+        "stdout_response_only": "GET prints the response without writing files",
+        "readonly_terminal_output": "Prints history or findings; writes nothing (git log without delete, audit without fix)",
+        "dependency_rewrite": "Audit in fix mode can rewrite dependencies and lockfiles",
+        "unknown": "No output file, destination, or response pattern detected in the command text"
+      }
+    },
+    "risk": {
+      "type": "score",
+      "instructions": "How destructive is this command if run with example values? Return the severity level. Renders into the Safety How destructive row as a Low/Medium/High pill plus reasons.",
+      "criteria": [
+        "Low: read-only, or writes only new output files; deletes nothing and confirms nothing automatically",
+        "Medium: auto-confirms overwrites (-y, --force), triggers remote side effects (POST), builds or starts containers, or rewrites dependencies (audit fix)",
+        "High: deletes data (rm -rf, git branch -d, xargs with -d)"
+      ]
+    },
+    "mutates_files": {
+      "type": "noul",
+      "instructions": "Does the command write or change files, images, containers, lockfiles, or remote state? Renders into the Safety Mutates files Yes/No row.",
+      "criteria": {
+        "true": "Writes or changes files, images, containers, lockfiles, or remote state (output refs, -o, docker build/run, -vframes, movflags, crf, POST, audit fix, branch -d)",
+        "false": "Read-only; writes nothing (history inspection, plain GET, audit without fix)"
+      }
+    },
+    "deletes_data": {
+      "type": "noul",
+      "instructions": "Does the command delete files or branches? Renders into the Safety Deletes files Yes/No row.",
+      "criteria": {
+        "true": "Deletes branches or files matched by the command (rm, git branch -d, xargs with -d, delete)",
+        "false": "Deletes nothing"
+      }
+    },
+    "overwrites_files": {
+      "type": "noul",
+      "instructions": "Could existing files be replaced without asking? Renders into the Safety Overwrites files Yes/No row.",
+      "criteria": {
+        "true": "Possible: auto-confirm flags (-y, --force), media output extensions, output refs, -o, shell redirect, POST, or audit fix",
+        "false": "No overwrite detected in the command text"
       }
     }
   }
